@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id            String        @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  company       String?
+  cnpj          String?       @unique
+  password      String?
+  internalNotes String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  licenses      License[]
+  clientNotes   ClientNote[]
+  subscription  Subscription?
+  subdomain     String?       @unique
+  dnsRecordId   String?           
+
+  @@map("clients")
+}
+
+model ClientNote {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  body      String
+  author    String   @default("Admin")
+  createdAt DateTime @default(now())
+
+  @@map("client_notes")
+}
+
+model License {
+  id           String        @id @default(cuid())
+  key          String        @unique
+  product      String
+  notes        String?
+  status       LicenseStatus @default(ACTIVE)
+  maxSeats     Int           @default(1)
+  expiresAt    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  activations  Activation[]
+  clientId     String?
+  client       Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  subscription Subscription?
+
+  @@map("licenses")
+}
+
+model Activation {
+  id          String   @id @default(cuid())
+  licenseId   String
+  license     License  @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  hardwareId  String
+  label       String?
+  activatedAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  @@unique([licenseId, hardwareId])
+  @@map("activations")
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  clientId             String             @unique
+  client               Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  licenseId            String?            @unique
+  license              License?           @relation(fields: [licenseId], references: [id], onDelete: SetNull)
+  product              String             @default("TurboISP")
+  seats                Int
+  status               SubscriptionStatus @default(TRIAL)
+  billingDate          Int                // day of month 1-28
+  billingDateChangedAt DateTime?
+  trialEndsAt          DateTime?
+  gracePeriodUsedAt    DateTime?
+  gracePeriodEndsAt    DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  invoices             Invoice[]
+
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  type           InvoiceType
+  amount         Float
+  status         InvoiceStatus @default(PENDING)
+  dueDate        DateTime
+  paidAt         DateTime?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("invoices")
+}
+
+enum LicenseStatus {
+  ACTIVE
+  SUSPENDED
+  REVOKED
+  EXPIRED
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  PENDING_PAYMENT
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum InvoiceType {
+  INSTALLATION
+  MONTHLY
+  PRORATED
+  GRACE_FEE
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
+}

@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================
+   TurboISP Brand — Color Variables
+   ========================================= */
+
+:root {
+  --background: 0 0% 90%;
+  --foreground: 220 51% 16%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 220 51% 16%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 51% 16%;
+
+  --primary: 220 50% 28%;
+  --primary-foreground: 0 0% 90%;
+
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 220 51% 16%;
+
+  --muted: 0 0% 96%;
+  --muted-foreground: 220 50% 30%;
+
+  --accent: 37 98% 52%;
+  --accent-foreground: 220 51% 10%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 0 0% 83%;
+  --input: 0 0% 83%;
+  --ring: 37 98% 52%;
+  --radius: 0.5rem;
+
+  --scrollbar-track: #edeff2;
+  --scrollbar-thumb: #8f9198;
+}
+
+.dark {
+  --background: 222 45% 6%;
+  --foreground: 0 0% 96%;
+
+  --card: 222 38% 11%;
+  --card-foreground: 0 0% 96%;
+
+  --popover: 222 38% 11%;
+  --popover-foreground: 0 0% 96%;
+
+  --primary: 37 98% 52%;
+  --primary-foreground: 0 0% 8%;
+
+  --secondary: 222 32% 16%;
+  --secondary-foreground: 0 0% 96%;
+
+  --muted: 222 32% 14%;
+  --muted-foreground: 214 18% 70%;
+
+  --accent: 37 98% 52%;
+  --accent-foreground: 220 51% 10%;
+
+  --destructive: 356 72% 46%;
+  --destructive-foreground: 0 0% 96%;
+
+  --border: 222 30% 22%;
+  --input: 222 30% 22%;
+  --ring: 37 98% 52%;
+
+  --scrollbar-track: #0b172b;
+  --scrollbar-thumb: #0f1f45;
+}
+
+/* ============================
+   Global Layout
+   ============================ */
+html, body {
+  @apply m-0 p-0 w-full overflow-hidden;
+  height: 100svh;
+}
+
+body {
+  @apply flex flex-col text-foreground text-xs transition-colors duration-300;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: hsl(var(--background));
+  overscroll-behavior: none;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ============================
+   Worktop Desktop Background
+   ============================ */
+.worktop-bg {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(20, 33, 61, 0.5) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(8, 17, 36, 0.7) 0%, transparent 60%),
+    linear-gradient(135deg, #060c1a 0%, #0a1428 40%, #071020 70%, #060c1a 100%);
+}
+
+/* Subtle dot grid overlay */
+.worktop-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(252, 163, 17, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+/* ============================
+   Window scrollbar styling
+   ============================ */
+.window-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #fca311 #0f1f45;
+}
+
+.window-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.window-scroll::-webkit-scrollbar-track {
+  background: #0f1f45;
+}
+
+.window-scroll::-webkit-scrollbar-thumb {
+  background: #fca311;
+  border-radius: 3px;
+}
