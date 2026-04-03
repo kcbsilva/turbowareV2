@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import {
-  KeyRound, CheckCircle, Clock, AlertTriangle, XCircle,
-  ArrowRight, Loader2, Info, CalendarDays, Users, RefreshCw,
-  ChevronDown
+  CheckCircle, Clock, AlertTriangle, XCircle,
+  Loader2, Info, CalendarDays, Users, RefreshCw,
+  ExternalLink, ShieldCheck, Building2
 } from 'lucide-react'
 import {
-  BRAZIL_TIERS, INSTALLATION_FEE, TRIAL_DAYS,
-  getMonthlyPrice, getProratedAmount,
+  getMonthlyPrice,
   canChangeBillingDate, canActivateGrace,
   formatBRL, BILLING_DATE_LOCK_MONTHS
 } from '@/lib/pricing'
@@ -23,6 +22,8 @@ interface Invoice {
   dueDate: string
   paidAt: string | null
   notes: string | null
+  paymentUrl: string | null
+  paymentGateway: 'ASAAS' | 'STRIPE' | null
 }
 
 interface Subscription {
@@ -68,209 +69,222 @@ function invoiceTypeLabel(type: Invoice['type']) {
 
 // ── Activation Wizard ─────────────────────────────────────────────────────────
 
+interface ActivationResult {
+  clientName: string
+  plan: {
+    region: string
+    subscriberTier: string
+    monthlyAmount: number | null
+    status: string
+    trialEndsAt: string | null
+  }
+  permissions: {
+    maxSubscribers: number
+    modules: string[]
+  }
+  activatedAt: string
+  hardwareId: string
+}
+
 function ActivationWizard({ onActivated }: { onActivated: () => void }) {
-  const [step, setStep]             = useState<1 | 2>(1)
-  const [licenseKey, setLicenseKey] = useState('')
-  const [seats, setSeats]           = useState<number | ''>('')
-  const [billingDate, setBillingDate] = useState<number | ''>('')
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState('')
+  const [cnpj, setCnpj]         = useState<string | null>(null)
+  const [clientName, setClientName] = useState<string | null>(null)
+  const [password, setPassword] = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [fetchingProfile, setFetchingProfile] = useState(true)
+  const [error, setError]       = useState('')
+  const [result, setResult]     = useState<ActivationResult | null>(null)
 
-  const monthly  = typeof seats === 'number' && seats > 0 ? getMonthlyPrice(seats) : null
-  const prorated = typeof billingDate === 'number' && billingDate > 0 && monthly
-    ? getProratedAmount(monthly, billingDate) : null
-  const trialDue = new Date(Date.now() + TRIAL_DAYS * 86_400_000)
+  // Load the authenticated client's CNPJ from the session
+  useEffect(() => {
+    fetch('/api/client/me')
+      .then((r) => r.json())
+      .then((d) => {
+        setCnpj(d.cnpj ?? null)
+        setClientName(d.name ?? null)
+      })
+      .catch(() => {})
+      .finally(() => setFetchingProfile(false))
+  }, [])
 
-  async function activate() {
-    setLoading(true); setError('')
-    const res = await fetch('/api/client/subscription', {
+  async function handleActivate() {
+    if (!cnpj || !password.trim()) return
+    setLoading(true)
+    setError('')
+
+    // Generate a stable hardware ID for this browser session.
+    // In a real TurboISP desktop install this would be a real machine fingerprint;
+    // here we use a UUID stored in sessionStorage so each browser tab is unique.
+    let hardwareId = sessionStorage.getItem('turboisp_hwid')
+    if (!hardwareId) {
+      hardwareId = crypto.randomUUID()
+      sessionStorage.setItem('turboisp_hwid', hardwareId)
+    }
+
+    const res = await fetch('/api/client/auth/activate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ licenseKey, seats, billingDate }),
+      body: JSON.stringify({ cnpj, password, hardwareId }),
     })
+
     setLoading(false)
-    if (res.ok) { onActivated() }
-    else { const d = await res.json().catch(() => ({})); setError(d.error || 'Something went wrong.') }
+
+    if (res.ok) {
+      const data = await res.json()
+      setResult(data)
+      onActivated() // refresh parent — subscription may now be visible
+    } else {
+      const d = await res.json().catch(() => ({}))
+      setError(d.message || 'Activation failed.')
+    }
   }
 
   const inputCls = 'w-full px-3 py-2.5 rounded-lg text-sm bg-muted border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring'
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] px-6 py-12">
-      <div className="w-full max-w-md">
-
-        {/* Step indicators */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {([1, 2] as const).map((s) => (
-            <div key={s} className="flex items-center gap-2">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all
-                ${step === s ? 'border-[#fca311] bg-[#fca311]/10 text-[#fca311]'
-                  : step > s ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                  : 'border-border text-muted-foreground'}`}
-              >
-                {step > s ? <CheckCircle className="w-3.5 h-3.5" /> : s}
-              </div>
-              {s < 2 && <div className={`w-12 h-0.5 ${step > s ? 'bg-emerald-500/50' : 'bg-border'}`} />}
+  // ── Success state ──────────────────────────────────────────────────────────
+  if (result) {
+    const statusLabels: Record<string, string> = {
+      ACTIVE: 'Active', TRIAL: 'Trial', PENDING_PAYMENT: 'Pending Payment',
+      SUSPENDED: 'Suspended', CANCELLED: 'Cancelled',
+    }
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] px-6 py-12">
+        <div className="w-full max-w-md space-y-5">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+              <ShieldCheck className="w-6 h-6 text-emerald-400" />
             </div>
-          ))}
-        </div>
-
-        {/* Step 1: key + seats */}
-        {step === 1 && (
-          <div className="space-y-5">
             <div>
-              <h1 className="text-lg font-bold text-foreground mb-1">Activate Your License</h1>
-              <p className="text-xs text-muted-foreground">Enter the key provided by your admin and choose your user count.</p>
+              <h1 className="text-lg font-bold text-foreground">TurboISP Activated</h1>
+              <p className="text-xs text-muted-foreground mt-1">This installation is now linked to <strong className="text-foreground">{result.clientName}</strong>.</p>
             </div>
-
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">License Key</label>
-              <input
-                className={`${inputCls} font-mono uppercase tracking-widest`}
-                placeholder="XXXX-XXXX-XXXX-XXXX"
-                value={licenseKey}
-                onChange={(e) => setLicenseKey(e.target.value.toUpperCase())}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Product</label>
-              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-muted border border-border">
-                <div className="w-5 h-5 rounded flex items-center justify-center" style={{ backgroundColor: '#fca311' }}>
-                  <span className="text-[8px] font-black" style={{ color: '#081124' }}>T</span>
-                </div>
-                <span className="text-sm font-medium text-foreground">TurboISP</span>
-                <span className="ml-auto text-[10px] text-muted-foreground/50">Only available product</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Number of Users</label>
-              <input
-                type="number" min={1} max={12000}
-                className={inputCls}
-                placeholder="e.g. 500"
-                value={seats}
-                onChange={(e) => setSeats(e.target.value ? Number(e.target.value) : '')}
-              />
-              {typeof seats === 'number' && seats > 0 && (
-                <p className={`mt-1.5 text-xs font-medium ${monthly !== null ? 'text-[#fca311]' : 'text-yellow-400'}`}>
-                  {monthly !== null ? `Monthly plan: ${formatBRL(monthly)}/mo` : 'Over 12,000 users — contact us for enterprise pricing.'}
-                </p>
-              )}
-            </div>
-
-            {/* Pricing reference */}
-            <details className="group">
-              <summary className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer select-none hover:text-foreground transition">
-                <Info className="w-3 h-3" /> View pricing table
-                <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform" />
-              </summary>
-              <div className="mt-2 rounded-lg border border-border overflow-hidden">
-                <table className="w-full text-[10px]">
-                  <thead>
-                    <tr className="bg-muted border-b border-border">
-                      <th className="px-3 py-2 text-left text-muted-foreground font-semibold uppercase tracking-wider">Users</th>
-                      <th className="px-3 py-2 text-right text-muted-foreground font-semibold uppercase tracking-wider">Monthly (BRL)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {BRAZIL_TIERS.map((t) => {
-                      const isActive = typeof seats === 'number' && seats > 0 && getMonthlyPrice(seats) === t.monthly && seats <= t.maxSeats
-                      return (
-                        <tr key={t.maxSeats} className={isActive ? 'bg-[#fca311]/8' : ''}>
-                          <td className="px-3 py-1.5 text-foreground">Up to {t.maxSeats.toLocaleString()}</td>
-                          <td className={`px-3 py-1.5 text-right font-mono ${isActive ? 'text-[#fca311] font-semibold' : 'text-foreground'}`}>{formatBRL(t.monthly)}</td>
-                        </tr>
-                      )
-                    })}
-                    <tr><td className="px-3 py-1.5 text-foreground">12,000+</td><td className="px-3 py-1.5 text-right text-muted-foreground italic">Inquire</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </details>
-
-            <button
-              onClick={() => setStep(2)}
-              disabled={!licenseKey.trim() || !seats || monthly === null}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
-              style={{ backgroundColor: '#fca311', color: '#081124' }}
-            >
-              Continue to payment setup <ArrowRight className="w-4 h-4" />
-            </button>
           </div>
-        )}
 
-        {/* Step 2: billing date + payment breakdown */}
-        {step === 2 && typeof seats === 'number' && monthly !== null && (
-          <div className="space-y-5">
-            <div>
-              <h1 className="text-lg font-bold text-foreground mb-1">Payment Setup</h1>
-              <p className="text-xs text-muted-foreground">Choose your billing date. Your first payment is due after the {TRIAL_DAYS}-day trial.</p>
+          <div className="bg-card border border-border rounded-lg divide-y divide-border text-xs">
+            <div className="flex justify-between px-4 py-2.5">
+              <span className="text-muted-foreground">Plan tier</span>
+              <span className="font-medium text-foreground">{result.plan.subscriberTier} subscribers</span>
             </div>
-
-            {/* Plan summary */}
-            <div className="bg-card border border-border rounded-lg p-4 space-y-2 text-xs">
-              <div className="flex justify-between"><span className="text-muted-foreground">Product</span><span className="font-medium text-foreground">TurboISP</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Users</span><span className="font-medium text-foreground">{seats.toLocaleString()} seats</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Monthly</span><span className="font-medium text-[#fca311]">{formatBRL(monthly)}/mo</span></div>
+            <div className="flex justify-between px-4 py-2.5">
+              <span className="text-muted-foreground">Status</span>
+              <span className="font-medium text-foreground">{statusLabels[result.plan.status] ?? result.plan.status}</span>
             </div>
-
-            {/* Billing date */}
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Preferred billing day of month</label>
-              <select value={billingDate} onChange={(e) => setBillingDate(e.target.value ? Number(e.target.value) : '')} className={inputCls}>
-                <option value="">Select a day…</option>
-                {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>Day {d} of each month</option>)}
-              </select>
-              <p className="text-[10px] text-muted-foreground mt-1">Billing date can only be changed every {BILLING_DATE_LOCK_MONTHS} months.</p>
+            <div className="flex justify-between px-4 py-2.5">
+              <span className="text-muted-foreground">Max subscribers</span>
+              <span className="font-medium text-foreground">{result.permissions.maxSubscribers.toLocaleString()}</span>
             </div>
-
-            {/* Payment breakdown */}
-            {prorated !== null && typeof billingDate === 'number' && billingDate > 0 && (
-              <div className="bg-card border border-border rounded-lg overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-border">
-                  <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider">First Payment Breakdown</p>
-                </div>
-                <div className="px-4 py-3 space-y-2 text-xs">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Installation (one-time)</span><span className="font-mono text-foreground">{formatBRL(INSTALLATION_FEE)}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Prorated (today → day {billingDate})</span><span className="font-mono text-foreground">{formatBRL(prorated)}</span></div>
-                  <div className="border-t border-border pt-2 flex justify-between font-semibold">
-                    <span className="text-foreground">Total first payment</span>
-                    <span className="text-[#fca311] font-mono">{formatBRL(INSTALLATION_FEE + prorated)}</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground pt-1 flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> Due on {trialDue.toLocaleDateString('pt-BR')} (after {TRIAL_DAYS}-day free trial)
-                  </p>
-                </div>
+            <div className="flex justify-between px-4 py-2.5">
+              <span className="text-muted-foreground">Region</span>
+              <span className="font-medium text-foreground">{result.plan.region}</span>
+            </div>
+            {result.plan.monthlyAmount !== null && (
+              <div className="flex justify-between px-4 py-2.5">
+                <span className="text-muted-foreground">Monthly</span>
+                <span className="font-medium text-[#fca311]">{formatBRL(result.plan.monthlyAmount!)}</span>
               </div>
             )}
-
-            {/* Trial notice */}
-            <div className="flex gap-2.5 p-3 rounded-lg bg-blue-500/5 border border-blue-500/15">
-              <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-blue-300/80 leading-relaxed">
-                You get <strong className="text-blue-300">{TRIAL_DAYS} days free</strong>. Payment only required after the trial ends on <strong className="text-blue-300">{trialDue.toLocaleDateString('pt-BR')}</strong>.
-              </p>
-            </div>
-
-            {error && <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">{error}</p>}
-
-            <div className="flex gap-3">
-              <button onClick={() => { setStep(1); setError('') }} className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition">
-                ← Back
-              </button>
-              <button
-                onClick={activate}
-                disabled={loading || !billingDate || prorated === null}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
-                style={{ backgroundColor: '#fca311', color: '#081124' }}
-              >
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Starting…</> : <>Start free trial <CheckCircle className="w-4 h-4" /></>}
-              </button>
+            {result.plan.trialEndsAt && (
+              <div className="flex justify-between px-4 py-2.5">
+                <span className="text-muted-foreground">Trial ends</span>
+                <span className="font-medium text-blue-400">{new Date(result.plan.trialEndsAt).toLocaleDateString('pt-BR')}</span>
+              </div>
+            )}
+            <div className="px-4 py-2.5">
+              <p className="text-[10px] text-muted-foreground mb-1.5">Modules</p>
+              <div className="flex flex-wrap gap-1">
+                {result.permissions.modules.map((m) => (
+                  <span key={m} className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] text-muted-foreground capitalize">{m}</span>
+                ))}
+              </div>
             </div>
           </div>
+
+          <p className="text-[10px] text-center text-muted-foreground/50">
+            Activated at {new Date(result.activatedAt).toLocaleString('pt-BR')}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Main wizard ────────────────────────────────────────────────────────────
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] px-6 py-12">
+      <div className="w-full max-w-md space-y-6">
+
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-2" style={{ backgroundColor: '#fca311' }}>
+            <span className="text-base font-black" style={{ color: '#081124' }}>T</span>
+          </div>
+          <h1 className="text-lg font-bold text-foreground">Activate TurboISP</h1>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Your TurboISP installation will use the credentials you used to log into this portal.
+            No license key is required.
+          </p>
+        </div>
+
+        {/* Info notice */}
+        <div className="flex gap-2.5 p-3 rounded-lg bg-blue-500/5 border border-blue-500/15">
+          <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+          <p className="text-xs text-blue-300/80 leading-relaxed">
+            TurboISP will authenticate using your CNPJ and password on startup.
+            Keep your portal password safe — changing it will require re-activation.
+          </p>
+        </div>
+
+        {/* CNPJ display */}
+        <div>
+          <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Your CNPJ</label>
+          {fetchingProfile ? (
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted border border-border">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Loading…</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-muted border border-border">
+              <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                {clientName && <p className="text-xs font-medium text-foreground truncate">{clientName}</p>}
+                <p className="text-xs font-mono text-muted-foreground">{cnpj ?? '—'}</p>
+              </div>
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            </div>
+          )}
+        </div>
+
+        {/* Password confirmation */}
+        <div>
+          <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Confirm your password</label>
+          <input
+            type="password"
+            className={inputCls}
+            placeholder="Enter your portal password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleActivate() }}
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Used once to verify your identity. TurboISP stores this securely on the machine.
+          </p>
+        </div>
+
+        {error && (
+          <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+            {error}
+          </p>
         )}
+
+        <button
+          onClick={handleActivate}
+          disabled={loading || !password.trim() || !cnpj || fetchingProfile}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
+          style={{ backgroundColor: '#fca311', color: '#081124' }}
+        >
+          {loading
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> Activating…</>
+            : <><ShieldCheck className="w-4 h-4" /> Activate TurboISP</>}
+        </button>
       </div>
     </div>
   )
@@ -461,17 +475,38 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
           <div className="divide-y divide-border">
             {pendingInvs.map((inv) => (
               <div key={inv.id} className="px-4 py-3 flex items-start justify-between gap-4">
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-foreground">{invoiceTypeLabel(inv.type)}</p>
                   {inv.notes && <p className="text-[10px] text-muted-foreground/70 mt-0.5">{inv.notes}</p>}
                   <p className="text-[10px] text-muted-foreground">Due: {new Date(inv.dueDate).toLocaleDateString('pt-BR')}</p>
+                  {inv.paymentGateway && (
+                    <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                      via {inv.paymentGateway === 'ASAAS' ? 'Pix / Boleto / Cartão' : 'Stripe'}
+                    </p>
+                  )}
                 </div>
-                <p className="text-sm font-bold font-mono text-yellow-400 shrink-0">{formatBRL(inv.amount)}</p>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <p className="text-sm font-bold font-mono text-yellow-400">{formatBRL(inv.amount)}</p>
+                  {inv.paymentUrl && (
+                    <a
+                      href={inv.paymentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md transition hover:opacity-90"
+                      style={{ backgroundColor: '#fca311', color: '#081124' }}
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Pagar agora
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
-            <div className="px-4 py-3 bg-yellow-500/5 text-center">
-              <p className="text-[10px] text-muted-foreground">Contact your administrator to confirm payment and activate your plan.</p>
-            </div>
+            {pendingInvs.every((i) => !i.paymentUrl) && (
+              <div className="px-4 py-3 bg-yellow-500/5 text-center">
+                <p className="text-[10px] text-muted-foreground">Contact your administrator to receive a payment link.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
