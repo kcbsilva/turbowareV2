@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getMonthlyPrice, nextBillingDate } from '@/lib/pricing'
+import { getMonthlyPrice, getPriceByLabel, nextBillingDate, type Region } from '@/lib/pricing'
 
 /**
  * GET /api/cron/billing
@@ -161,7 +161,43 @@ export async function GET(req: NextRequest) {
 
       // ── 4. ACTIVE + billing day matches today → new MONTHLY invoice ───────────────
       if (sub.status === 'ACTIVE' && sub.billingDate === todayDay) {
-        const monthlyPrice = getMonthlyPrice(sub.seats)
+        // ── 4a. Apply pending downgrade before calculating invoice amount ──────────
+        if (sub.pendingDowngradeTier) {
+          const region         = (sub.region ?? 'BR') as Region
+          const downgradePrice = getPriceByLabel(sub.pendingDowngradeTier, region)
+
+          if (downgradePrice !== 'inquire' && typeof downgradePrice === 'number') {
+            await prisma.subscription.update({
+              where: { id: sub.id },
+              data:  {
+                subscriberTier:       sub.pendingDowngradeTier,
+                monthlyAmount:        downgradePrice,
+                pendingDowngradeTier: null,
+                pendingDowngradeAt:   null,
+              },
+            })
+
+            // Refresh local sub fields for invoice generation below
+            sub.subscriberTier       = sub.pendingDowngradeTier
+            sub.monthlyAmount        = downgradePrice
+            sub.pendingDowngradeTier = null
+            sub.pendingDowngradeAt   = null
+          } else {
+            results.errors.push(
+              `sub ${sub.id}: pendingDowngradeTier '${sub.pendingDowngradeTier}' could not be resolved for region '${sub.region ?? 'BR'}' — skipping downgrade`,
+            )
+          }
+        }
+
+        // ── 4b. Determine monthly price ─────────────────────────────────────────
+        // Prefer subscriberTier-based amount if available; fall back to seat-based legacy pricing.
+        let monthlyPrice: number | null = null
+        if (sub.monthlyAmount != null) {
+          monthlyPrice = sub.monthlyAmount
+        } else {
+          monthlyPrice = getMonthlyPrice(sub.seats)
+        }
+
         if (monthlyPrice === null) {
           results.errors.push(
             `sub ${sub.id}: seats=${sub.seats} exceeds pricing tiers (>12,000)`,
@@ -189,7 +225,7 @@ export async function GET(req: NextRequest) {
             notes: `Monthly charge — ${now.toLocaleDateString('pt-BR', {
               month: 'long',
               year:  'numeric',
-            })} — ${sub.seats} seats`,
+            })} — tier: ${sub.subscriberTier ?? `${sub.seats} seats`}`,
           },
         })
 
