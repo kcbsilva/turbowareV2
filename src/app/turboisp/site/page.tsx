@@ -132,6 +132,9 @@ export default function TurboISPSitePage() {
             <a href="#modules"  className="hover:text-[#0a1428] transition">{t("navbar_modules")}</a>
             <a href="#valores"  className="hover:text-[#0a1428] transition">{t("navbar_why_turboware")}</a>
             <a href="#metricas" className="hover:text-[#0a1428] transition">{t("navbar_results")}</a>
+            <Link href="/turboisp/pricing" className="hover:text-[#0a1428] transition">
+              {s({ en: "Pricing", pt: "Preços", fr: "Tarifs" })}
+            </Link>
           </nav>
 
           {/* Right side: lang switcher + CTA */}
@@ -393,6 +396,7 @@ export default function TurboISPSitePage() {
             <a href="#modules"  className="hover:text-white/60 transition">{t("navbar_modules")}</a>
             <a href="#valores"  className="hover:text-white/60 transition">{t("navbar_why_turboware")}</a>
             <a href="#metricas" className="hover:text-white/60 transition">{t("navbar_results")}</a>
+            <Link href="/turboisp/pricing"  className="hover:text-white/60 transition">{s({ en: "Pricing", pt: "Preços", fr: "Tarifs" })}</Link>
             <Link href="/turboisp/register" className="hover:text-white/60 transition">{FOOTER_DEMO}</Link>
             <Link href="/admin/login"       className="hover:text-white/60 transition">{FOOTER_ADMIN}</Link>
           </div>

@@ -10,12 +10,14 @@ import {
   Users,
   Sun,
   Moon,
+  Package,
 } from 'lucide-react'
 import { useTheme } from './ThemeProvider'
 
 const menuItems = [
-  { href: '/admin',         label: 'Dashboard', icon: <LayoutDashboard className="w-3.5 h-3.5" />, exact: true },
-  { href: '/admin/clients', label: 'Clients',   icon: <Users className="w-3.5 h-3.5" />,           exact: false },
+  { href: '/admin',          label: 'Dashboard', icon: <LayoutDashboard className="w-3.5 h-3.5" />, exact: true },
+  { href: '/admin/clients',  label: 'Clients',   icon: <Users className="w-3.5 h-3.5" />,           exact: false },
+  { href: '/admin/products', label: 'Products',  icon: <Package className="w-3.5 h-3.5" />,         exact: false },
 ]
 
 interface Props {

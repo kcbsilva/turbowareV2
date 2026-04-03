@@ -87,6 +87,9 @@ model Subscription {
   gracePeriodEndsAt    DateTime?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
+  region               String?
+  subscriberTier       String?
+  monthlyAmount        Float?
   invoices             Invoice[]
 
   @@map("subscriptions")
