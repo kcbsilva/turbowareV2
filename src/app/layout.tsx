@@ -1,13 +1,17 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import { ThemeProvider } from '@/components/ThemeProvider'
+import type { Metadata } from "next";
+import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: 'Turboware Admin',
-  description: 'License key management for Turboware',
-}
+  title: "Turboware",
+  description: "Gestão completa para quem não pode parar.",
+};
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       {/* Prevent flash: apply saved theme before first paint */}
@@ -19,10 +23,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

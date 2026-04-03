@@ -9,8 +9,19 @@ import { isLicenseUsable } from '@/lib/license'
  * Returns whether the license key is valid and usable.
  * If hardwareId is provided, also checks if this machine is already activated
  * (activated machines don't count against the seat check).
+ *
+ * Protected by CLIENT_API_KEY when set. Pass `Authorization: Bearer <token>`.
+ * If CLIENT_API_KEY is not configured the check is skipped (backward compat).
  */
 export async function POST(req: NextRequest) {
+  const clientApiKey = process.env.CLIENT_API_KEY
+  if (clientApiKey) {
+    const auth = req.headers.get('authorization')
+    if (!auth || auth !== `Bearer ${clientApiKey}`) {
+      return NextResponse.json({ valid: false, message: 'Unauthorized' }, { status: 401 })
+    }
+  }
+
   const { key, hardwareId } = await req.json()
 
   if (!key) {

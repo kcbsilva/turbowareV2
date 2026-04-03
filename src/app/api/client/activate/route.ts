@@ -8,8 +8,19 @@ import { isLicenseUsable } from '@/lib/license'
  *
  * Activates a license key on a specific hardware/device.
  * Idempotent — calling again with the same hardwareId just updates lastSeenAt.
+ *
+ * Protected by CLIENT_API_KEY when set. Pass `Authorization: Bearer <token>`.
+ * If CLIENT_API_KEY is not configured the check is skipped (backward compat).
  */
 export async function POST(req: NextRequest) {
+  const clientApiKey = process.env.CLIENT_API_KEY
+  if (clientApiKey) {
+    const auth = req.headers.get('authorization')
+    if (!auth || auth !== `Bearer ${clientApiKey}`) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    }
+  }
+
   const { key, hardwareId, label } = await req.json()
 
   if (!key || !hardwareId) {
