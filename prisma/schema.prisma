@@ -90,6 +90,9 @@ model Subscription {
   region               String?
   subscriberTier       String?
   monthlyAmount        Float?
+  lastSubscriberSync   DateTime?
+  pendingDowngradeTier String?
+  pendingDowngradeAt   DateTime?
   invoices             Invoice[]
 
   @@map("subscriptions")
