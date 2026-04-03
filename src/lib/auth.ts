@@ -7,8 +7,19 @@ const secret = () =>
 // ── Admin auth ────────────────────────────────────────────────────────────────
 export const COOKIE_NAME = 'tw_admin_token'
 
-export async function signAdminToken(): Promise<string> {
-  return new SignJWT({ role: 'admin' })
+export interface AdminTokenPayload {
+  id?: string
+  name?: string
+  email?: string
+  role: string
+}
+
+export async function signAdminToken(user?: { id: string; name: string; email: string; role: string }): Promise<string> {
+  const jwtPayload = user
+    ? { role: user.role, id: user.id, name: user.name, email: user.email }
+    : { role: 'admin' }
+
+  return new SignJWT(jwtPayload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('12h')

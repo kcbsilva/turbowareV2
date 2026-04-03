@@ -9,21 +9,22 @@ datasource db {
 }
 
 model Client {
-  id            String        @id @default(cuid())
-  name          String
-  email         String?
-  phone         String?
-  company       String?
-  cnpj          String?       @unique
-  password      String?
-  internalNotes String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  licenses      License[]
-  clientNotes   ClientNote[]
-  subscription  Subscription?
-  subdomain     String?       @unique
-  dnsRecordId   String?           
+  id              String        @id @default(cuid())
+  name            String
+  email           String?
+  phone           String?
+  company         String?
+  cnpj            String?       @unique
+  password        String?
+  internalNotes   String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  licenses        License[]
+  clientNotes     ClientNote[]
+  subscription    Subscription?
+  subdomain       String?       @unique
+  dnsRecordId     String?
+  asaasCustomerId String?       // Asaas customer ID for payment sync
 
   @@map("clients")
 }
@@ -92,17 +93,20 @@ model Subscription {
 }
 
 model Invoice {
-  id             String        @id @default(cuid())
-  subscriptionId String
-  subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  type           InvoiceType
-  amount         Float
-  status         InvoiceStatus @default(PENDING)
-  dueDate        DateTime
-  paidAt         DateTime?
-  notes          String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                String          @id @default(cuid())
+  subscriptionId    String
+  subscription      Subscription    @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  type              InvoiceType
+  amount            Float
+  status            InvoiceStatus   @default(PENDING)
+  dueDate           DateTime
+  paidAt            DateTime?
+  notes             String?
+  externalPaymentId String?         // Asaas charge ID or Stripe session ID
+  paymentUrl        String?         // Hosted payment link sent to client
+  paymentGateway    PaymentGateway? // Which gateway was used
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   @@map("invoices")
 }
@@ -134,4 +138,21 @@ enum InvoiceStatus {
   PAID
   OVERDUE
   WAIVED
+}
+
+enum PaymentGateway {
+  ASAAS
+  STRIPE
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admin_users")
 }
