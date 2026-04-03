@@ -6,6 +6,7 @@ import { Key } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -18,7 +19,7 @@ export default function LoginPage() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ email: email || undefined, password }),
     })
 
     setLoading(false)
@@ -26,8 +27,24 @@ export default function LoginPage() {
     if (res.ok) {
       router.push('/admin')
     } else {
-      setError('Invalid password. Please try again.')
+      const data = await res.json().catch(() => ({}))
+      setError(data.error || 'Invalid credentials. Please try again.')
     }
+  }
+
+  const inputStyle = {
+    backgroundColor: 'hsl(222 45% 6%)',
+    border: '1px solid hsl(222 30% 22%)',
+    color: 'hsl(0 0% 96%)',
+    boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.3)',
+  } as const
+
+  function focusInput(e: React.FocusEvent<HTMLInputElement>) {
+    e.currentTarget.style.outline = '2px solid #fca311'
+    e.currentTarget.style.outlineOffset = '0px'
+  }
+  function blurInput(e: React.FocusEvent<HTMLInputElement>) {
+    e.currentTarget.style.outline = 'none'
   }
 
   return (
@@ -77,26 +94,41 @@ export default function LoginPage() {
             backdropFilter: 'blur(12px)',
           }}
         >
+          {/* Email */}
+          <div className="mb-4">
+            <label className="block text-xs font-medium mb-2" style={{ color: 'hsl(214 18% 70%)' }}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-md text-sm transition focus:outline-none"
+              style={inputStyle}
+              onFocus={focusInput}
+              onBlur={blurInput}
+              placeholder="admin@example.com"
+              autoComplete="email"
+              autoFocus
+            />
+          </div>
+
+          {/* Password */}
           <div className="mb-5">
             <label className="block text-xs font-medium mb-2" style={{ color: 'hsl(214 18% 70%)' }}>
-              Admin Password
+              Password
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2.5 rounded-md text-sm transition focus:outline-none"
-              style={{
-                backgroundColor: 'hsl(222 45% 6%)',
-                border: '1px solid hsl(222 30% 22%)',
-                color: 'hsl(0 0% 96%)',
-                boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.3)',
-              }}
-              onFocus={(e) => { e.currentTarget.style.outline = '2px solid #fca311'; e.currentTarget.style.outlineOffset = '0px' }}
-              onBlur={(e) => { e.currentTarget.style.outline = 'none' }}
+              style={inputStyle}
+              onFocus={focusInput}
+              onBlur={blurInput}
               placeholder="Enter password"
+              autoComplete="current-password"
               required
-              autoFocus
             />
           </div>
 
@@ -117,10 +149,7 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             className="w-full py-2.5 text-sm font-semibold rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: '#fca311',
-              color: '#081124',
-            }}
+            style={{ backgroundColor: '#fca311', color: '#081124' }}
             onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.backgroundColor = '#f59e0b' }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = '#fca311' }}
           >
