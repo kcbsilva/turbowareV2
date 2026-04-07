@@ -101,5 +101,19 @@ export async function POST(req: NextRequest) {
     },
   })
 
+  if (ddns) {
+    await prisma.subscription.create({
+      data: {
+        clientId: client.id,
+        product: 'TurboISP',
+        seats: 0,
+        status: 'TRIAL',
+        billingDate: 1,
+        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        region: 'BR',
+      },
+    })
+  }
+
   return NextResponse.json({ ok: true, id: client.id }, { status: 201 })
 }
