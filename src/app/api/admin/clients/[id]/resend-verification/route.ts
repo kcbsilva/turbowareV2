@@ -51,7 +51,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
       {
         error: isEmailConfigError
           ? 'Email service is not configured on this deployment.'
-          : 'Failed to send verification email.',
+          : `Failed to send verification email: ${message}`,
       },
       { status: isEmailConfigError ? 503 : 502 },
     )

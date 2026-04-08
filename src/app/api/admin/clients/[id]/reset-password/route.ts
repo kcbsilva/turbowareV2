@@ -58,7 +58,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
       {
         error: isEmailConfigError
           ? 'Email service is not configured on this deployment.'
-          : 'Failed to send temporary password email.',
+          : `Failed to send temporary password email: ${message}`,
       },
       { status: isEmailConfigError ? 503 : 502 },
     )
