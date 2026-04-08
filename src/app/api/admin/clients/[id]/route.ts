@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
+import { sendVerificationEmail } from '@/lib/email'
 
 type Params = { params: { id: string } }
 
@@ -41,18 +43,44 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     passwordHash = await bcrypt.hash(newPassword, 12)
   }
 
+  // Detect email change — if email is changing, reset verification
+  const existing = await prisma.client.findUnique({
+    where: { id: params.id },
+    select: { email: true },
+  })
+
+  const newEmail          = email !== undefined ? email?.trim().toLowerCase() || null : undefined
+  const emailChanged      = newEmail !== undefined && newEmail !== existing?.email
+  const verificationToken = emailChanged && newEmail ? crypto.randomBytes(32).toString('hex') : undefined
+
   const client = await prisma.client.update({
     where: { id: params.id },
     data: {
       ...(name !== undefined ? { name: name.trim() } : {}),
-      ...(email !== undefined ? { email: email?.trim() || null } : {}),
+      ...(email !== undefined ? { email: newEmail } : {}),
       ...(phone !== undefined ? { phone: phone?.trim() || null } : {}),
       ...(company !== undefined ? { company: company?.trim() || null } : {}),
       ...(cnpj !== undefined ? { cnpj: cnpj?.replace(/\D/g, '') || null } : {}),
       ...(internalNotes !== undefined ? { internalNotes: internalNotes?.trim() || null } : {}),
       ...(passwordHash ? { password: passwordHash } : {}),
+      ...(emailChanged ? {
+        emailVerified:                   false,
+        emailVerificationToken:          verificationToken ?? null,
+        emailVerificationTokenExpiresAt: verificationToken
+          ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+          : null,
+      } : {}),
     },
   })
+
+  // Send new verification email if email changed — non-fatal
+  if (emailChanged && newEmail && verificationToken) {
+    try {
+      await sendVerificationEmail(newEmail, verificationToken)
+    } catch (err) {
+      console.error('[admin/clients] Failed to send verification email:', err)
+    }
+  }
 
   const { password: _, ...safe } = client
   return NextResponse.json({ ...safe, hasPassword: !!client.password })
