@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { canChangeBillingDate, getProratedAmount, getMonthlyPrice } from '@/lib/pricing'
+import { parseBody, badRequest } from '@/lib/api'
 
 // PATCH /api/client/subscription/billing-date
 // Body: { billingDate: number }
@@ -8,7 +9,9 @@ export async function PATCH(req: NextRequest) {
   const clientId = req.headers.get('x-client-id')
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { billingDate } = await req.json()
+  const { body, error } = await parseBody<{ billingDate?: number }>(req)
+  if (error) return badRequest()
+  const { billingDate } = body
   if (!billingDate || billingDate < 1 || billingDate > 28)
     return NextResponse.json({ error: 'Billing date must be between 1 and 28.' }, { status: 400 })
 
