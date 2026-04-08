@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         { cnpj: cnpj.trim() },
       ],
     },
-    select: { id: true, password: true },
+    select: { id: true, password: true, emailVerified: true },
   })
 
   if (!client || !client.password) {
@@ -42,6 +42,13 @@ export async function POST(req: NextRequest) {
   const valid = await bcrypt.compare(password, client.password)
   if (!valid) {
     return NextResponse.json({ error: 'Invalid CNPJ or password' }, { status: 401 })
+  }
+
+  if (!client.emailVerified) {
+    return NextResponse.json(
+      { error: 'Por favor, verifique seu e-mail antes de fazer login.' },
+      { status: 403 },
+    )
   }
 
   const token = await signClientToken(client.id)
