@@ -6,7 +6,15 @@ export const dynamic = 'force-dynamic'
 
 async function getStats() {
   const clients = await prisma.client.findMany({
-    include: { _count: { select: { licenses: true } } },
+    select: {
+      id: true,
+      name: true,
+      company: true,
+      email: true,
+      cnpj: true,
+      createdAt: true,
+      _count: { select: { licenses: true } },
+    },
     orderBy: { createdAt: 'desc' },
   })
 

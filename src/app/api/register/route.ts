@@ -47,19 +47,26 @@ export async function POST(req: NextRequest) {
   // ── Duplicate checks ───────────────────────────────────────────────────────
   const existing = await prisma.client.findFirst({
     where: { email: { equals: email.trim(), mode: 'insensitive' } },
+    select: { id: true },
   })
   if (existing)
     return NextResponse.json({ error: 'An account with this email already exists.' }, { status: 409 })
 
   const normalizedCnpj = cnpj ? cnpj.replace(/\D/g, '') : null
   if (normalizedCnpj) {
-    const existingCnpj = await prisma.client.findUnique({ where: { cnpj: normalizedCnpj } })
+    const existingCnpj = await prisma.client.findUnique({
+      where: { cnpj: normalizedCnpj },
+      select: { id: true },
+    })
     if (existingCnpj)
       return NextResponse.json({ error: 'An account with this CNPJ already exists.' }, { status: 409 })
   }
 
   if (slug) {
-    const existingSubdomain = await prisma.client.findFirst({ where: { subdomain: slug } })
+    const existingSubdomain = await prisma.client.findFirst({
+      where: { subdomain: slug },
+      select: { id: true },
+    })
     if (existingSubdomain)
       return NextResponse.json({ error: 'Este subdomínio já está em uso.' }, { status: 409 })
   }
@@ -96,6 +103,7 @@ export async function POST(req: NextRequest) {
       internalNotes: notes,
       subdomain: slug || undefined,
     },
+    select: { id: true, email: true },
   })
 
   // Generate email verification token

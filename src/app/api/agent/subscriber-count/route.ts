@@ -70,7 +70,8 @@ export async function POST(req: NextRequest) {
 
   const client = await prisma.client.findUnique({
     where: { id: clientRows[0].id },
-    include: {
+    select: {
+      id: true,
       subscription: {
         include: { invoices: { orderBy: { createdAt: 'asc' } } },
       },
