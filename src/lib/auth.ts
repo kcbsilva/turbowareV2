@@ -1,8 +1,11 @@
 import { SignJWT, jwtVerify } from 'jose'
 
 // ── Shared secret ────────────────────────────────────────────────────────────
-const secret = () =>
-  new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-change-me')
+export function getJwtSecret(): Uint8Array {
+  const s = process.env.JWT_SECRET
+  if (!s) throw new Error('JWT_SECRET environment variable is not set')
+  return new TextEncoder().encode(s)
+}
 
 // ── Admin auth ────────────────────────────────────────────────────────────────
 export const COOKIE_NAME = 'tw_admin_token'
@@ -23,12 +26,12 @@ export async function signAdminToken(user?: { id: string; name: string; email: s
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('12h')
-    .sign(secret())
+    .sign(getJwtSecret())
 }
 
 export async function verifyAdminToken(token: string): Promise<boolean> {
   try {
-    const { payload } = await jwtVerify(token, secret())
+    const { payload } = await jwtVerify(token, getJwtSecret())
     return payload.role === 'admin'
   } catch {
     return false
@@ -43,12 +46,12 @@ export async function signClientToken(clientId: string): Promise<string> {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('12h')
-    .sign(secret())
+    .sign(getJwtSecret())
 }
 
 export async function verifyClientToken(token: string): Promise<{ valid: boolean; clientId?: string }> {
   try {
-    const { payload } = await jwtVerify(token, secret())
+    const { payload } = await jwtVerify(token, getJwtSecret())
     if (payload.role !== 'client') return { valid: false }
     return { valid: true, clientId: payload.clientId as string }
   } catch {

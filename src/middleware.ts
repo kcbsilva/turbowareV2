@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
-import { COOKIE_NAME, CLIENT_COOKIE_NAME } from '@/lib/auth'
-
-const secret = () =>
-  new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-change-me')
+import { COOKIE_NAME, CLIENT_COOKIE_NAME, getJwtSecret } from '@/lib/auth'
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -19,7 +16,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL('/admin/login', req.url))
     }
     try {
-      const { payload } = await jwtVerify(token, secret())
+      const { payload } = await jwtVerify(token, getJwtSecret())
       if (payload.role !== 'admin') throw new Error()
       return NextResponse.next()
     } catch {
@@ -45,7 +42,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL('/client/login', req.url))
     }
     try {
-      const { payload } = await jwtVerify(token, secret())
+      const { payload } = await jwtVerify(token, getJwtSecret())
       if (payload.role !== 'client') throw new Error()
 
       // Forward clientId to API handlers via header
