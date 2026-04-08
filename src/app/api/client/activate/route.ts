@@ -15,6 +15,10 @@ import { parseBody, badRequest } from '@/lib/api'
  */
 export async function POST(req: NextRequest) {
   const clientApiKey = process.env.CLIENT_API_KEY
+  if (!clientApiKey && process.env.NODE_ENV === 'production') {
+    console.error('[activate] CLIENT_API_KEY is not set in production')
+    return NextResponse.json({ success: false, message: 'Service misconfigured' }, { status: 503 })
+  }
   if (clientApiKey) {
     const auth = req.headers.get('authorization')
     if (!auth || auth !== `Bearer ${clientApiKey}`) {
