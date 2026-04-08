@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { sendTemporaryPasswordEmail } from '@/lib/email'
+import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
 
 type Params = { params: { id: string } }
 
@@ -28,13 +29,22 @@ export async function POST(_req: NextRequest, { params }: Params) {
   const temporaryPassword = generateTemporaryPassword()
   const passwordHash = await bcrypt.hash(temporaryPassword, 12)
 
-  await prisma.client.update({
-    where: { id: client.id },
-    data: {
-      password: passwordHash,
-      mustChangePassword: true,
-    },
-  })
+  try {
+    await prisma.client.update({
+      where: { id: client.id },
+      data: {
+        password: passwordHash,
+        mustChangePassword: true,
+      },
+    })
+  } catch (error) {
+    if (!isMissingMustChangePasswordColumn(error)) throw error
+
+    await prisma.client.update({
+      where: { id: client.id },
+      data: { password: passwordHash },
+    })
+  }
 
   try {
     await sendTemporaryPasswordEmail(client.email, temporaryPassword)

@@ -4,21 +4,53 @@ import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 import { sendVerificationEmail } from '@/lib/email'
+import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
 
 type Params = { params: { id: string } }
 
+const baseClientSelect = {
+  id: true,
+  name: true,
+  email: true,
+  emailVerified: true,
+  phone: true,
+  company: true,
+  cnpj: true,
+  internalNotes: true,
+  createdAt: true,
+  updatedAt: true,
+  password: true,
+  licenses: {
+    include: { _count: { select: { activations: true } } },
+    orderBy: { createdAt: 'desc' as const },
+  },
+  clientNotes: { orderBy: { createdAt: 'desc' as const } },
+}
+
+async function getClientForAdmin(id: string) {
+  try {
+    return await prisma.client.findUnique({
+      where: { id },
+      select: {
+        ...baseClientSelect,
+        mustChangePassword: true,
+      },
+    })
+  } catch (error) {
+    if (!isMissingMustChangePasswordColumn(error)) throw error
+
+    const client = await prisma.client.findUnique({
+      where: { id },
+      select: baseClientSelect,
+    })
+
+    return client ? { ...client, mustChangePassword: false } : null
+  }
+}
+
 // GET /api/admin/clients/[id]
 export async function GET(_req: NextRequest, { params }: Params) {
-  const client = await prisma.client.findUnique({
-    where: { id: params.id },
-    include: {
-      licenses: {
-        include: { _count: { select: { activations: true } } },
-        orderBy: { createdAt: 'desc' },
-      },
-      clientNotes: { orderBy: { createdAt: 'desc' } },
-    },
-  })
+  const client = await getClientForAdmin(params.id)
 
   if (!client) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -53,7 +85,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const emailChanged      = newEmail !== undefined && newEmail !== existing?.email
   const verificationToken = emailChanged && newEmail ? crypto.randomBytes(32).toString('hex') : undefined
 
-  const client = await prisma.client.update({
+  await prisma.client.update({
     where: { id: params.id },
     data: {
       ...(name !== undefined ? { name: name.trim() } : {}),
@@ -81,6 +113,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       console.error('[admin/clients] Failed to send verification email:', err)
     }
   }
+
+  const client = await getClientForAdmin(params.id)
+  if (!client) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { password: _, ...safe } = client
   return NextResponse.json({ ...safe, hasPassword: !!client.password })
