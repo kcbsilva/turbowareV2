@@ -4,14 +4,13 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutDashboard, User, Ticket, CreditCard, LogOut, Sun, Moon, Zap } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
-import { cn } from '@/lib/utils'
 
 const NAV = [
-  { href: '/client/dashboard',       label: 'Dashboard',   icon: LayoutDashboard },
-  { href: '/client/activate',        label: 'Activation',  icon: Zap            },
-  { href: '/client/tickets',         label: 'Tickets',     icon: Ticket         },
-  { href: '/client/payment-methods', label: 'Billing',     icon: CreditCard     },
-  { href: '/client/profile',         label: 'Profile',     icon: User           },
+  { href: '/client/dashboard',       label: 'Dashboard',  icon: LayoutDashboard },
+  { href: '/client/activate',        label: 'Activation', icon: Zap             },
+  { href: '/client/tickets',         label: 'Tickets',    icon: Ticket          },
+  { href: '/client/payment-methods', label: 'Billing',    icon: CreditCard      },
+  { href: '/client/profile',         label: 'Profile',    icon: User            },
 ]
 
 export default function ClientHeader() {
@@ -44,17 +43,12 @@ export default function ClientHeader() {
         <nav className="flex items-center gap-0.5 overflow-x-auto flex-1 justify-center">
           {NAV.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || (href !== '/client/dashboard' && pathname.startsWith(href))
+            const base   = 'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition whitespace-nowrap'
+            const style  = active
+              ? 'text-[#fca311] bg-[rgba(252,163,17,0.12)]'
+              : 'text-white/50 hover:text-white/80 hover:bg-white/5'
             return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition whitespace-nowrap',
-                  active
-                    ? 'text-[#fca311] bg-[rgba(252,163,17,0.12)]'
-                    : 'text-white/50 hover:text-white/80 hover:bg-white/5'
-                )}
-              >
+              <Link key={href} href={href} className={`${base} ${style}`}>
                 <Icon className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{label}</span>
               </Link>
