@@ -1,5 +1,11 @@
 # TurbowareV2 Security & Code Quality Audit
 
+**Last Updated:** 2026-04-08  
+**Scope:** CRITICAL and HIGH security fixes + actionable MEDIUM fixes  
+**Status:** 11 of 16 issues resolved in this sprint. See [Implementation Status](#implementation-status) below.
+
+---
+
 ## 🔴 CRITICAL Issues
 
 ### 1. Hardcoded Default JWT Secret
@@ -176,21 +182,41 @@ maxSeats: parseInt(maxSeats)  // NaN if invalid
 
 ---
 
-## Next Steps
+## Implementation Status
 
-1. **Immediate** (Today):
-   - Remove JWT secret fallback
-   - Add try-catch to all JSON parsing
-   - Add seat type validation
+### ✅ Completed (2026-04-08)
 
-2. **This Sprint** (This week):
-   - Fix race condition in activation
-   - Implement rate limiting
-   - Add CLIENT_API_KEY requirement
-   - Add maxSeats validation
+**CRITICAL (3/3):**
+- [x] #1: Remove JWT secret fallback — throws if JWT_SECRET unset
+- [x] #2: Guard all req.json() calls in 9 routes with parseBody() utility
+- [x] #3: Strict type validation on seats (number + integer check)
 
-3. **Soon** (Next sprint):
-   - Implement email verification
-   - Add status transition validation
-   - Refactor middleware to allowlist
-   - Full input validation pass
+**HIGH (3/3):**
+- [x] #4: Wrap activation in DB transaction to fix TOCTOU race
+- [x] #5: In-memory rate limiter on both login endpoints (5 req / 15 min per IP)
+- [x] #6: Minimize license status endpoint — return `{ active: bool }` only
+
+**MEDIUM (5/8):**
+- [x] #8: Validate maxSeats >= 1 in admin/licenses PATCH
+- [x] #9: Guard parseInt() against NaN in both license routes
+- [x] #10: Reject OVERDUE/WAIVED/CANCELLED invoices from send-payment
+- [x] #7: Require CLIENT_API_KEY in production for validate/activate endpoints
+- [x] #13: Strict type validation + NaN guards for seat counts
+
+**Testing Added:**
+- New test suite: `vitest` with 3 test files (auth, api, rate-limit)
+- 9 tests total, all passing
+
+### ⏸️ Deferred to Next Sprint
+
+**HIGH (1):**
+- [ ] #7: Email verification flow — requires email service + token system (feature-scale, separate work)
+
+**MEDIUM (3):**
+- [ ] #11: Subscription status transitions state machine — requires enum + validation per status
+- [ ] #12: Middleware allowlist refactor — architectural change to route protection
+
+**LOW (3):**
+- [ ] #14: CSRF token implementation — low priority, cookies mitigate most attacks
+- [ ] #15: Implicit client auth verification in handlers — defense in depth
+- [ ] #16: XSS escaping in notes fields — verify frontend escaping (already using React)
