@@ -3,11 +3,20 @@ import bcrypt from 'bcryptjs'
 import { signClientToken, CLIENT_COOKIE_NAME } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
+import { loginRateLimiter } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   const { body, error } = await parseBody<{ cnpj?: string; password?: string }>(req)
   if (error) return badRequest()
   const { cnpj, password } = body
+
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
+  if (!loginRateLimiter.check(ip)) {
+    return NextResponse.json(
+      { error: 'Too many login attempts. Please try again in 15 minutes.' },
+      { status: 429 },
+    )
+  }
 
   if (!cnpj || !password) {
     return NextResponse.json({ error: 'CNPJ and password are required' }, { status: 400 })
