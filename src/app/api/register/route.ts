@@ -127,6 +127,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  let provisioningFailed = false
+
   // ── TurboISP provisioning (only when a subdomain was chosen) ───────────────
   if (slug) {
     let tenantId: string | null = null
@@ -162,7 +164,7 @@ export async function POST(req: NextRequest) {
         await turboISPQuery(`DELETE FROM tenants WHERE id = $1`, [tenantId]).catch(() => null)
       }
       console.error('[register] TurboISP provisioning failed:', err)
-      // Don't block registration — client record stays as a lead, admin can reprovision manually
+      provisioningFailed = true
     }
 
     // Step C — create 14-day trial subscription in Turboware
@@ -184,5 +186,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, id: client.id }, { status: 201 })
+  return NextResponse.json({ ok: true, id: client.id, provisioningWarning: provisioningFailed || undefined }, { status: 201 })
 }

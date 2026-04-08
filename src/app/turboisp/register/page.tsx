@@ -1025,7 +1025,7 @@ export default function RegisterPage() {
                   <ArrowRight className="w-3.5 h-3.5" />
                 </a>
                 <a
-                  href={`https://${portalSubdomain || "{chosen}.turboisp.app"}/admin/auth/login`}
+                  href={`https://${portalSubdomain ? `${portalSubdomain}.turboisp.app` : "{chosen}.turboisp.app"}/admin/auth/login`}
                   className="inline-flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg border transition hover:bg-black/5"
                   style={{
                     borderColor: "rgba(0,0,0,0.12)",
