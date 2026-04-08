@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { COOKIE_NAME, CLIENT_COOKIE_NAME, getJwtSecret } from '@/lib/auth'
+import { isSameSiteRequest } from '@/lib/csrf'
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -18,6 +19,14 @@ export async function middleware(req: NextRequest) {
     try {
       const { payload } = await jwtVerify(token, getJwtSecret())
       if (payload.role !== 'admin') throw new Error()
+
+      // Block cross-origin mutations on admin API
+      if (isAdminApi && ['POST', 'PATCH', 'PUT', 'DELETE'].includes(req.method)) {
+        if (!isSameSiteRequest(req)) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        }
+      }
+
       return NextResponse.next()
     } catch {
       if (isAdminApi) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
