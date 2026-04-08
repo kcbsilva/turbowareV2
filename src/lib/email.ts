@@ -1,19 +1,30 @@
 import nodemailer from 'nodemailer'
 
+function getRequiredEnv(name: string): string {
+  const value = process.env[name]
+  if (!value) throw new Error(`Missing required email environment variable: ${name}`)
+  return value
+}
+
 function createTransporter() {
+  const host = getRequiredEnv('SMTP_HOST')
+  const port = Number(process.env.SMTP_PORT ?? 587)
+  const user = getRequiredEnv('SMTP_USER')
+  const pass = getRequiredEnv('SMTP_PASS')
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT ?? 587),
-    secure: Number(process.env.SMTP_PORT ?? 587) === 465,
+    host,
+    port,
+    secure: port === 465,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user,
+      pass,
     },
   })
 }
 
 export async function sendVerificationEmail(to: string, token: string): Promise<void> {
-  const baseUrl = process.env.APP_URL ?? 'http://localhost:3000'
+  const baseUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   const link    = `${baseUrl}/api/verify-email?token=${token}`
   const from    = process.env.SMTP_FROM ?? 'TurbowareV2 <noreply@turboware.com>'
 

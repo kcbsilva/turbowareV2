@@ -13,45 +13,54 @@ function generateTemporaryPassword() {
 
 // POST /api/admin/clients/[id]/reset-password
 export async function POST(_req: NextRequest, { params }: Params) {
-  const client = await prisma.client.findUnique({
-    where: { id: params.id },
-    select: { id: true, email: true },
-  })
-
-  if (!client) {
-    return NextResponse.json({ error: 'Client not found.' }, { status: 404 })
-  }
-
-  if (!client.email) {
-    return NextResponse.json({ error: 'Client does not have an email address.' }, { status: 400 })
-  }
-
-  const temporaryPassword = generateTemporaryPassword()
-  const passwordHash = await bcrypt.hash(temporaryPassword, 12)
-
   try {
-    await prisma.client.update({
-      where: { id: client.id },
-      data: {
-        password: passwordHash,
-        mustChangePassword: true,
-      },
+    const client = await prisma.client.findUnique({
+      where: { id: params.id },
+      select: { id: true, email: true },
     })
-  } catch (error) {
-    if (!isMissingMustChangePasswordColumn(error)) throw error
 
-    await prisma.client.update({
-      where: { id: client.id },
-      data: { password: passwordHash },
-    })
-  }
+    if (!client) {
+      return NextResponse.json({ error: 'Client not found.' }, { status: 404 })
+    }
 
-  try {
+    if (!client.email) {
+      return NextResponse.json({ error: 'Client does not have an email address.' }, { status: 400 })
+    }
+
+    const temporaryPassword = generateTemporaryPassword()
+    const passwordHash = await bcrypt.hash(temporaryPassword, 12)
+
+    try {
+      await prisma.client.update({
+        where: { id: client.id },
+        data: {
+          password: passwordHash,
+          mustChangePassword: true,
+        },
+      })
+    } catch (error) {
+      if (!isMissingMustChangePasswordColumn(error)) throw error
+
+      await prisma.client.update({
+        where: { id: client.id },
+        data: { password: passwordHash },
+      })
+    }
+
     await sendTemporaryPasswordEmail(client.email, temporaryPassword)
-  } catch (err) {
-    console.error('[admin/clients/reset-password] Failed to send temporary password email:', err)
-    return NextResponse.json({ error: 'Failed to send temporary password email.' }, { status: 502 })
-  }
 
-  return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[admin/clients/reset-password] Failed:', err)
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    const isEmailConfigError = message.includes('Missing required email environment variable')
+    return NextResponse.json(
+      {
+        error: isEmailConfigError
+          ? 'Email service is not configured on this deployment.'
+          : 'Failed to send temporary password email.',
+      },
+      { status: isEmailConfigError ? 503 : 502 },
+    )
+  }
 }
