@@ -29,11 +29,17 @@ export async function middleware(req: NextRequest) {
 
   // ── Client portal routes ────────────────────────────────────────────────────
   const isClientDashboard = pathname.startsWith('/client/dashboard')
-  const isClientApi       = pathname.startsWith('/api/client/') &&
-                            !pathname.startsWith('/api/client/auth') &&
-                            !pathname.startsWith('/api/client/validate') &&
-                            !pathname.startsWith('/api/client/activate') &&
-                            !pathname.startsWith('/api/client/status')
+  // Public client API routes — no JWT required.
+  // Add new public endpoints here; everything else under /api/client/ is protected.
+  const PUBLIC_CLIENT_PATHS = [
+    '/api/client/auth',
+    '/api/client/validate',
+    '/api/client/activate',
+    '/api/client/status',
+  ]
+
+  const isClientApi = pathname.startsWith('/api/client/') &&
+    !PUBLIC_CLIENT_PATHS.some((p) => pathname.startsWith(p))
 
   if (isClientDashboard || isClientApi) {
     const token = req.cookies.get(CLIENT_COOKIE_NAME)?.value
