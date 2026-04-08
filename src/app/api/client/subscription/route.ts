@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
+import { getClientId } from '@/lib/client-auth'
 import {
   getMonthlyPrice,
   getProratedAmount,
@@ -10,7 +11,7 @@ import {
 
 // ── GET /api/client/subscription ─────────────────────────────────────────────
 export async function GET(req: NextRequest) {
-  const clientId = req.headers.get('x-client-id')
+  const clientId = getClientId(req)
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const sub = await prisma.subscription.findUnique({
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
 // ── POST /api/client/subscription ────────────────────────────────────────────
 // Body: { licenseKey, seats, billingDate }
 export async function POST(req: NextRequest) {
-  const clientId = req.headers.get('x-client-id')
+  const clientId = getClientId(req)
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // No duplicate subscriptions

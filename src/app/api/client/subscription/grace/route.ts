@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { canActivateGrace, GRACE_FEE } from '@/lib/pricing'
+import { getClientId } from '@/lib/client-auth'
 
 // POST /api/client/subscription/grace
 export async function POST(req: NextRequest) {
-  const clientId = req.headers.get('x-client-id')
+  const clientId = getClientId(req)
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const sub = await prisma.subscription.findUnique({
