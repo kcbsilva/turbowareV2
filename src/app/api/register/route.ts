@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { turboISPQuery } from '@/lib/turboisp-db'
+import { parseBody, badRequest } from '@/lib/api'
 
 function normalize(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/^-+|-+$/g, '')
@@ -10,7 +11,8 @@ function normalize(value: string): string {
 // POST /api/register — public signup that creates a pending client record,
 // provisions a TurboISP tenant + admin user, and starts a 14-day trial.
 export async function POST(req: NextRequest) {
-  const body = await req.json()
+  const { body: parsed, error } = await parseBody(req)
+  if (error) return badRequest()
   const {
     firstName, lastName, cpf, phone,
     cnpj, tradeName, legalName, openingDate, fullAddress,
@@ -18,7 +20,7 @@ export async function POST(req: NextRequest) {
     ddns, ddnsUsername, ddnsPassword,
     password, product, message, internalNotes,
     recaptchaToken, acceptedTerms,
-  } = body
+  } = parsed as Record<string, string>
 
   const name  = `${firstName || ''} ${lastName || ''}`.trim()
   const email = financialEmail || technicalEmail

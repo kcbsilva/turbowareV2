@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { isLicenseUsable } from '@/lib/license'
+import { parseBody, badRequest } from '@/lib/api'
 
 /**
  * POST /api/client/validate
@@ -22,7 +23,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const { key, hardwareId } = await req.json()
+  const { body, error } = await parseBody<{ key?: string; hardwareId?: string }>(req)
+  if (error) return badRequest()
+  const { key, hardwareId } = body
 
   if (!key) {
     return NextResponse.json({ valid: false, message: 'key is required' }, { status: 400 })
