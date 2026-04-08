@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { isLicenseUsable } from '@/lib/license'
+import { parseBody, badRequest } from '@/lib/api'
 
 /**
  * POST /api/client/activate
@@ -21,7 +22,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const { key, hardwareId, label } = await req.json()
+  const { body, error } = await parseBody<{ key?: string; hardwareId?: string; label?: string }>(req)
+  if (error) return badRequest()
+  const { key, hardwareId, label } = body
 
   if (!key || !hardwareId) {
     return NextResponse.json(

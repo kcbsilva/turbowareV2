@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateLicenseKey, resolveStatus } from '@/lib/license'
 import { LicenseStatus } from '@prisma/client'
+import { parseBody, badRequest } from '@/lib/api'
 
 // GET /api/admin/licenses — list all licenses
 export async function GET(req: NextRequest) {
@@ -38,8 +39,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/licenses — create a new license
 export async function POST(req: NextRequest) {
-  const body = await req.json()
-  const { product, notes, maxSeats, expiresAt, clientId } = body
+  const { body: parsed, error } = await parseBody<{ product?: string; notes?: string; maxSeats?: unknown; expiresAt?: string; clientId?: string }>(req)
+  if (error) return badRequest()
+  const { product, notes, maxSeats, expiresAt, clientId } = parsed
 
   if (!product?.trim()) {
     return NextResponse.json({ error: 'product is required' }, { status: 400 })
@@ -50,9 +52,9 @@ export async function POST(req: NextRequest) {
   const license = await prisma.license.create({
     data: {
       key,
-      product: product.trim(),
+      product: (product as string).trim(),
       notes: notes?.trim() || null,
-      maxSeats: maxSeats ? parseInt(maxSeats) : 1,
+      maxSeats: maxSeats ? parseInt(String(maxSeats), 10) : 1,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       clientId: clientId || null,
     },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { parseBody, badRequest } from '@/lib/api'
 
 // GET /api/admin/clients — list all clients with license count
 export async function GET(req: NextRequest) {
@@ -25,8 +26,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/clients — create a client
 export async function POST(req: NextRequest) {
-  const body = await req.json()
-  const { name, email, phone, company, internalNotes } = body
+  const { body: parsed, error } = await parseBody<{ name?: string; email?: string; phone?: string; company?: string; internalNotes?: string }>(req)
+  if (error) return badRequest()
+  const { name, email, phone, company, internalNotes } = parsed
 
   if (!name?.trim()) {
     return NextResponse.json({ error: 'name is required' }, { status: 400 })

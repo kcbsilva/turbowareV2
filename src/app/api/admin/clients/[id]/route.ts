@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
+import { parseBody, badRequest } from '@/lib/api'
 
 type Params = { params: { id: string } }
 
@@ -26,8 +27,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 // PATCH /api/admin/clients/[id] — update fields
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const body = await req.json()
-  const { name, email, phone, company, cnpj, internalNotes, newPassword } = body
+  const { body: parsed, error } = await parseBody<{ name?: string; email?: string; phone?: string; company?: string; cnpj?: string; internalNotes?: string; newPassword?: string }>(req)
+  if (error) return badRequest()
+  const { name, email, phone, company, cnpj, internalNotes, newPassword } = parsed
 
   if (name !== undefined && !name?.trim()) {
     return NextResponse.json({ error: 'name cannot be empty' }, { status: 400 })

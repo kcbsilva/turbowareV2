@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { parseBody, badRequest } from '@/lib/api'
 import {
   getMonthlyPrice,
   getProratedAmount,
@@ -57,18 +58,20 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.subscription.findUnique({ where: { clientId } })
   if (existing) return NextResponse.json({ error: 'Subscription already exists.' }, { status: 409 })
 
-  const { licenseKey, seats, billingDate } = await req.json()
+  const { body, error } = await parseBody<{ licenseKey?: string; seats?: unknown; billingDate?: number }>(req)
+  if (error) return badRequest()
+  const { licenseKey, seats, billingDate } = body
 
   if (!licenseKey?.trim())
     return NextResponse.json({ error: 'License key is required.' }, { status: 400 })
-  if (!seats || seats < 1)
+  if (!seats || (seats as number) < 1)
     return NextResponse.json({ error: 'Seat count is required.' }, { status: 400 })
   if (!billingDate || billingDate < 1 || billingDate > 28)
     return NextResponse.json({ error: 'Billing date must be between 1 and 28.' }, { status: 400 })
 
   // Verify license key belongs to this client
   const license = await prisma.license.findFirst({
-    where: { key: licenseKey.trim().toUpperCase(), clientId },
+    where: { key: (licenseKey as string).trim().toUpperCase(), clientId },
   })
   if (!license)
     return NextResponse.json(
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'This license key is already activated.' }, { status: 409 })
 
   // Validate seats → get price
-  const monthly = getMonthlyPrice(seats)
+  const monthly = getMonthlyPrice(seats as number)
   if (monthly === null)
     return NextResponse.json(
       { error: 'Seat count exceeds 12,000. Please contact us for enterprise pricing.' },
@@ -102,9 +105,9 @@ export async function POST(req: NextRequest) {
         clientId,
         licenseId:  license.id,
         product:    'TurboISP',
-        seats,
+        seats: seats as number,
         status:     'TRIAL',
-        billingDate,
+        billingDate: billingDate as number,
         trialEndsAt,
         invoices: {
           create: [

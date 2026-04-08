@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { signClientToken, CLIENT_COOKIE_NAME } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { parseBody, badRequest } from '@/lib/api'
 
 export async function POST(req: NextRequest) {
-  const { cnpj, password } = await req.json()
+  const { body, error } = await parseBody<{ cnpj?: string; password?: string }>(req)
+  if (error) return badRequest()
+  const { cnpj, password } = body
 
   if (!cnpj || !password) {
     return NextResponse.json({ error: 'CNPJ and password are required' }, { status: 400 })
