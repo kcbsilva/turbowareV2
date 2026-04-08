@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { turboISPQuery } from '@/lib/turboisp-db'
 import { parseBody, badRequest } from '@/lib/api'
+import { sendVerificationEmail } from '@/lib/email'
 
 function normalize(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/^-+|-+$/g, '')
@@ -89,6 +91,27 @@ export async function POST(req: NextRequest) {
       subdomain: slug || undefined,
     },
   })
+
+  // Generate email verification token
+  const verificationToken   = crypto.randomBytes(32).toString('hex')
+  const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
+
+  await prisma.client.update({
+    where: { id: client.id },
+    data: {
+      emailVerificationToken:          verificationToken,
+      emailVerificationTokenExpiresAt: verificationExpires,
+    },
+  })
+
+  // Send verification email — non-fatal if SMTP is down
+  if (client.email) {
+    try {
+      await sendVerificationEmail(client.email, verificationToken)
+    } catch (err) {
+      console.error('[register] Failed to send verification email:', err)
+    }
+  }
 
   // ── TurboISP provisioning (only when a subdomain was chosen) ───────────────
   if (slug) {
