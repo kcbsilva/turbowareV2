@@ -4,6 +4,32 @@ import { signClientToken, CLIENT_COOKIE_NAME } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 import { loginRateLimiter } from '@/lib/rate-limit'
+import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
+
+async function findClientForLogin(normalized: string, raw: string) {
+  const where = {
+    OR: [
+      { cnpj: normalized },
+      { cnpj: raw.trim() },
+    ],
+  }
+
+  try {
+    return await prisma.client.findFirst({
+      where,
+      select: { id: true, password: true, emailVerified: true, mustChangePassword: true },
+    })
+  } catch (error) {
+    if (!isMissingMustChangePasswordColumn(error)) throw error
+
+    const client = await prisma.client.findFirst({
+      where,
+      select: { id: true, password: true, emailVerified: true },
+    })
+
+    return client ? { ...client, mustChangePassword: false } : null
+  }
+}
 
 export async function POST(req: NextRequest) {
   const { body, error } = await parseBody<{ cnpj?: string; password?: string }>(req)
@@ -25,15 +51,7 @@ export async function POST(req: NextRequest) {
   // Normalize CNPJ — strip formatting so XX.XXX.XXX/XXXX-XX and 00000000000000 both work
   const normalized = cnpj.replace(/\D/g, '')
 
-  const client = await prisma.client.findFirst({
-    where: {
-      OR: [
-        { cnpj: normalized },
-        { cnpj: cnpj.trim() },
-      ],
-    },
-    select: { id: true, password: true, emailVerified: true, mustChangePassword: true },
-  })
+  const client = await findClientForLogin(normalized, cnpj)
 
   if (!client || !client.password) {
     return NextResponse.json({ error: 'Invalid CNPJ or password' }, { status: 401 })

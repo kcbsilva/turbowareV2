@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 import { getClientId } from '@/lib/client-auth'
+import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
 
 export async function PATCH(req: NextRequest) {
   const clientId = getClientId(req)
@@ -20,13 +21,22 @@ export async function PATCH(req: NextRequest) {
 
   const passwordHash = await bcrypt.hash(newPassword, 12)
 
-  await prisma.client.update({
-    where: { id: clientId },
-    data: {
-      password: passwordHash,
-      mustChangePassword: false,
-    },
-  })
+  try {
+    await prisma.client.update({
+      where: { id: clientId },
+      data: {
+        password: passwordHash,
+        mustChangePassword: false,
+      },
+    })
+  } catch (error) {
+    if (!isMissingMustChangePasswordColumn(error)) throw error
+
+    await prisma.client.update({
+      where: { id: clientId },
+      data: { password: passwordHash },
+    })
+  }
 
   return NextResponse.json({ ok: true })
 }
