@@ -34,12 +34,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
   }
 
+  let parsedMaxSeats: number | undefined
+  if (maxSeats !== undefined) {
+    const parsed = parseInt(String(maxSeats), 10)
+    if (isNaN(parsed) || parsed < 1)
+      return NextResponse.json({ error: 'maxSeats must be a positive integer.' }, { status: 400 })
+    parsedMaxSeats = parsed
+  }
+
   const license = await prisma.license.update({
     where: { id: params.id },
     data: {
       ...(status !== undefined ? { status: status as LicenseStatus } : {}),
       ...(notes !== undefined ? { notes: notes?.trim() || null } : {}),
-      ...(maxSeats !== undefined ? { maxSeats: parseInt(String(maxSeats), 10) } : {}),
+      ...(parsedMaxSeats !== undefined ? { maxSeats: parsedMaxSeats } : {}),
       ...(expiresAt !== undefined
         ? { expiresAt: expiresAt ? new Date(expiresAt) : null }
         : {}),

@@ -64,8 +64,8 @@ export async function POST(req: NextRequest) {
 
   if (!licenseKey?.trim())
     return NextResponse.json({ error: 'License key is required.' }, { status: 400 })
-  if (!seats || (seats as number) < 1)
-    return NextResponse.json({ error: 'Seat count is required.' }, { status: 400 })
+  if (typeof seats !== 'number' || !Number.isInteger(seats) || seats < 1)
+    return NextResponse.json({ error: 'Seat count must be a positive integer.' }, { status: 400 })
   if (!billingDate || billingDate < 1 || billingDate > 28)
     return NextResponse.json({ error: 'Billing date must be between 1 and 28.' }, { status: 400 })
 
