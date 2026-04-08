@@ -33,52 +33,44 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const license = await prisma.license.findUnique({
-    where: { key },
-    include: { activations: true },
-  })
-
-  if (!license) {
-    return NextResponse.json({ success: false, message: 'License key not found.' })
-  }
-
-  // Check if already activated on this hardware
-  const existing = license.activations.find((a) => a.hardwareId === hardwareId)
-  if (existing) {
-    await prisma.activation.update({
-      where: { id: existing.id },
-      data: { lastSeenAt: new Date(), ...(label ? { label } : {}) },
+  const result = await prisma.$transaction(async (tx) => {
+    // Re-fetch inside transaction to get consistent activation count
+    const freshLicense = await tx.license.findUnique({
+      where: { key },
+      include: { activations: true },
     })
-    return NextResponse.json({
-      success: true,
-      message: 'Already activated on this device.',
-      alreadyActivated: true,
+
+    if (!freshLicense) return { type: 'not_found' as const }
+
+    const existing = freshLicense.activations.find((a) => a.hardwareId === hardwareId)
+    if (existing) {
+      await tx.activation.update({
+        where: { id: existing.id },
+        data: { lastSeenAt: new Date(), ...(label ? { label } : {}) },
+      })
+      return { type: 'already_activated' as const }
+    }
+
+    const { ok, reason } = isLicenseUsable(
+      freshLicense.status,
+      freshLicense.expiresAt,
+      freshLicense.activations.length,
+      freshLicense.maxSeats,
+    )
+    if (!ok) return { type: 'not_usable' as const, reason }
+
+    await tx.activation.create({
+      data: { licenseId: freshLicense.id, hardwareId, label: label || null },
     })
-  }
-
-  // Check if the license can accept a new activation
-  const { ok, reason } = isLicenseUsable(
-    license.status,
-    license.expiresAt,
-    license.activations.length,
-    license.maxSeats
-  )
-
-  if (!ok) {
-    return NextResponse.json({ success: false, message: reason })
-  }
-
-  await prisma.activation.create({
-    data: {
-      licenseId: license.id,
-      hardwareId,
-      label: label || null,
-    },
+    return { type: 'activated' as const }
   })
 
-  return NextResponse.json({
-    success: true,
-    message: 'License activated successfully.',
-    alreadyActivated: false,
-  })
+  if (result.type === 'not_found')
+    return NextResponse.json({ success: false, message: 'License key not found.' }, { status: 404 })
+  if (result.type === 'not_usable')
+    return NextResponse.json({ success: false, message: result.reason })
+  if (result.type === 'already_activated')
+    return NextResponse.json({ success: true, message: 'Already activated on this device.', alreadyActivated: true })
+
+  return NextResponse.json({ success: true, message: 'License activated successfully.', alreadyActivated: false })
 }
