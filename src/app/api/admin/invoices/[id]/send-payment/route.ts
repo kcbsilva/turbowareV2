@@ -23,8 +23,12 @@ export async function POST(_req: NextRequest, { params }: Params): Promise<NextR
     return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
   }
 
-  if (invoice.status === 'PAID') {
-    return NextResponse.json({ error: 'Invoice is already paid' }, { status: 400 })
+  const nonPayableStatuses = ['PAID', 'WAIVED', 'CANCELLED', 'OVERDUE'] as const
+  if (nonPayableStatuses.includes(invoice.status as typeof nonPayableStatuses[number])) {
+    return NextResponse.json(
+      { error: `Invoice cannot be paid — current status: ${invoice.status}` },
+      { status: 400 },
+    )
   }
 
   try {
