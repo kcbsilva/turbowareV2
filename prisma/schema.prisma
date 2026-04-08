@@ -29,6 +29,8 @@ model Client {
   subdomain       String?       @unique
   dnsRecordId     String?
   asaasCustomerId String?       // Asaas customer ID for payment sync
+  tickets         SupportTicket[]
+  products        ClientProduct[]
 
   @@map("clients")
 }
@@ -165,4 +167,110 @@ model AdminUser {
   updatedAt    DateTime @updatedAt
 
   @@map("admin_users")
+}
+
+model SupportTicket {
+  id        String         @id @default(cuid())
+  clientId  String
+  client    Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title     String
+  status    TicketStatus   @default(OPEN)
+  priority  TicketPriority @default(MEDIUM)
+  category  String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  messages  TicketMessage[]
+
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id         String      @id @default(cuid())
+  ticketId   String
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  body       String
+  authorType AuthorType  @default(CLIENT)
+  authorName String?
+  createdAt  DateTime    @default(now())
+
+  @@map("ticket_messages")
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum AuthorType {
+  CLIENT
+  ADMIN
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  name        String        // "TurboGIS", "TurboChat", "TurboISP"
+  slug        String        @unique // "turbogis", "turbochat", "turboisp"
+  description String?
+  logoEmoji   String?       @default("📦")
+  active      Boolean       @default(true)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  tiers       ProductTier[]
+  activations ClientProduct[]
+
+  @@map("products")
+}
+
+model ProductTier {
+  id           String    @id @default(cuid())
+  productId    String
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name         String    // "Starter", "Pro", "Enterprise"
+  description  String?
+  maxSeats     Int?
+  priceBR      Float?
+  priceCA      Float?
+  priceUS      Float?
+  priceGB      Float?
+  features     String?   // JSON array of feature strings
+  sortOrder    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  activations  ClientProduct[]
+
+  @@map("product_tiers")
+}
+
+model ClientProduct {
+  id          String              @id @default(cuid())
+  clientId    String
+  client      Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product             @relation(fields: [productId], references: [id])
+  tierId      String?
+  tier        ProductTier?        @relation(fields: [tierId], references: [id])
+  status      ClientProductStatus @default(PENDING)
+  notes       String?
+  activatedAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@unique([clientId, productId])
+  @@map("client_products")
+}
+
+enum ClientProductStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CANCELLED
 }

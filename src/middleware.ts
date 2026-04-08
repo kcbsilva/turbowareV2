@@ -37,7 +37,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // ── Client portal routes ────────────────────────────────────────────────────
-  const isClientDashboard = pathname.startsWith('/client/dashboard')
+  const isClientDashboard = pathname.startsWith('/client/') && pathname !== '/client/login'
   // Public client API routes — no JWT required.
   // Add new public endpoints here; everything else under /api/client/ is protected.
   const PUBLIC_CLIENT_PATHS = [
