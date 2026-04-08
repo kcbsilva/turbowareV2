@@ -1,10 +1,11 @@
 import { cookies } from 'next/headers'
 import { WorktopDesktop } from '@/components/WorktopDesktop'
-import { COOKIE_NAME } from '@/lib/auth'
+import { COOKIE_NAME, verifyAdminToken } from '@/lib/auth'
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = cookies()
-  const isAuthenticated = cookieStore.has(COOKIE_NAME)
+  const token = cookieStore.get(COOKIE_NAME)?.value
+  const isAuthenticated = token ? await verifyAdminToken(token) : false
 
   // Don't render the taskbar/desktop shell on the login page
   if (!isAuthenticated) {

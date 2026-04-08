@@ -17,7 +17,15 @@ export async function GET(req: NextRequest) {
           ],
         }
       : undefined,
-    include: { _count: { select: { licenses: true } } },
+    select: {
+      id: true,
+      name: true,
+      company: true,
+      email: true,
+      phone: true,
+      createdAt: true,
+      _count: { select: { licenses: true } },
+    },
     orderBy: { createdAt: 'desc' },
   })
 
@@ -42,6 +50,7 @@ export async function POST(req: NextRequest) {
       company: company?.trim() || null,
       internalNotes: internalNotes?.trim() || null,
     },
+    select: { id: true },
   })
 
   return NextResponse.json(client, { status: 201 })

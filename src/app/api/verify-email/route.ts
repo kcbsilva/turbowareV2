@@ -16,6 +16,10 @@ export async function GET(req: NextRequest) {
 
   const client = await prisma.client.findFirst({
     where: { emailVerificationToken: token },
+    select: {
+      id: true,
+      emailVerificationTokenExpiresAt: true,
+    },
   })
 
   if (!client) {
