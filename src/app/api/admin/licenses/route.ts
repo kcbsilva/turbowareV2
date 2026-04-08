@@ -47,6 +47,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'product is required' }, { status: 400 })
   }
 
+  let parsedMaxSeats = 1
+  if (maxSeats !== undefined) {
+    const parsed = parseInt(String(maxSeats), 10)
+    if (isNaN(parsed) || parsed < 1)
+      return NextResponse.json({ error: 'maxSeats must be a positive integer.' }, { status: 400 })
+    parsedMaxSeats = parsed
+  }
+
   const key = generateLicenseKey()
 
   const license = await prisma.license.create({
@@ -54,7 +62,7 @@ export async function POST(req: NextRequest) {
       key,
       product: (product as string).trim(),
       notes: notes?.trim() || null,
-      maxSeats: maxSeats ? parseInt(String(maxSeats), 10) : 1,
+      maxSeats: parsedMaxSeats,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       clientId: clientId || null,
     },
