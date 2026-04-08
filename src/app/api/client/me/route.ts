@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   const client = await prisma.client.findUnique({
     where: { id: clientId },
-    select: { id: true, name: true, cnpj: true, email: true },
+    select: { id: true, name: true, cnpj: true, email: true, mustChangePassword: true },
   })
 
   if (!client) return NextResponse.json({ error: 'Client not found' }, { status: 404 })

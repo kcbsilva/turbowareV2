@@ -19,10 +19,10 @@ type RegionConfig = {
 };
 
 const REGIONS: RegionConfig[] = [
-  { code: "BR", label: "Brasil",         flag: "🇧🇷" },
-  { code: "CA", label: "Canada",         flag: "🇨🇦" },
-  { code: "US", label: "United States",  flag: "🇺🇸" },
-  { code: "GB", label: "England",        flag: "🇬🇧" },
+  { code: "BR", label: "Brasil", flag: "🇧🇷" },
+  { code: "CA", label: "Canada", flag: "🇨🇦" },
+  { code: "US", label: "United States", flag: "🇺🇸" },
+  { code: "GB", label: "England", flag: "🇬🇧" },
 ];
 
 function fmt(amount: number | "inquire", region: Region): string {
@@ -46,7 +46,8 @@ export default function PricingPage() {
       <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{
-          backgroundImage: "radial-gradient(rgba(0,0,0,0.05) 1px, transparent 1px)",
+          backgroundImage:
+            "radial-gradient(rgba(0,0,0,0.05) 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }}
       />
@@ -62,13 +63,38 @@ export default function PricingPage() {
       >
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/turboisp/site">
-            <Image src={logo} alt="TurboISP" height={56} className="h-12 w-auto" priority />
+            <Image
+              src={logo}
+              alt="TurboISP"
+              height={56}
+              className="h-12 w-auto"
+              priority
+            />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6 text-xs" style={{ color: "rgba(10,20,40,0.5)" }}>
-            <Link href="/turboisp/site#modules" className="hover:text-[#0a1428] transition">Modules</Link>
-            <Link href="/turboisp/site#valores"  className="hover:text-[#0a1428] transition">Why TurboISP</Link>
-            <Link href="/turboisp/pricing" className="font-semibold transition" style={{ color: "#0a1428" }}>Pricing</Link>
+          <nav
+            className="hidden md:flex items-center gap-6 text-xs"
+            style={{ color: "rgba(10,20,40,0.5)" }}
+          >
+            <Link
+              href="/turboisp/site#modules"
+              className="hover:text-[#0a1428] transition"
+            >
+              Modules
+            </Link>
+            <Link
+              href="/turboisp/site#valores"
+              className="hover:text-[#0a1428] transition"
+            >
+              Why TurboISP
+            </Link>
+            <Link
+              href="/turboisp/pricing"
+              className="font-semibold transition"
+              style={{ color: "#0a1428" }}
+            >
+              Pricing
+            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -114,7 +140,8 @@ export default function PricingPage() {
           className="text-sm max-w-xl mx-auto leading-relaxed"
           style={{ color: "rgba(10,20,40,0.5)" }}
         >
-          One monthly fee based on your subscriber count. No hidden charges, no per-feature tiers.
+          One monthly fee based on your subscriber count. No hidden charges, no
+          per-feature tiers.
         </p>
       </section>
 
@@ -127,10 +154,11 @@ export default function PricingPage() {
               onClick={() => setRegion(code)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border transition"
               style={{
-                backgroundColor: region === code ? "#0a1428"              : "#ffffff",
-                color:           region === code ? "#ffffff"              : "rgba(10,20,40,0.6)",
-                borderColor:     region === code ? "#0a1428"              : "rgba(0,0,0,0.1)",
-                boxShadow:       region === code ? "0 2px 8px rgba(10,20,40,0.15)" : undefined,
+                backgroundColor: region === code ? "#0a1428" : "#ffffff",
+                color: region === code ? "#ffffff" : "rgba(10,20,40,0.6)",
+                borderColor: region === code ? "#0a1428" : "rgba(0,0,0,0.1)",
+                boxShadow:
+                  region === code ? "0 2px 8px rgba(10,20,40,0.15)" : undefined,
               }}
             >
               <span className="text-base leading-none">{flag}</span>
@@ -152,13 +180,21 @@ export default function PricingPage() {
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-              style={{ backgroundColor: "rgba(26,171,240,0.12)", border: "1px solid rgba(26,171,240,0.25)" }}
+              style={{
+                backgroundColor: "rgba(26,171,240,0.12)",
+                border: "1px solid rgba(26,171,240,0.25)",
+              }}
             >
               <CheckCircle className="w-4 h-4" style={{ color: "#1AABF0" }} />
             </div>
             <div>
-              <p className="text-xs font-bold" style={{ color: "#0a1428" }}>One-time Installation Fee</p>
-              <p className="text-[11px]" style={{ color: "rgba(10,20,40,0.45)" }}>
+              <p className="text-xs font-bold" style={{ color: "#0a1428" }}>
+                One-time Installation Fee
+              </p>
+              <p
+                className="text-[11px]"
+                style={{ color: "rgba(10,20,40,0.45)" }}
+              >
                 Covers full platform setup, DNS configuration, and onboarding
               </p>
             </div>
@@ -176,12 +212,19 @@ export default function PricingPage() {
       <section className="relative z-10 max-w-4xl mx-auto px-6 pb-16">
         <div
           className="rounded-2xl border overflow-hidden shadow-sm"
-          style={{ backgroundColor: "#ffffff", borderColor: "rgba(0,0,0,0.08)" }}
+          style={{
+            backgroundColor: "#ffffff",
+            borderColor: "rgba(0,0,0,0.08)",
+          }}
         >
           {/* Table header */}
           <div
             className="grid grid-cols-2 px-6 py-3 text-[10px] font-bold uppercase tracking-widest border-b"
-            style={{ backgroundColor: "#0a1428", borderColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)" }}
+            style={{
+              backgroundColor: "#0a1428",
+              borderColor: "rgba(255,255,255,0.06)",
+              color: "rgba(255,255,255,0.5)",
+            }}
           >
             <span>Subscribers</span>
             <span className="text-right">Monthly</span>
@@ -202,10 +245,14 @@ export default function PricingPage() {
                 }}
               >
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: "#0a1428" }}>
-                    {isLast ? "12,000+" : `Up to ${Number(tier.label).toLocaleString("en-US")}`}
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: "#0a1428" }}
+                  >
+                    {isLast
+                      ? "12,000+"
+                      : `${Number(tier.label).toLocaleString("en-US")} active subscribers`}
                   </p>
-                  <p className="text-[10px]" style={{ color: "rgba(10,20,40,0.35)" }}>subscribers</p>
                 </div>
                 <div className="text-right">
                   {isInquire ? (
@@ -223,10 +270,18 @@ export default function PricingPage() {
                     </a>
                   ) : (
                     <div>
-                      <p className="text-lg font-black" style={{ color: "#0a1428" }}>
+                      <p
+                        className="text-lg font-black"
+                        style={{ color: "#0a1428" }}
+                      >
                         {fmt(price, region)}
                       </p>
-                      <p className="text-[10px]" style={{ color: "rgba(10,20,40,0.35)" }}>/ month</p>
+                      <p
+                        className="text-[10px]"
+                        style={{ color: "rgba(10,20,40,0.35)" }}
+                      >
+                        / month
+                      </p>
                     </div>
                   )}
                 </div>
@@ -240,11 +295,18 @@ export default function PricingPage() {
       <section className="relative z-10 max-w-4xl mx-auto px-6 pb-16">
         <div
           className="rounded-2xl p-10 text-center"
-          style={{ background: "linear-gradient(135deg, #0a1428 0%, #14213d 100%)" }}
+          style={{
+            background: "linear-gradient(135deg, #0a1428 0%, #14213d 100%)",
+          }}
         >
-          <h2 className="text-2xl font-bold text-white mb-2">Ready to get started?</h2>
-          <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.45)" }}>
-            Register your ISP and get 7 days free — no credit card required.
+          <h2 className="text-2xl font-bold text-white mb-2">
+            Ready to get started?
+          </h2>
+          <p
+            className="text-sm mb-6"
+            style={{ color: "rgba(255,255,255,0.45)" }}
+          >
+            Register your ISP and get 14 days free — no credit card required.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Link
@@ -254,13 +316,6 @@ export default function PricingPage() {
             >
               Get Started <ArrowRight className="w-4 h-4" />
             </Link>
-            <a
-              href="mailto:sales@turboisp.com"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium border transition hover:bg-white/5"
-              style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}
-            >
-              Contact us for enterprise plans
-            </a>
           </div>
         </div>
       </section>
@@ -268,7 +323,10 @@ export default function PricingPage() {
       {/* ── Footer ──────────────────────────────────────────────────────────── */}
       <footer
         className="relative z-10 py-8 border-t"
-        style={{ backgroundColor: "#0a1428", borderColor: "rgba(255,255,255,0.06)" }}
+        style={{
+          backgroundColor: "#0a1428",
+          borderColor: "rgba(255,255,255,0.06)",
+        }}
       >
         <div
           className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4"
@@ -281,12 +339,34 @@ export default function PricingPage() {
             className="h-10 w-auto brightness-0 invert opacity-60"
           />
           <div className="flex items-center gap-6 text-[11px]">
-            <Link href="/turboisp/site#modules"  className="hover:text-white/60 transition">Modules</Link>
-            <Link href="/turboisp/pricing"        className="hover:text-white/60 transition">Pricing</Link>
-            <Link href="/turboisp/register"       className="hover:text-white/60 transition">Register</Link>
-            <Link href="/admin/login"             className="hover:text-white/60 transition">Admin</Link>
+            <Link
+              href="/turboisp/site#modules"
+              className="hover:text-white/60 transition"
+            >
+              Modules
+            </Link>
+            <Link
+              href="/turboisp/pricing"
+              className="hover:text-white/60 transition"
+            >
+              Pricing
+            </Link>
+            <Link
+              href="/turboisp/register"
+              className="hover:text-white/60 transition"
+            >
+              Register
+            </Link>
+            <Link
+              href="/admin/login"
+              className="hover:text-white/60 transition"
+            >
+              Admin
+            </Link>
           </div>
-          <p className="text-[10px]">© {new Date().getFullYear()} TurboISP. All rights reserved.</p>
+          <p className="text-[10px]">
+            © {new Date().getFullYear()} TurboISP. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

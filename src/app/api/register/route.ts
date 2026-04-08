@@ -6,6 +6,8 @@ import { turboISPQuery } from '@/lib/turboisp-db'
 import { parseBody, badRequest } from '@/lib/api'
 import { sendVerificationEmail } from '@/lib/email'
 
+const VALID_REGIONS = new Set(['BR', 'CA', 'US', 'GB'])
+
 function normalize(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/^-+|-+$/g, '')
 }
@@ -16,6 +18,7 @@ export async function POST(req: NextRequest) {
   const { body: parsed, error } = await parseBody(req)
   if (error) return badRequest()
   const {
+    region, languagePreference,
     firstName, lastName, cpf, phone,
     cnpj, tradeName, legalName, openingDate, fullAddress,
     financialEmail, technicalEmail,
@@ -27,6 +30,7 @@ export async function POST(req: NextRequest) {
   const name  = `${firstName || ''} ${lastName || ''}`.trim()
   const email = financialEmail || technicalEmail
   const slug  = ddns ? normalize(ddns) : null
+  const selectedRegion = VALID_REGIONS.has(region) ? region : 'BR'
 
   // ── Validation ─────────────────────────────────────────────────────────────
   if (!firstName?.trim() || !lastName?.trim())
@@ -66,6 +70,8 @@ export async function POST(req: NextRequest) {
     internalNotes?.trim() || null,
     product   ? `Product interest: ${product.trim()}` : null,
     message   ? `Message: ${message.trim()}` : null,
+    region ? `Region: ${selectedRegion}` : null,
+    languagePreference ? `Language preference: ${languagePreference.trim()}` : null,
     cpf       ? `CPF: ${cpf.trim()}` : null,
     tradeName ? `Nome Fantasia: ${tradeName.trim()}` : null,
     legalName ? `Razão Social: ${legalName.trim()}` : null,
@@ -161,7 +167,7 @@ export async function POST(req: NextRequest) {
           status: 'TRIAL',
           billingDate: 1,
           trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-          region: 'BR',
+          region: selectedRegion,
         },
       })
     } catch (err) {

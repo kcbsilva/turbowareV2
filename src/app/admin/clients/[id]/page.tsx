@@ -17,6 +17,8 @@ interface Client {
   id: string
   name: string
   email: string | null
+  emailVerified: boolean
+  mustChangePassword: boolean
   phone: string | null
   company: string | null
   cnpj: string | null

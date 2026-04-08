@@ -40,6 +40,14 @@ interface Subscription {
   license: { key: string; status: string; maxSeats: number } | null
 }
 
+interface ClientProfile {
+  id: string
+  name: string
+  cnpj: string | null
+  email: string | null
+  mustChangePassword: boolean
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function daysUntil(date: string | null): number {
@@ -541,16 +549,62 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
 
 export default function DashboardPage() {
   const [sub, setSub]     = useState<Subscription | null | undefined>(undefined)
+  const [profile, setProfile] = useState<ClientProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [passwordModal, setPasswordModal] = useState({ open: false, saving: false, error: '', success: '' })
+  const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' })
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res = await fetch('/api/client/subscription')
-    if (res.ok) setSub(await res.json())
+    const [subRes, profileRes] = await Promise.all([
+      fetch('/api/client/subscription'),
+      fetch('/api/client/me'),
+    ])
+
+    if (subRes.ok) setSub(await subRes.json())
+    if (profileRes.ok) {
+      const data = await profileRes.json()
+      setProfile(data)
+      setPasswordModal((prev) => ({ ...prev, open: !!data.mustChangePassword }))
+    }
     setLoading(false)
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  async function changePassword() {
+    if (!passwordForm.newPassword.trim() || passwordForm.newPassword.length < 8) {
+      setPasswordModal((prev) => ({ ...prev, error: 'Password must be at least 8 characters.', success: '' }))
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordModal((prev) => ({ ...prev, error: 'Passwords do not match.', success: '' }))
+      return
+    }
+
+    setPasswordModal((prev) => ({ ...prev, saving: true, error: '', success: '' }))
+
+    const res = await fetch('/api/client/password', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newPassword: passwordForm.newPassword }),
+    })
+
+    if (res.ok) {
+      setPasswordForm({ newPassword: '', confirmPassword: '' })
+      setPasswordModal({ open: false, saving: false, error: '', success: '' })
+      await load()
+    } else {
+      const data = await res.json().catch(() => ({}))
+      setPasswordModal((prev) => ({
+        ...prev,
+        saving: false,
+        error: data.error || 'Failed to update password.',
+        success: '',
+      }))
+    }
+  }
 
   if (loading || sub === undefined) {
     return (
@@ -560,6 +614,69 @@ export default function DashboardPage() {
     )
   }
 
-  if (sub === null) return <ActivationWizard onActivated={load} />
-  return <SubscriptionDashboard sub={sub} onRefresh={load} />
+  return (
+    <>
+      {sub === null ? <ActivationWizard onActivated={load} /> : <SubscriptionDashboard sub={sub} onRefresh={load} />}
+
+      {passwordModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-foreground">Change your password</h2>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              Your administrator reset your portal password. Set a new password before continuing.
+            </p>
+            {profile?.email && (
+              <p className="mt-1 text-[10px] text-muted-foreground/70">
+                Temporary password sent to {profile.email}
+              </p>
+            )}
+
+            <div className="mt-5 space-y-3">
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                  New password
+                </label>
+                <input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-lg text-sm bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Minimum 8 characters"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                  Confirm password
+                </label>
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-lg text-sm bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Repeat your new password"
+                />
+              </div>
+            </div>
+
+            {passwordModal.error && (
+              <p className="mt-3 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+                {passwordModal.error}
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={changePassword}
+              disabled={passwordModal.saving}
+              className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
+              style={{ backgroundColor: '#fca311', color: '#081124' }}
+            >
+              {passwordModal.saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : 'Update password'}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  )
 }

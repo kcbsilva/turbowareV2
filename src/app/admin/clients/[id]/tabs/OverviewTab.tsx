@@ -2,17 +2,19 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Edit, Trash2, Check, KeyRound, Eye, EyeOff } from 'lucide-react'
+import { X, Edit, Trash2, Check, KeyRound, Mail, Loader2 } from 'lucide-react'
 
 interface Client {
   id: string
   name: string
   email: string | null
+  emailVerified: boolean
   phone: string | null
   company: string | null
   cnpj: string | null
   internalNotes: string | null
   hasPassword?: boolean
+  mustChangePassword?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -38,11 +40,10 @@ export function OverviewTab({ client }: Props) {
     internalNotes: client.internalNotes || '',
   })
 
-  // Password reset state
-  const [newPassword, setNewPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordResetting, setPasswordResetting] = useState(false)
   const [passwordMsg, setPasswordMsg] = useState('')
+  const [resendingVerification, setResendingVerification] = useState(false)
+  const [verificationMsg, setVerificationMsg] = useState('')
 
   function handle(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
@@ -81,22 +82,19 @@ export function OverviewTab({ client }: Props) {
     else { const d = await res.json(); setError(d.error || 'Save failed.') }
   }
 
-  async function savePassword() {
-    if (!newPassword.trim()) return
-    setPasswordSaving(true)
+  async function resetPassword() {
+    setPasswordResetting(true)
     setPasswordMsg('')
-    const res = await fetch(`/api/admin/clients/${client.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ newPassword }),
+    const res = await fetch(`/api/admin/clients/${client.id}/reset-password`, {
+      method: 'POST',
     })
-    setPasswordSaving(false)
+    setPasswordResetting(false)
     if (res.ok) {
-      setNewPassword('')
-      setPasswordMsg('Password updated.')
+      setPasswordMsg('Temporary password sent by email.')
       router.refresh()
     } else {
-      setPasswordMsg('Failed to update password.')
+      const data = await res.json().catch(() => ({}))
+      setPasswordMsg(data.error || 'Failed to send temporary password.')
     }
   }
 
@@ -105,6 +103,24 @@ export function OverviewTab({ client }: Props) {
     const res = await fetch(`/api/admin/clients/${client.id}`, { method: 'DELETE' })
     if (res.ok) router.push('/admin/clients')
     else { setDeleting(false); setError('Delete failed.') }
+  }
+
+  async function resendVerificationEmail() {
+    setResendingVerification(true)
+    setVerificationMsg('')
+
+    const res = await fetch(`/api/admin/clients/${client.id}/resend-verification`, {
+      method: 'POST',
+    })
+
+    setResendingVerification(false)
+
+    if (res.ok) {
+      setVerificationMsg('Verification email sent.')
+    } else {
+      const data = await res.json().catch(() => ({}))
+      setVerificationMsg(data.error || 'Failed to send verification email.')
+    }
   }
 
   const inputClass = 'w-full px-3 py-1.5 bg-muted border border-border rounded-md text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring'
@@ -203,38 +219,52 @@ export function OverviewTab({ client }: Props) {
         </div>
         <div className="px-4 py-3 flex items-end gap-3">
           <div className="flex-1">
-            <label className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
-              {client.hasPassword ? 'Reset Password' : 'Set Password'}
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="New password…"
-                className={`${inputClass} pr-7`}
-              />
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2">
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">
+                  Email Verification
+                </p>
+                <p className={`text-xs font-medium ${client.emailVerified ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {client.emailVerified ? 'Verified' : 'Pending verification'}
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground"
-                tabIndex={-1}
+                onClick={resendVerificationEmail}
+                disabled={resendingVerification || client.emailVerified || !client.email}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-[10px] font-medium text-foreground transition hover:bg-background disabled:opacity-40"
               >
-                {showPassword ? <EyeOff size={11} /> : <Eye size={11} />}
+                {resendingVerification ? <Loader2 size={11} className="animate-spin" /> : <Mail size={11} />}
+                {resendingVerification ? 'Sending…' : 'Resend verification'}
               </button>
+            </div>
+
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">
+                Password Reset
+              </p>
+              <p className="text-xs text-foreground">
+                Sends a temporary password to the client email and forces a password change on next login.
+              </p>
             </div>
             {passwordMsg && (
               <p className={`text-[10px] mt-1 ${passwordMsg.includes('Failed') ? 'text-destructive' : 'text-emerald-400'}`}>
                 {passwordMsg}
               </p>
             )}
+            {verificationMsg && (
+              <p className={`text-[10px] mt-1 ${verificationMsg.includes('Failed') || verificationMsg.includes('already') || verificationMsg.includes('does not') ? 'text-destructive' : 'text-emerald-400'}`}>
+                {verificationMsg}
+              </p>
+            )}
           </div>
           <button
-            onClick={savePassword}
-            disabled={passwordSaving || !newPassword.trim()}
+            onClick={resetPassword}
+            disabled={passwordResetting || !client.email}
             className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-md hover:opacity-90 disabled:opacity-40 transition flex items-center gap-1.5"
           >
-            <Check size={11} /> {passwordSaving ? 'Saving…' : 'Save'}
+            {passwordResetting ? <Loader2 size={11} className="animate-spin" /> : <KeyRound size={11} />}
+            {passwordResetting ? 'Sending…' : 'Reset password'}
           </button>
         </div>
       </div>

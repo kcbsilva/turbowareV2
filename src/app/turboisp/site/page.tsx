@@ -347,7 +347,7 @@ export default function TurboISPSitePage() {
             </div>
 
             <Link
-              href="/admin/login"
+              href="/client/login"
               className="text-xs px-3 py-1.5 transition"
               style={{ color: "rgba(10,20,40,0.45)" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "#0a1428")}

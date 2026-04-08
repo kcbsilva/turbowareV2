@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         { cnpj: cnpj.trim() },
       ],
     },
-    select: { id: true, password: true, emailVerified: true },
+    select: { id: true, password: true, emailVerified: true, mustChangePassword: true },
   })
 
   if (!client || !client.password) {
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   const token = await signClientToken(client.id)
 
-  const res = NextResponse.json({ ok: true })
+  const res = NextResponse.json({ ok: true, mustChangePassword: client.mustChangePassword })
   res.cookies.set(CLIENT_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
