@@ -7,27 +7,19 @@ type Params = { params: { key: string } }
 /**
  * GET /api/client/status/[key]
  *
- * Returns public metadata about a license key.
+ * Returns only the effective status of a license key (active/inactive).
  */
 export async function GET(_req: NextRequest, { params }: Params) {
   const license = await prisma.license.findUnique({
     where: { key: params.key },
-    include: { _count: { select: { activations: true } } },
+    select: { status: true, expiresAt: true },
   })
 
   if (!license) {
-    return NextResponse.json({ error: 'License key not found.' }, { status: 404 })
+    // Return same shape for not-found to avoid key existence oracle
+    return NextResponse.json({ active: false })
   }
 
   const effectiveStatus = resolveStatus(license.status, license.expiresAt)
-
-  return NextResponse.json({
-    key: license.key,
-    product: license.product,
-    status: effectiveStatus,
-    expiresAt: license.expiresAt,
-    maxSeats: license.maxSeats,
-    activatedSeats: license._count.activations,
-    createdAt: license.createdAt,
-  })
+  return NextResponse.json({ active: effectiveStatus === 'ACTIVE' })
 }
