@@ -73,9 +73,9 @@ if (!seats || seats < 1)
 **Files**: `/api/register`, `/api/admin/clients/[id]`
 **Risk**: An admin could steal someone's email by editing client record or registering with victim's email.
 **Fix**: Add email verification flow with time-limited tokens
-- [ ] Create email verification token system
-- [ ] Add verification step to registration
-- [ ] Validate email changes in admin client updates
+- [x] Create email verification token system (src/lib/email.ts + Nodemailer)
+- [x] Add verification step to registration (token generated, email sent, login gated)
+- [x] Validate email changes in admin client updates (resets emailVerified, resends email)
 
 ---
 
@@ -169,7 +169,7 @@ user-generated content. No code changes required.
 | Activation race condition | HIGH | Constraint violation | [x] |
 | No rate limiting | HIGH | Brute force attacks | [x] |
 | License key enumeration | HIGH | Information disclosure | [x] |
-| No email verification | HIGH | Email takeover | [ ] |
+| No email verification | HIGH | Email takeover | [x] |
 | Open client API | MEDIUM | Unauthorized access | [x] |
 | Invalid seat values | MEDIUM | Data corruption | [x] |
 | Status transitions | MEDIUM | Invalid states | [x] |
@@ -223,7 +223,16 @@ user-generated content. No code changes required.
 - 3 new test files: transitions, csrf, client-auth
 - 21 new tests; 30 total across 6 test files, all passing
 
-### ⏸️ Deferred
+### ✅ Completed (2026-04-08) — Phase 3
 
 **HIGH (1):**
-- [ ] #7: Email verification flow — requires email service + token system (separate plan, pending email provider decision)
+- [x] #7: Email verification — Nodemailer + token system, login gated on emailVerified, admin email change triggers resend
+
+### Summary: All Issues Resolved ✅
+
+All 16 security issues identified in the audit have been implemented:
+- **CRITICAL (3/3):** JWT secret, JSON parsing, type coercion
+- **HIGH (3/3):** Race condition, rate limiting, license enumeration
+- **HIGH (1/3 deferred):** Email verification — NOW COMPLETE
+- **MEDIUM (8/8):** Client API key, seat validation, status transitions, middleware refactor, parseInt safety, invoice validation
+- **LOW (3/3):** CSRF protection, client-ID validation, XSS in notes (already safe)
