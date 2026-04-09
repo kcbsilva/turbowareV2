@@ -135,12 +135,15 @@ export async function POST(req: NextRequest) {
 
     try {
       // Step A — create tenant row
+      const turboispDomain = process.env.TURBOISP_DOMAIN || 'turboisp.app'
+      const tenantDomain = `${slug}.${turboispDomain}`
+      const tenantDbUrl = process.env.TURBOISP_DATABASE_URL!
       const tenantResult = await turboISPQuery<{ id: string }>(
-        `INSERT INTO tenants (slug, name, status, created_at, updated_at)
-         VALUES ($1, $2, 'active', NOW(), NOW())
+        `INSERT INTO tenants (slug, name, domain, db_url, status, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, 'active', NOW(), NOW())
          ON CONFLICT (slug) DO NOTHING
          RETURNING id`,
-        [slug, tradeName?.trim() || legalName?.trim() || name],
+        [slug, tradeName?.trim() || legalName?.trim() || name, tenantDomain, tenantDbUrl],
       )
 
       if (tenantResult.rows.length === 0) {
