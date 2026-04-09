@@ -154,9 +154,9 @@ export async function POST(req: NextRequest) {
       // Step B — create admin user for the tenant
       const adminHash = await bcrypt.hash(finalPassword, 12)
       await turboISPQuery(
-        `INSERT INTO system_users (tenant_id, username, full_name, password_hash, role, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, 'owner', NOW(), NOW())`,
-        [tenantId, ddnsUsername?.trim() || email.trim(), name, adminHash],
+        `INSERT INTO system_users (tenant_id, username, full_name, email, password, status, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, 'active', NOW(), NOW())`,
+        [tenantId, ddnsUsername?.trim() || email.trim(), name, email.trim(), adminHash],
       )
     } catch (err) {
       // Roll back tenant if admin user creation fails
