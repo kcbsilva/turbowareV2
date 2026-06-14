@@ -30,8 +30,13 @@ async function lookupViaApi(slug: string): Promise<SlugLookupResult | null> {
   }
 }
 
-/** Returns whether slug exists in TurboISP tenants (DB first, Go API fallback). */
+/** Returns whether slug exists in TurboISP tenants (API first when configured, else DB). */
 export async function isTurboISPTenantSlugTaken(slug: string): Promise<SlugLookupResult> {
+  const viaApi = await lookupViaApi(slug)
+  if (viaApi && !('error' in viaApi)) {
+    return viaApi
+  }
+
   if (process.env.TURBOISP_DATABASE_URL?.trim()) {
     try {
       const tenant = await turboISPQuery<{ id: string }>(
@@ -41,13 +46,9 @@ export async function isTurboISPTenantSlugTaken(slug: string): Promise<SlugLooku
       return { taken: tenant.rows.length > 0, source: 'db' }
     } catch (err) {
       console.error('[turboisp-tenant-slug] DB lookup failed:', err)
-      const viaApi = await lookupViaApi(slug)
-      if (viaApi) return viaApi
-      return { error: 'Could not check availability' }
     }
   }
 
-  const viaApi = await lookupViaApi(slug)
   if (viaApi) return viaApi
 
   return { error: 'Could not check availability' }

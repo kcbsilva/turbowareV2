@@ -50,21 +50,6 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  const existingClient = await prisma.client.findFirst({
-    where: { subdomain: slug },
-    select: { id: true },
-  })
-  if (existingClient) {
-    return withSignupCors(
-      req,
-      NextResponse.json({
-        slug,
-        available: false,
-        reason: REASON_TAKEN,
-      }),
-    )
-  }
-
   const tenantLookup = await isTurboISPTenantSlugTaken(slug)
   if ('error' in tenantLookup) {
     return withSignupCors(
@@ -80,6 +65,35 @@ export async function GET(req: NextRequest) {
         available: false,
         reason: REASON_TAKEN,
       }),
+    )
+  }
+
+  try {
+    const existingClient = await prisma.client.findFirst({
+      where: { subdomain: slug },
+      select: { id: true },
+    })
+    if (existingClient) {
+      return withSignupCors(
+        req,
+        NextResponse.json({
+          slug,
+          available: false,
+          reason: REASON_TAKEN,
+        }),
+      )
+    }
+  } catch (err) {
+    console.error('[signup/check-slug] billing client lookup failed:', err)
+    return withSignupCors(
+      req,
+      NextResponse.json(
+        {
+          error:
+            'Billing database unavailable. Ensure DATABASE_URL points at the TurboISP Supabase project and run: npx prisma db push',
+        },
+        { status: 503 },
+      ),
     )
   }
 
