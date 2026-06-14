@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { turboISPQuery } from '@/lib/turboisp-db'
 import { isValidSignupSlug, normalizeSignupSlug } from '@/lib/signup-slug'
 import { RESERVED_SLUGS } from '@/lib/slug'
 import { signupCorsPreflight, withSignupCors } from '@/lib/signup-cors'
+import { isTurboISPTenantSlugTaken } from '@/lib/turboisp-tenant-slug-check'
 
 const REASON_INVALID = 'invalid slug'
 const REASON_TAKEN = 'slug already in use'
@@ -65,26 +65,21 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  try {
-    const tenant = await turboISPQuery<{ id: string }>(
-      `SELECT id FROM tenants WHERE slug = $1 LIMIT 1`,
-      [slug],
-    )
-    if (tenant.rows.length > 0) {
-      return withSignupCors(
-        req,
-        NextResponse.json({
-          slug,
-          available: false,
-          reason: REASON_TAKEN,
-        }),
-      )
-    }
-  } catch (err) {
-    console.error('[signup/check-slug] TurboISP lookup failed:', err)
+  const tenantLookup = await isTurboISPTenantSlugTaken(slug)
+  if ('error' in tenantLookup) {
     return withSignupCors(
       req,
-      NextResponse.json({ error: 'Could not check availability' }, { status: 503 }),
+      NextResponse.json({ error: tenantLookup.error }, { status: 503 }),
+    )
+  }
+  if (tenantLookup.taken) {
+    return withSignupCors(
+      req,
+      NextResponse.json({
+        slug,
+        available: false,
+        reason: REASON_TAKEN,
+      }),
     )
   }
 
