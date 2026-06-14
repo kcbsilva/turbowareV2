@@ -38,6 +38,35 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
   })
 }
 
+export async function sendAdminTemporaryPasswordEmail(to: string, temporaryPassword: string): Promise<void> {
+  const loginUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const from = process.env.SMTP_FROM ?? 'TurbowareV2 <noreply@turboware.com>'
+  const transporter = createTransporter()
+
+  await transporter.sendMail({
+    from,
+    to,
+    subject: 'Temporary Turboware admin password',
+    text: [
+      'A temporary admin password was requested for your Turboware account.',
+      '',
+      `Temporary password: ${temporaryPassword}`,
+      '',
+      `Sign in: ${loginUrl}/admin/login`,
+      '',
+      'You will be asked to set a new password immediately after signing in.',
+      'If you did not request this, contact your platform administrator.',
+    ].join('\n'),
+    html: [
+      '<p>A temporary admin password was requested for your Turboware account.</p>',
+      `<p><strong>Temporary password:</strong> ${temporaryPassword}</p>`,
+      `<p><a href="${loginUrl}/admin/login">Sign in to Turboware Admin</a></p>`,
+      '<p>You will be asked to set a new password immediately after signing in.</p>',
+      '<p>If you did not request this, contact your platform administrator.</p>',
+    ].join(''),
+  })
+}
+
 export async function sendTemporaryPasswordEmail(to: string, temporaryPassword: string): Promise<void> {
   const from = process.env.SMTP_FROM ?? 'TurbowareV2 <noreply@turboware.com>'
   const transporter = createTransporter()

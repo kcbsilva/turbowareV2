@@ -37,3 +37,6 @@ export class RateLimiter {
 
 /** Shared instance for login endpoints: 5 attempts per 15 minutes per IP. */
 export const loginRateLimiter = new RateLimiter({ max: 5, windowMs: 15 * 60 * 1000 })
+
+/** Forgot-password: 3 requests per 15 minutes per IP. */
+export const forgotPasswordRateLimiter = new RateLimiter({ max: 3, windowMs: 15 * 60 * 1000 })

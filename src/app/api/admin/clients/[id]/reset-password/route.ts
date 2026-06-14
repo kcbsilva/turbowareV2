@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { sendTemporaryPasswordEmail } from '@/lib/email'
 import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
+import { generateTemporaryPassword } from '@/lib/temporary-password'
 
 type Params = { params: { id: string } }
-
-function generateTemporaryPassword() {
-  return crypto.randomBytes(9).toString('base64url')
-}
 
 // POST /api/admin/clients/[id]/reset-password
 export async function POST(_req: NextRequest, { params }: Params) {

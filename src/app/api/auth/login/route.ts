@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
       }
 
-      if (user.mfaEnabled) {
+      if (user.mfaEnabled && !user.mustChangePassword) {
         const pending = await signMfaPendingToken(user.id)
         const res = NextResponse.json({
           ok: true,
@@ -59,7 +59,12 @@ export async function POST(req: NextRequest) {
         role: user.role,
       })
 
-      const res = NextResponse.json({ ok: true, name: user.name, email: user.email })
+      const res = NextResponse.json({
+        ok: true,
+        name: user.name,
+        email: user.email,
+        mustChangePassword: user.mustChangePassword,
+      })
       setAdminAuthCookie(res, token)
       return res
     }
