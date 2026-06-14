@@ -5,12 +5,10 @@ import { prisma } from '@/lib/prisma'
 import { turboISPQuery } from '@/lib/turboisp-db'
 import { parseBody, badRequest } from '@/lib/api'
 import { sendVerificationEmail } from '@/lib/email'
+import { verifyRecaptcha } from '@/lib/recaptcha'
+import { normalizeSlug } from '@/lib/slug'
 
 const VALID_REGIONS = new Set(['BR', 'CA', 'US', 'GB'])
-
-function normalize(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/^-+|-+$/g, '')
-}
 
 // POST /api/register — public signup that creates a pending client record,
 // provisions a TurboISP tenant + admin user, and starts a 14-day trial.
@@ -29,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   const name  = `${firstName || ''} ${lastName || ''}`.trim()
   const email = financialEmail || technicalEmail
-  const slug  = ddns ? normalize(ddns) : null
+  const slug  = ddns ? normalizeSlug(ddns) : null
   const selectedRegion = VALID_REGIONS.has(region) ? region : 'BR'
 
   // ── Validation ─────────────────────────────────────────────────────────────
@@ -41,6 +39,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'A senha é obrigatória.' }, { status: 400 })
   if (!acceptedTerms)
     return NextResponse.json({ error: 'Você precisa concordar com os Termos de Serviços.' }, { status: 400 })
+
+  const recaptchaOk = await verifyRecaptcha(recaptchaToken)
+  if (!recaptchaOk) {
+    return NextResponse.json({ error: 'Verificação reCAPTCHA falhou. Tente novamente.' }, { status: 400 })
+  }
 
   const finalPassword = ddnsPassword || password
 
@@ -191,3 +194,4 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, id: client.id, provisioningWarning: provisioningFailed || undefined }, { status: 201 })
 }
+

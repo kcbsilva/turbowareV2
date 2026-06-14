@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getClientId } from '@/lib/client-auth'
 
 export async function GET(req: NextRequest) {
-  const clientId = req.headers.get('x-client-id')
+  const clientId = getClientId(req)
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const tickets = await prisma.supportTicket.findMany({
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const clientId = req.headers.get('x-client-id')
+  const clientId = getClientId(req)
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { title, body, category, priority } = await req.json().catch(() => ({}))

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getClientId } from '@/lib/client-auth'
 
 /** GET — list all active products with the client's activation status for each */
 export async function GET(req: NextRequest) {
-  const clientId = req.headers.get('x-client-id')
+  const clientId = getClientId(req)
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const [products, activations] = await Promise.all([
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
 
 /** POST — request activation for a product/tier */
 export async function POST(req: NextRequest) {
-  const clientId = req.headers.get('x-client-id')
+  const clientId = getClientId(req)
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { productId, tierId } = await req.json().catch(() => ({}))

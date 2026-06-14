@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
+import { getClientId } from '@/lib/client-auth'
 
 /**
  * GET /api/client/me
@@ -10,7 +11,7 @@ import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
  * Protected by middleware — x-client-id header is injected automatically.
  */
 export async function GET(req: NextRequest) {
-  const clientId = req.headers.get('x-client-id')
+  const clientId = getClientId(req)
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let client

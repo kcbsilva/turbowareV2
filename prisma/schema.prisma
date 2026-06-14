@@ -27,7 +27,6 @@ model Client {
   clientNotes     ClientNote[]
   subscription    Subscription?
   subdomain       String?       @unique
-  dnsRecordId     String?
   asaasCustomerId String?       // Asaas customer ID for payment sync
   tickets         SupportTicket[]
   products        ClientProduct[]
@@ -163,6 +162,8 @@ model AdminUser {
   email        String   @unique
   passwordHash String
   role         String   @default("admin")
+  mfaEnabled   Boolean  @default(false)
+  totpSecret   String?  // AES-256-GCM encrypted TOTP seed
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
