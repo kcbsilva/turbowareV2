@@ -144,13 +144,84 @@ export async function createTurboISPTenant(
   }
 }
 
+function quoteIdent(name: string): string {
+  if (!/^[a-z_][a-z0-9_]*$/i.test(name)) {
+    throw new Error(`invalid table name: ${name}`)
+  }
+  return `"${name}"`
+}
+
+/** Delete tenant row and all public rows keyed by tenant_id (FK-safe multi-pass). */
+async function purgeTurboISPTenantById(client: PoolClient, tenantId: string): Promise<void> {
+  const { rows: tables } = await client.query<{ table_name: string }>(
+    `SELECT DISTINCT c.table_name
+     FROM information_schema.columns c
+     INNER JOIN information_schema.tables t
+       ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+     WHERE c.table_schema = 'public'
+       AND c.column_name = 'tenant_id'
+       AND t.table_type = 'BASE TABLE'
+       AND c.table_name <> 'tenants'
+     ORDER BY c.table_name`,
+  )
+
+  const MAX_PASSES = 24
+  for (let pass = 0; pass < MAX_PASSES; pass++) {
+    let deletedAny = false
+    for (const { table_name } of tables) {
+      const result = await client.query(
+        `DELETE FROM ${quoteIdent(table_name)} WHERE tenant_id = $1`,
+        [tenantId],
+      )
+      if ((result.rowCount ?? 0) > 0) deletedAny = true
+    }
+    if (!deletedAny) break
+  }
+
+  const del = await client.query(`DELETE FROM tenants WHERE id = $1`, [tenantId])
+  if ((del.rowCount ?? 0) === 0) {
+    throw new Error('tenant delete blocked by remaining foreign keys')
+  }
+}
+
 export async function deleteTurboISPTenant(tenantId: string): Promise<void> {
-  await getTurboISPPool().query(`DELETE FROM tenants WHERE id = $1`, [tenantId])
+  const pool = getTurboISPPool()
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await purgeTurboISPTenantById(client, tenantId)
+    await client.query('COMMIT')
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
 }
 
 /** Remove TurboISP tenant by slug (used when deleting a linked billing client). */
 export async function deleteTurboISPTenantBySlug(slug: string): Promise<void> {
   const normalized = normalizeSignupSlug(slug)
   if (!normalized) return
-  await getTurboISPPool().query(`DELETE FROM tenants WHERE slug = $1`, [normalized])
+
+  const pool = getTurboISPPool()
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const found = await client.query<{ id: string }>(
+      `SELECT id::text FROM tenants WHERE slug = $1`,
+      [normalized],
+    )
+    if (found.rowCount === 0) {
+      await client.query('COMMIT')
+      return
+    }
+    await purgeTurboISPTenantById(client, found.rows[0].id)
+    await client.query('COMMIT')
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
 }
