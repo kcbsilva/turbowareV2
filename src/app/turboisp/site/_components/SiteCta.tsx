@@ -1,8 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { ArrowRight, Zap } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
+import { turboispSignupUrl } from '@/lib/signup-slug'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -20,12 +20,12 @@ export function SiteCtaBanner({ title, description, cta }: Props) {
         </div>
         <h2 className="font-display text-2xl sm:text-3xl font-black text-white mb-3 tracking-tight italic">{title}</h2>
         <p className="text-sm mb-8 max-w-md mx-auto text-white/45">{description}</p>
-        <Link
-          href="/turboisp/register"
+        <a
+          href={turboispSignupUrl()}
           className={cn(buttonVariants({ size: 'lg' }), 'turbo-btn-primary rounded-lg px-8')}
         >
           {cta} <ArrowRight className="w-4 h-4 ml-1" />
-        </Link>
+        </a>
       </div>
     </section>
   )
