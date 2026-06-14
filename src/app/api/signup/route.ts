@@ -10,24 +10,32 @@ import {
 } from '@/lib/turboisp-bootstrap'
 import { isValidSignupSlug, normalizeSignupSlug } from '@/lib/signup-slug'
 import { regionForCountry } from '@/lib/signup-countries'
+import { signupCorsPreflight, withSignupCors } from '@/lib/signup-cors'
 
 function signupEnabled(): boolean {
   const v = (process.env.PUBLIC_SIGNUP_ENABLED ?? '').trim().toLowerCase()
   return v === '' || v === '1' || v === 'true' || v === 'yes'
 }
 
-function apiError(message: string, status: number) {
-  return NextResponse.json({ error: message }, { status })
+function apiError(req: NextRequest, message: string, status: number) {
+  return withSignupCors(req, NextResponse.json({ error: message }, { status }))
 }
 
 /** POST /api/signup — TurboISP tenant + Turboware billing client */
+export async function OPTIONS(req: NextRequest) {
+  return signupCorsPreflight(req) ?? new NextResponse(null, { status: 204 })
+}
+
 export async function POST(req: NextRequest) {
+  const preflight = signupCorsPreflight(req)
+  if (preflight) return preflight
+
   if (!signupEnabled()) {
-    return apiError('public signup is disabled', 403)
+    return apiError(req, 'public signup is disabled', 403)
   }
 
   const { body: parsed, error } = await parseBody(req)
-  if (error) return badRequest()
+  if (error) return withSignupCors(req, badRequest())
 
   const {
     name,
@@ -44,19 +52,19 @@ export async function POST(req: NextRequest) {
   const email = adminEmail?.trim().toLowerCase() ?? ''
   const password = adminPassword ?? ''
 
-  if (!companyName) return apiError('invalid request body', 400)
-  if (!isValidSignupSlug(slug)) return apiError('invalid slug', 400)
+  if (!companyName) return apiError(req, 'invalid request body', 400)
+  if (!isValidSignupSlug(slug)) return apiError(req, 'invalid slug', 400)
   if (password.length < 8) {
-    return apiError('password must be at least 8 characters', 400)
+    return apiError(req, 'password must be at least 8 characters', 400)
   }
-  if (!email) return apiError('invalid request body', 400)
+  if (!email) return apiError(req, 'invalid request body', 400)
 
   const existingEmail = await prisma.client.findFirst({
     where: { email: { equals: email, mode: 'insensitive' } },
     select: { id: true },
   })
   if (existingEmail) {
-    return apiError('email already in use', 409)
+    return apiError(req, 'email already in use', 409)
   }
 
   const existingSubdomain = await prisma.client.findFirst({
@@ -64,7 +72,7 @@ export async function POST(req: NextRequest) {
     select: { id: true },
   })
   if (existingSubdomain) {
-    return apiError('slug already in use', 409)
+    return apiError(req, 'slug already in use', 409)
   }
 
   let bootstrap: Awaited<ReturnType<typeof createTurboISPTenant>>
@@ -82,11 +90,11 @@ export async function POST(req: NextRequest) {
     const msg = err instanceof Error ? err.message : 'signup failed'
     if (msg.includes('already in use')) {
       const status = msg.includes('username') || msg.includes('email') ? 409 : 409
-      return apiError(msg, status)
+      return apiError(req, msg, status)
     }
-    if (msg.includes('invalid slug')) return apiError(msg, 400)
+    if (msg.includes('invalid slug')) return apiError(req, msg, 400)
     console.error('[signup] TurboISP bootstrap failed:', err)
-    return apiError(msg, 500)
+    return apiError(req, msg, 500)
   }
 
   const passwordHash = await bcrypt.hash(password, 12)
@@ -146,19 +154,22 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[signup] Turboware client creation failed, rolling back tenant:', err)
     await deleteTurboISPTenant(bootstrap.tenantId).catch(() => null)
-    return apiError('signup failed', 500)
+    return apiError(req, 'signup failed', 500)
   }
 
-  return NextResponse.json(
-    {
-      tenantId: bootstrap.tenantId,
-      slug: bootstrap.slug,
-      adminUsername: bootstrap.adminUsername,
-      staffLoginUrl: bootstrap.staffLoginUrl,
-      clientId,
-      message:
-        'Tenant created. Sign in with your admin credentials to complete setup.',
-    },
-    { status: 201 },
+  return withSignupCors(
+    req,
+    NextResponse.json(
+      {
+        tenantId: bootstrap.tenantId,
+        slug: bootstrap.slug,
+        adminUsername: bootstrap.adminUsername,
+        staffLoginUrl: bootstrap.staffLoginUrl,
+        clientId,
+        message:
+          'Tenant created. Sign in with your admin credentials to complete setup.',
+      },
+      { status: 201 },
+    ),
   )
 }

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { turboISPQuery } from '@/lib/turboisp-db'
 import { isValidSignupSlug, normalizeSignupSlug } from '@/lib/signup-slug'
 import { RESERVED_SLUGS } from '@/lib/slug'
+import { signupCorsPreflight, withSignupCors } from '@/lib/signup-cors'
 
 const REASON_INVALID = 'invalid slug'
 const REASON_TAKEN = 'slug already in use'
@@ -13,27 +14,40 @@ function signupEnabled(): boolean {
 }
 
 /** GET /api/signup/check-slug?slug= — React signup compatibility */
+export async function OPTIONS(req: NextRequest) {
+  return signupCorsPreflight(req) ?? new NextResponse(null, { status: 204 })
+}
+
 export async function GET(req: NextRequest) {
+  const preflight = signupCorsPreflight(req)
+  if (preflight) return preflight
+
   if (!signupEnabled()) {
-    return NextResponse.json({ error: 'public signup is disabled' }, { status: 403 })
+    return withSignupCors(req, NextResponse.json({ error: 'public signup is disabled' }, { status: 403 }))
   }
 
   const slug = normalizeSignupSlug(req.nextUrl.searchParams.get('slug') || '')
 
   if (!isValidSignupSlug(slug)) {
-    return NextResponse.json({
-      slug,
-      available: false,
-      reason: REASON_INVALID,
-    })
+    return withSignupCors(
+      req,
+      NextResponse.json({
+        slug,
+        available: false,
+        reason: REASON_INVALID,
+      }),
+    )
   }
 
   if (RESERVED_SLUGS.has(slug)) {
-    return NextResponse.json({
-      slug,
-      available: false,
-      reason: REASON_TAKEN,
-    })
+    return withSignupCors(
+      req,
+      NextResponse.json({
+        slug,
+        available: false,
+        reason: REASON_TAKEN,
+      }),
+    )
   }
 
   const existingClient = await prisma.client.findFirst({
@@ -41,11 +55,14 @@ export async function GET(req: NextRequest) {
     select: { id: true },
   })
   if (existingClient) {
-    return NextResponse.json({
-      slug,
-      available: false,
-      reason: REASON_TAKEN,
-    })
+    return withSignupCors(
+      req,
+      NextResponse.json({
+        slug,
+        available: false,
+        reason: REASON_TAKEN,
+      }),
+    )
   }
 
   try {
@@ -54,19 +71,22 @@ export async function GET(req: NextRequest) {
       [slug],
     )
     if (tenant.rows.length > 0) {
-      return NextResponse.json({
-        slug,
-        available: false,
-        reason: REASON_TAKEN,
-      })
+      return withSignupCors(
+        req,
+        NextResponse.json({
+          slug,
+          available: false,
+          reason: REASON_TAKEN,
+        }),
+      )
     }
   } catch (err) {
     console.error('[signup/check-slug] TurboISP lookup failed:', err)
-    return NextResponse.json(
-      { error: 'Could not check availability' },
-      { status: 503 },
+    return withSignupCors(
+      req,
+      NextResponse.json({ error: 'Could not check availability' }, { status: 503 }),
     )
   }
 
-  return NextResponse.json({ slug, available: true, reason: '' })
+  return withSignupCors(req, NextResponse.json({ slug, available: true, reason: '' }))
 }
