@@ -157,15 +157,16 @@ enum PaymentGateway {
 }
 
 model AdminUser {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         String   @default("admin")
-  mfaEnabled   Boolean  @default(false)
-  totpSecret   String?  // AES-256-GCM encrypted TOTP seed
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  name               String
+  email              String   @unique
+  passwordHash       String
+  role               String   @default("admin")
+  mfaEnabled         Boolean  @default(false)
+  totpSecret         String?  // AES-256-GCM encrypted TOTP seed
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@map("admin_users")
 }
