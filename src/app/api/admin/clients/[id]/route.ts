@@ -138,8 +138,12 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
       await deleteTurboISPTenantBySlug(slug)
     } catch (err) {
       console.error('[admin/clients] TurboISP tenant delete failed:', err)
+      const detail = err instanceof Error ? err.message : 'unknown error'
       return NextResponse.json(
-        { error: 'Failed to delete linked TurboISP tenant. Client was not removed.' },
+        {
+          error: `Failed to delete linked TurboISP tenant (${slug}). Client was not removed.`,
+          detail,
+        },
         { status: 500 },
       )
     }

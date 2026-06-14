@@ -30,6 +30,7 @@ export function OverviewTab({ client }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState('')
+  const [deleteError, setDeleteError] = useState('')
 
   const [form, setForm] = useState({
     name: client.name,
@@ -100,16 +101,24 @@ export function OverviewTab({ client }: Props) {
 
   async function deleteClient() {
     setDeleting(true)
-    setError('')
-    const res = await fetch(`/api/admin/clients/${client.id}`, { method: 'DELETE' })
-    if (res.ok) {
-      router.replace('/admin/clients')
-      router.refresh()
-      return
+    setDeleteError('')
+    try {
+      const res = await fetch(`/api/admin/clients/${client.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        router.replace('/admin/clients')
+        router.refresh()
+        return
+      }
+      const data = (await res.json().catch(() => ({}))) as { error?: string; detail?: string }
+      const msg = [data.error, data.detail].filter(Boolean).join(' — ') || 'Delete failed.'
+      setDeleteError(msg)
+      setConfirmDelete(true)
+    } catch {
+      setDeleteError('Delete request failed. Check your connection and try again.')
+      setConfirmDelete(true)
+    } finally {
+      setDeleting(false)
     }
-    const data = await res.json().catch(() => ({}))
-    setDeleting(false)
-    setError((data as { error?: string }).error || 'Delete failed.')
   }
 
   async function resendVerificationEmail() {
@@ -327,13 +336,16 @@ export function OverviewTab({ client }: Props) {
             </div>
           ) : (
             <button
-              onClick={() => setConfirmDelete(true)}
+              onClick={() => { setConfirmDelete(true); setDeleteError('') }}
               className="flex items-center gap-1.5 px-3 py-1.5 border border-destructive/50 text-destructive hover:bg-destructive/10 text-xs font-medium rounded-md transition"
             >
               <Trash2 size={12} /> Delete Client
             </button>
           )}
         </div>
+        {deleteError && (
+          <p className="px-4 pb-3 text-xs text-destructive">{deleteError}</p>
+        )}
       </div>
     </div>
   )
