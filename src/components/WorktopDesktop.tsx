@@ -6,8 +6,10 @@ import { WorktopWindow } from './WorktopWindow'
 import { Taskbar } from './Taskbar'
 
 const routeTitles: Record<string, string> = {
-  '/admin':          'Clients',
-  '/admin/clients':  'Clients',
+  '/admin':            'Clients',
+  '/admin/clients':      'Clients',
+  '/admin/products':     'Products',
+  '/admin/security':     'Security',
 }
 
 function getTitle(pathname: string) {

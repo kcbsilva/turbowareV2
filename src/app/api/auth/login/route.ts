@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import { signAdminToken, COOKIE_NAME } from '@/lib/auth'
+import { signAdminToken, setAdminAuthCookie } from '@/lib/auth'
+import { signMfaPendingToken, MFA_PENDING_COOKIE } from '@/lib/mfa-pending'
 import { loginRateLimiter } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
@@ -34,6 +35,23 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
       }
 
+      if (user.mfaEnabled) {
+        const pending = await signMfaPendingToken(user.id)
+        const res = NextResponse.json({
+          ok: true,
+          mfaRequired: true,
+          email: user.email,
+        })
+        res.cookies.set(MFA_PENDING_COOKIE, pending, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 5,
+        })
+        return res
+      }
+
       const token = await signAdminToken({
         id: user.id,
         name: user.name,
@@ -42,24 +60,16 @@ export async function POST(req: NextRequest) {
       })
 
       const res = NextResponse.json({ ok: true, name: user.name, email: user.email })
-      res.cookies.set(COOKIE_NAME, token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 12, // 12 hours
-      })
+      setAdminAuthCookie(res, token)
       return res
     }
 
     // ── Path B: no email → backward-compat ADMIN_PASSWORD fallback ───────────
-    // Only active when zero AdminUser rows exist (i.e. not yet migrated)
     const adminCount = await prisma.adminUser.count()
     if (adminCount > 0) {
-      // DB users exist — require email+password from now on
       return NextResponse.json(
         { error: 'Please provide your email and password' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -68,22 +78,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
     }
 
-    // Legacy token — no user identity embedded
     const token = await signAdminToken()
     const res = NextResponse.json({ ok: true })
-    res.cookies.set(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 12, // 12 hours
-    })
+    setAdminAuthCookie(res, token)
     return res
   } catch (err) {
     console.error('[/api/auth/login] Unhandled error:', err)
     return NextResponse.json(
       { error: 'Internal server error. Please try again later.' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

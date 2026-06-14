@@ -29,7 +29,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const webhookToken = process.env.ASAAS_API_KEY
   const sentToken    = req.headers.get('asaas-access-token')
 
-  // Validate only when the key is set (always set in production)
+  if (!webhookToken && process.env.NODE_ENV === 'production') {
+    console.error('[asaas-webhook] ASAAS_API_KEY is not set in production')
+    return NextResponse.json({ error: 'Service misconfigured' }, { status: 503 })
+  }
   if (webhookToken && sentToken !== webhookToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

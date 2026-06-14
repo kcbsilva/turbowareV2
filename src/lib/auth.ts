@@ -1,3 +1,4 @@
+import { NextRequest, NextResponse } from 'next/server'
 import { SignJWT, jwtVerify } from 'jose'
 
 // ── Shared secret ────────────────────────────────────────────────────────────
@@ -58,3 +59,32 @@ export async function verifyClientToken(token: string): Promise<{ valid: boolean
     return { valid: false }
   }
 }
+
+/** Read verified admin session from the admin JWT cookie (for /api/auth/* handlers). */
+export async function getAdminSession(req: NextRequest): Promise<AdminTokenPayload | null> {
+  const token = req.cookies.get(COOKIE_NAME)?.value
+  if (!token) return null
+  try {
+    const { payload } = await jwtVerify(token, getJwtSecret())
+    if (payload.role !== 'admin') return null
+    return {
+      id: payload.id as string | undefined,
+      name: payload.name as string | undefined,
+      email: payload.email as string | undefined,
+      role: payload.role as string,
+    }
+  } catch {
+    return null
+  }
+}
+
+export function setAdminAuthCookie(res: NextResponse, token: string): void {
+  res.cookies.set(COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 12,
+  })
+}
+

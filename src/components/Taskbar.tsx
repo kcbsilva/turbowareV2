@@ -10,6 +10,7 @@ import {
   Users,
   Sun,
   Moon,
+  Shield,
   Package,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
@@ -32,6 +33,12 @@ const menuItems = [
     label: "Products",
     icon: <Package className="w-3.5 h-3.5" />,
     exact: false,
+  },
+  {
+    href: "/admin/security",
+    label: "Security",
+    icon: <Shield className="w-3.5 h-3.5" />,
+    exact: true,
   },
 ];
 
