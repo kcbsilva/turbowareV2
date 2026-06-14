@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Key } from 'lucide-react'
+import { turboispSignupUrl } from '@/lib/signup-slug'
 
 const BG = '#e5e5e5'
 
@@ -154,9 +155,9 @@ export default function ClientLoginPage() {
 
         <p className="text-center text-[10px] mt-4" style={{ color: 'rgba(10,20,40,0.3)' }}>
           Don&apos;t have an account?{' '}
-          <Link href="/turboisp/register" className="underline underline-offset-2 hover:opacity-70 transition">
+          <a href={turboispSignupUrl()} className="underline underline-offset-2 hover:opacity-70 transition">
             Request access
-          </Link>
+          </a>
         </p>
       </div>
     </div>

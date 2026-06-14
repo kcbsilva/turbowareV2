@@ -10,6 +10,7 @@ import {
   CURRENCY_SYMBOL,
   type Region,
 } from "@/lib/pricing";
+import { turboispSignupUrl } from "@/lib/signup-slug";
 import { ArrowRight, CheckCircle, Mail } from "lucide-react";
 
 type RegionConfig = {
@@ -105,13 +106,13 @@ export default function PricingPage() {
             >
               Login
             </Link>
-            <Link
-              href="/turboisp/register"
+            <a
+              href={turboispSignupUrl()}
               className="text-xs font-semibold px-4 py-1.5 rounded-md transition hover:opacity-90 shadow-sm"
               style={{ backgroundColor: "#1AABF0", color: "#ffffff" }}
             >
               Get Started
-            </Link>
+            </a>
           </div>
         </div>
       </header>
@@ -309,13 +310,13 @@ export default function PricingPage() {
             Register your ISP and get 14 days free — no credit card required.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link
-              href="/turboisp/register"
+            <a
+              href={turboispSignupUrl()}
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition hover:opacity-90"
               style={{ backgroundColor: "#1AABF0", color: "#ffffff" }}
             >
               Get Started <ArrowRight className="w-4 h-4" />
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -351,12 +352,12 @@ export default function PricingPage() {
             >
               Pricing
             </Link>
-            <Link
-              href="/turboisp/register"
+            <a
+              href={turboispSignupUrl()}
               className="hover:text-white/60 transition"
             >
               Register
-            </Link>
+            </a>
             <Link
               href="/admin/login"
               className="hover:text-white/60 transition"

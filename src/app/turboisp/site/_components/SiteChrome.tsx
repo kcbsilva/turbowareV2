@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
+import { turboispSignupUrl } from '@/lib/signup-slug'
 import { cn } from '@/lib/utils'
 import { LANGS, type Lang } from './constants'
 import logo from '../../assets/TurboISP-logo.png'
@@ -54,12 +55,12 @@ export function SiteNavbar({ lang, onLangChange, labels }: Props) {
           <Link href="/client/login" className="hidden sm:inline text-sm text-white/45 hover:text-white transition-colors">
             {labels.login}
           </Link>
-          <Link
-            href="/turboisp/register"
+          <a
+            href={turboispSignupUrl()}
             className={cn(buttonVariants({ size: 'sm' }), 'turbo-btn-primary rounded-md px-4')}
           >
             {labels.demo}
-          </Link>
+          </a>
         </div>
       </div>
     </header>
@@ -88,7 +89,7 @@ export function SiteFooter({
           <a href="#valores" className="hover:text-[#fca311]/80 transition">{labels.why}</a>
           <a href="#metricas" className="hover:text-[#fca311]/80 transition">{labels.results}</a>
           <Link href="/turboisp/pricing" className="hover:text-[#fca311]/80 transition">{labels.pricing}</Link>
-          <Link href="/turboisp/register" className="hover:text-[#fca311]/80 transition">{labels.demo}</Link>
+          <a href={turboispSignupUrl()} className="hover:text-[#fca311]/80 transition">{labels.demo}</a>
           <Link href="/admin/login" className="hover:text-white/60 transition">{labels.admin}</Link>
         </div>
         <p>© {new Date().getFullYear()} TurboISP. {labels.copy}</p>

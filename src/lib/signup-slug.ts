@@ -13,7 +13,19 @@ export function isValidSignupSlug(slug: string): boolean {
   return slug.length >= 3 && slug.length <= 63 && SLUG_RE.test(slug)
 }
 
+export function turboispAppBase(): string {
+  return (
+    process.env.NEXT_PUBLIC_TURBOISP_APP_URL ||
+    process.env.TURBOISP_APP_URL ||
+    'https://turboisp.app'
+  ).replace(/\/$/, '')
+}
+
+/** TurboISP React app public signup (turboisp-react /signup). */
+export function turboispSignupUrl(): string {
+  return `${turboispAppBase()}/signup`
+}
+
 export function staffLoginUrl(slug: string): string {
-  const base = (process.env.TURBOISP_APP_URL || 'https://turboisp.app').replace(/\/$/, '')
-  return `${base}/${slug}/login`
+  return `${turboispAppBase()}/${slug}/login`
 }

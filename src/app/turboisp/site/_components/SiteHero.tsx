@@ -1,9 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, BookOpen, Gauge } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
+import { turboispSignupUrl } from '@/lib/signup-slug'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -43,12 +43,12 @@ export function SiteHero({ badge, tagline, title, subtitle, cta, seeModules, tru
         </p>
 
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <Link
-            href="/turboisp/register"
+          <a
+            href={turboispSignupUrl()}
             className={cn(buttonVariants({ size: 'lg' }), 'turbo-btn-primary h-12 px-8 rounded-lg')}
           >
             {cta} <ArrowRight className="w-4 h-4 ml-1" />
-          </Link>
+          </a>
           <a
             href="#modules"
             className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'turbo-btn-ghost h-12 px-7 rounded-lg')}
