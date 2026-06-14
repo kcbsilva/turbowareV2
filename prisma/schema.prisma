@@ -1,11 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["turboware"]
 }
 
 model Client {
@@ -31,6 +33,7 @@ model Client {
   tickets         SupportTicket[]
   products        ClientProduct[]
 
+  @@schema("turboware")
   @@map("clients")
 }
 
@@ -42,6 +45,7 @@ model ClientNote {
   author    String   @default("Admin")
   createdAt DateTime @default(now())
 
+  @@schema("turboware")
   @@map("client_notes")
 }
 
@@ -60,6 +64,7 @@ model License {
   client       Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
   subscription Subscription?
 
+  @@schema("turboware")
   @@map("licenses")
 }
 
@@ -73,6 +78,7 @@ model Activation {
   lastSeenAt  DateTime @default(now())
 
   @@unique([licenseId, hardwareId])
+  @@schema("turboware")
   @@map("activations")
 }
 
@@ -100,6 +106,7 @@ model Subscription {
   pendingDowngradeAt   DateTime?
   invoices             Invoice[]
 
+  @@schema("turboware")
   @@map("subscriptions")
 }
 
@@ -119,6 +126,7 @@ model Invoice {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
+  @@schema("turboware")
   @@map("invoices")
 }
 
@@ -127,6 +135,8 @@ enum LicenseStatus {
   SUSPENDED
   REVOKED
   EXPIRED
+
+  @@schema("turboware")
 }
 
 enum SubscriptionStatus {
@@ -135,6 +145,8 @@ enum SubscriptionStatus {
   ACTIVE
   SUSPENDED
   CANCELLED
+
+  @@schema("turboware")
 }
 
 enum InvoiceType {
@@ -142,6 +154,8 @@ enum InvoiceType {
   MONTHLY
   PRORATED
   GRACE_FEE
+
+  @@schema("turboware")
 }
 
 enum InvoiceStatus {
@@ -149,11 +163,15 @@ enum InvoiceStatus {
   PAID
   OVERDUE
   WAIVED
+
+  @@schema("turboware")
 }
 
 enum PaymentGateway {
   ASAAS
   STRIPE
+
+  @@schema("turboware")
 }
 
 model AdminUser {
@@ -168,6 +186,7 @@ model AdminUser {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  @@schema("turboware")
   @@map("admin_users")
 }
 
@@ -183,6 +202,7 @@ model SupportTicket {
   updatedAt DateTime       @updatedAt
   messages  TicketMessage[]
 
+  @@schema("turboware")
   @@map("support_tickets")
 }
 
@@ -195,6 +215,7 @@ model TicketMessage {
   authorName String?
   createdAt  DateTime    @default(now())
 
+  @@schema("turboware")
   @@map("ticket_messages")
 }
 
@@ -203,17 +224,23 @@ enum TicketStatus {
   IN_PROGRESS
   RESOLVED
   CLOSED
+
+  @@schema("turboware")
 }
 
 enum TicketPriority {
   LOW
   MEDIUM
   HIGH
+
+  @@schema("turboware")
 }
 
 enum AuthorType {
   CLIENT
   ADMIN
+
+  @@schema("turboware")
 }
 
 model Product {
@@ -229,6 +256,7 @@ model Product {
   tiers       ProductTier[]
   activations ClientProduct[]
 
+  @@schema("turboware")
   @@map("products")
 }
 
@@ -248,6 +276,7 @@ model ProductTier {
   createdAt    DateTime  @default(now())
   activations  ClientProduct[]
 
+  @@schema("turboware")
   @@map("product_tiers")
 }
 
@@ -267,6 +296,7 @@ model ClientProduct {
   updatedAt   DateTime            @updatedAt
 
   @@unique([clientId, productId])
+  @@schema("turboware")
   @@map("client_products")
 }
 
@@ -275,4 +305,6 @@ enum ClientProductStatus {
   ACTIVE
   SUSPENDED
   CANCELLED
+
+  @@schema("turboware")
 }
