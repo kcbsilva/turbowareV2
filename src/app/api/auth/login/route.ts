@@ -30,12 +30,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
       }
 
+      const mustChangePassword =
+        (user as { mustChangePassword?: boolean }).mustChangePassword ?? false
+
       const valid = await bcrypt.compare(password, user.passwordHash)
       if (!valid) {
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
       }
 
-      if (user.mfaEnabled && !user.mustChangePassword) {
+      if (user.mfaEnabled && !mustChangePassword) {
         const pending = await signMfaPendingToken(user.id)
         const res = NextResponse.json({
           ok: true,
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest) {
         ok: true,
         name: user.name,
         email: user.email,
-        mustChangePassword: user.mustChangePassword,
+        mustChangePassword,
       })
       setAdminAuthCookie(res, token)
       return res
