@@ -39,7 +39,9 @@ export default function ClientsPage() {
 
   const fetchClients = useCallback(async (q: string) => {
     setLoading(true)
-    const res = await fetch(`/api/admin/clients?search=${encodeURIComponent(q)}`)
+    const res = await fetch(`/api/admin/clients?search=${encodeURIComponent(q)}`, {
+      cache: 'no-store',
+    })
     if (res.ok) {
       const data: ClientRow[] = await res.json()
       setClients(data)

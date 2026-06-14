@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 import { sendVerificationEmail } from '@/lib/email'
 import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
+import { deleteTurboISPTenantBySlug } from '@/lib/turboisp-bootstrap'
 
 type Params = { params: { id: string } }
 
@@ -123,6 +124,33 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // DELETE /api/admin/clients/[id]
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  await prisma.client.delete({ where: { id: params.id } })
+  const client = await prisma.client.findUnique({
+    where: { id: params.id },
+    select: { id: true, subdomain: true },
+  })
+  if (!client) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  const slug = client.subdomain?.trim()
+  if (slug) {
+    try {
+      await deleteTurboISPTenantBySlug(slug)
+    } catch (err) {
+      console.error('[admin/clients] TurboISP tenant delete failed:', err)
+      return NextResponse.json(
+        { error: 'Failed to delete linked TurboISP tenant. Client was not removed.' },
+        { status: 500 },
+      )
+    }
+  }
+
+  try {
+    await prisma.client.delete({ where: { id: params.id } })
+  } catch (err) {
+    console.error('[admin/clients] Client delete failed:', err)
+    return NextResponse.json({ error: 'Delete failed' }, { status: 500 })
+  }
+
   return NextResponse.json({ ok: true })
 }
