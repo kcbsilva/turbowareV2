@@ -151,8 +151,39 @@ function quoteIdent(name: string): string {
   return `"${name}"`
 }
 
+/** Clear cross-table FKs that block tenant-scoped deletes (not keyed by tenant_id on the parent). */
+async function detachTenantDeleteBlockers(client: PoolClient, tenantId: string): Promise<void> {
+  await client.query(
+    `UPDATE projects SET company_id = NULL WHERE tenant_id = $1 AND company_id IS NOT NULL`,
+    [tenantId],
+  )
+}
+
+async function deleteTenantRowsFromTable(
+  client: PoolClient,
+  tableName: string,
+  tenantId: string,
+): Promise<number> {
+  const savepoint = `sp_${tableName.replace(/[^a-z0-9_]/gi, '_')}`
+  await client.query(`SAVEPOINT ${savepoint}`)
+  try {
+    const result = await client.query(
+      `DELETE FROM ${quoteIdent(tableName)} WHERE tenant_id = $1`,
+      [tenantId],
+    )
+    await client.query(`RELEASE SAVEPOINT ${savepoint}`)
+    return result.rowCount ?? 0
+  } catch {
+    await client.query(`ROLLBACK TO SAVEPOINT ${savepoint}`)
+    await client.query(`RELEASE SAVEPOINT ${savepoint}`)
+    return 0
+  }
+}
+
 /** Delete tenant row and all public rows keyed by tenant_id (FK-safe multi-pass). */
 async function purgeTurboISPTenantById(client: PoolClient, tenantId: string): Promise<void> {
+  await detachTenantDeleteBlockers(client, tenantId)
+
   const { rows: tables } = await client.query<{ table_name: string }>(
     `SELECT DISTINCT c.table_name
      FROM information_schema.columns c
@@ -165,17 +196,26 @@ async function purgeTurboISPTenantById(client: PoolClient, tenantId: string): Pr
      ORDER BY c.table_name`,
   )
 
-  const MAX_PASSES = 24
+  const MAX_PASSES = 32
   for (let pass = 0; pass < MAX_PASSES; pass++) {
     let deletedAny = false
     for (const { table_name } of tables) {
-      const result = await client.query(
-        `DELETE FROM ${quoteIdent(table_name)} WHERE tenant_id = $1`,
-        [tenantId],
-      )
-      if ((result.rowCount ?? 0) > 0) deletedAny = true
+      const n = await deleteTenantRowsFromTable(client, table_name, tenantId)
+      if (n > 0) deletedAny = true
     }
     if (!deletedAny) break
+  }
+
+  for (const { table_name } of tables) {
+    const check = await client.query(
+      `SELECT 1 FROM ${quoteIdent(table_name)} WHERE tenant_id = $1 LIMIT 1`,
+      [tenantId],
+    )
+    if ((check.rowCount ?? 0) > 0) {
+      throw new Error(
+        `tenant delete blocked: rows remain in ${table_name} (foreign key ordering)`,
+      )
+    }
   }
 
   const del = await client.query(`DELETE FROM tenants WHERE id = $1`, [tenantId])
