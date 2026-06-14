@@ -147,3 +147,10 @@ export async function createTurboISPTenant(
 export async function deleteTurboISPTenant(tenantId: string): Promise<void> {
   await getTurboISPPool().query(`DELETE FROM tenants WHERE id = $1`, [tenantId])
 }
+
+/** Remove TurboISP tenant by slug (used when deleting a linked billing client). */
+export async function deleteTurboISPTenantBySlug(slug: string): Promise<void> {
+  const normalized = normalizeSignupSlug(slug)
+  if (!normalized) return
+  await getTurboISPPool().query(`DELETE FROM tenants WHERE slug = $1`, [normalized])
+}

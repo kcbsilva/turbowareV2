@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/admin/clients — list all clients with license count
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
@@ -29,7 +31,9 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: 'desc' },
   })
 
-  return NextResponse.json(clients)
+  return NextResponse.json(clients, {
+    headers: { 'Cache-Control': 'no-store' },
+  })
 }
 
 // POST /api/admin/clients — create a client

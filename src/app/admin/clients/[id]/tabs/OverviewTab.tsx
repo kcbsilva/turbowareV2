@@ -100,9 +100,16 @@ export function OverviewTab({ client }: Props) {
 
   async function deleteClient() {
     setDeleting(true)
+    setError('')
     const res = await fetch(`/api/admin/clients/${client.id}`, { method: 'DELETE' })
-    if (res.ok) router.push('/admin/clients')
-    else { setDeleting(false); setError('Delete failed.') }
+    if (res.ok) {
+      router.replace('/admin/clients')
+      router.refresh()
+      return
+    }
+    const data = await res.json().catch(() => ({}))
+    setDeleting(false)
+    setError((data as { error?: string }).error || 'Delete failed.')
   }
 
   async function resendVerificationEmail() {
@@ -300,7 +307,9 @@ export function OverviewTab({ client }: Props) {
         <div className="px-4 py-3 flex items-center justify-between">
           <div>
             <p className="text-xs text-foreground font-medium">Delete this client</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Their licenses will be unassigned but not deleted.</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Removes the billing client and any linked TurboISP tenant. Licenses are unassigned, not deleted.
+            </p>
           </div>
           {confirmDelete ? (
             <div className="flex items-center gap-2">
