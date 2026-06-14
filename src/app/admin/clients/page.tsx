@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, Key, ShieldOff, UserPlus, X } from 'lucide-react'
+import { Users, Key, ShieldOff, UserPlus, X, RefreshCw } from 'lucide-react'
 
 type StatusFilter = 'all' | 'with-licenses' | 'no-licenses'
 
@@ -33,6 +33,8 @@ export default function ClientsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [page, setPage] = useState(1)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
   const fetchClients = useCallback(async (q: string) => {
@@ -52,6 +54,35 @@ export default function ClientsPage() {
     debounceRef.current = setTimeout(() => fetchClients(search), 300)
     return () => clearTimeout(debounceRef.current)
   }, [search, fetchClients])
+
+  async function syncTenants() {
+    setSyncing(true)
+    setSyncMsg(null)
+    try {
+      const res = await fetch('/api/admin/clients/sync-tenants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSyncMsg(data.error || 'Sync failed')
+        return
+      }
+      const parts: string[] = []
+      if (data.synced?.length) parts.push(`Synced ${data.synced.length}: ${data.synced.join(', ')}`)
+      if (data.skipped?.length) parts.push(`${data.skipped.length} already linked`)
+      if (data.errors?.length) {
+        parts.push(
+          `${data.errors.length} failed (${data.errors.map((e: { slug: string }) => e.slug).join(', ')})`,
+        )
+      }
+      setSyncMsg(parts.join(' · ') || 'No TurboISP tenants need syncing')
+      await fetchClients(search)
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   // Apply status filter locally
   const filtered = clients.filter((c) => {
@@ -121,6 +152,19 @@ export default function ClientsPage() {
             )}
           </div>
 
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <button
+              type="button"
+              onClick={syncTenants}
+              disabled={syncing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-card text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+              title="Create Turboware billing clients for TurboISP tenants missing from this list"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+              Sync TurboISP tenants
+            </button>
+          </div>
+
           {/* Status filters */}
           <div className="flex items-center gap-2">
             {statusConfig.map(({ value, label, color }) => {
@@ -139,6 +183,9 @@ export default function ClientsPage() {
           </div>
 
         </div>
+        {syncMsg && (
+          <p className="text-xs text-muted-foreground">{syncMsg}</p>
+        )}
       </div>
 
       {/* Table */}
