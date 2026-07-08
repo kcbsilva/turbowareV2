@@ -7,6 +7,7 @@ type SlugLookupResult =
 function turboISPApiOrigin(): string | null {
   const raw =
     process.env.TURBOISP_API_URL?.trim() ||
+    process.env.BACKEND_ROUTE?.trim() ||
     process.env.API_PROXY_TARGET?.trim()
   if (!raw) return null
   return raw.replace(/\/$/, '')
