@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
       tiers: tiers?.length ? {
         create: tiers.map((t: Record<string, unknown>, i: number) => ({
           name: t.name, description: t.description ?? null,
-          maxSeats: t.maxSeats ?? null, priceBR: t.priceBR ?? null,
+          maxSeats: t.maxSeats ?? null, maxMapItems: t.maxMapItems ?? null,
+          priceBR: t.priceBR ?? null,
           priceCA: t.priceCA ?? null, priceUS: t.priceUS ?? null,
           priceGB: t.priceGB ?? null, features: t.features ?? null,
           sortOrder: i,

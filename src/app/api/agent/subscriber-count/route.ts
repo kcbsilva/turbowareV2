@@ -2,33 +2,33 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
   PRICING_TIERS,
-  getPriceForTier,
+  getTierForUsage,
+  getPriceForUsage,
+  getTierByLabel,
   getProratedAmount,
   type Region,
+  type PricingTier,
 } from '@/lib/pricing'
 
 /**
  * POST /api/agent/subscriber-count
- * Called by TurboISP to sync licensed subscriber count (Active + Suspended).
+ * Sync licensed clients (Active+Suspended) and map plant items.
  * Protected by: Authorization: Bearer <CLIENT_API_KEY>
  *
  * Body: {
  *   activeSubscribers: number,
+ *   mapItemCount?: number,
  *   hardwareId: string,
  *   cnpj?: string,
  *   tenantSlug?: string
  * }
- *
- * Logic:
- *  - Same tier    → update lastSubscriberSync; maybe approaching-limit ticket
- *  - Upgrade      → apply immediately + prorated invoice; clear warning sentinels
- *  - Downgrade    → defer via pendingDowngradeTier + inform via portal ticket
  */
 
 type AgentBody = {
   cnpj?: string
   tenantSlug?: string
   activeSubscribers?: number
+  mapItemCount?: number
   hardwareId?: string
 }
 
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { cnpj, tenantSlug, activeSubscribers, hardwareId } = body
+  const mapItemCount = typeof body.mapItemCount === 'number' ? body.mapItemCount : 0
 
   if (typeof activeSubscribers !== 'number' || !hardwareId) {
     return NextResponse.json(
@@ -56,8 +57,8 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     )
   }
-  if (activeSubscribers < 0) {
-    return NextResponse.json({ error: 'activeSubscribers must be >= 0' }, { status: 400 })
+  if (activeSubscribers < 0 || mapItemCount < 0) {
+    return NextResponse.json({ error: 'Counts must be >= 0' }, { status: 400 })
   }
 
   const normalizedCnpj = cnpj ? cnpj.replace(/\D/g, '') : ''
@@ -94,11 +95,7 @@ export async function POST(req: NextRequest) {
 
   const client = await prisma.client.findUnique({
     where: { id: clientId },
-    select: {
-      id: true,
-      name: true,
-      subscription: true,
-    },
+    select: { id: true, name: true, subscription: true },
   })
 
   if (!client?.subscription) {
@@ -111,7 +108,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: `Subscription is not active (status: ${sub.status})`,
-        currentPlan: buildPlanSummary(sub),
+        currentPlan: buildPlanSummary(sub, activeSubscribers, mapItemCount),
       },
       { status: 422 },
     )
@@ -122,7 +119,7 @@ export async function POST(req: NextRequest) {
     ? PRICING_TIERS.findIndex((t) => t.label === sub.subscriberTier)
     : -1
 
-  const newTier = PRICING_TIERS.find((t) => t.maxSeats !== null && activeSubscribers <= t.maxSeats)
+  const newTier = getTierForUsage(activeSubscribers, mapItemCount)
 
   if (!newTier) {
     await maybeCreateTicket(client.id, client.name, {
@@ -130,24 +127,25 @@ export async function POST(req: NextRequest) {
       category: 'billing',
       priority: 'HIGH',
       body:
-        `Licensed subscriber count is ${activeSubscribers}, which exceeds the maximum automated tier (12,000).\n` +
-        `Please contact Turboware for enterprise pricing.\n` +
-        `Hardware: ${hardwareId}`,
+        `Usage exceeds the maximum automated package (12,000 clients / 90,000 map items).\n` +
+        `Clients: ${activeSubscribers}. Map items: ${mapItemCount}.\n` +
+        `Please contact Turboware for enterprise pricing.\nHardware: ${hardwareId}`,
       dedupeKey: 'enterprise-12k+',
     })
     return NextResponse.json(
       {
         ok: false,
-        message: 'Subscriber count exceeds maximum automated tier (12,000). Contact support for enterprise pricing.',
+        message: 'Usage exceeds maximum automated tier. Contact support for enterprise pricing.',
         activeSubscribers,
-        currentPlan: buildPlanSummary(sub),
+        mapItemCount,
+        currentPlan: buildPlanSummary(sub, activeSubscribers, mapItemCount),
       },
       { status: 422 },
     )
   }
 
   const newTierIndex = PRICING_TIERS.findIndex((t) => t.label === newTier.label)
-  const newPrice = getPriceForTier(activeSubscribers, region)
+  const newPrice = getPriceForUsage(activeSubscribers, mapItemCount, region)
 
   if (newPrice === 'inquire') {
     return NextResponse.json(
@@ -160,7 +158,6 @@ export async function POST(req: NextRequest) {
 
   // ── Same tier ─────────────────────────────────────────────────────────────
   if (newTierIndex === currentTierIndex) {
-    // Count rose back into current tier — clear a pending downgrade.
     const clearPending =
       !!sub.pendingDowngradeTier && sub.pendingDowngradeTier !== sub.subscriberTier
 
@@ -168,9 +165,9 @@ export async function POST(req: NextRequest) {
       where: { id: sub.id },
       data: {
         lastSubscriberSync: now,
-        ...(clearPending
-          ? { pendingDowngradeTier: null, pendingDowngradeAt: null }
-          : {}),
+        lastMapItemSync: now,
+        maxMapItems: newTier.maxMapItems,
+        ...(clearPending ? { pendingDowngradeTier: null, pendingDowngradeAt: null } : {}),
       },
     })
 
@@ -178,26 +175,28 @@ export async function POST(req: NextRequest) {
       client.id,
       client.name,
       activeSubscribers,
-      newTier.maxSeats,
-      newTier.label,
+      mapItemCount,
+      newTier,
       hardwareId,
     )
 
-    const refreshed = { ...sub, pendingDowngradeTier: clearPending ? null : sub.pendingDowngradeTier }
+    const refreshed = {
+      ...sub,
+      maxMapItems: newTier.maxMapItems,
+      pendingDowngradeTier: clearPending ? null : sub.pendingDowngradeTier,
+    }
 
     return NextResponse.json({
       ok: true,
       change: 'none',
       message: clearPending
-        ? 'Subscriber count synced — pending downgrade cleared.'
-        : 'Subscriber count synced — no tier change.',
+        ? 'Usage synced — pending downgrade cleared.'
+        : 'Usage synced — no tier change.',
       activeSubscribers,
+      mapItemCount,
       approachingLimit: approaching,
       pendingDowngradeTier: refreshed.pendingDowngradeTier,
-      currentPlan: {
-        ...buildPlanSummary(refreshed),
-        remaining: newTier.maxSeats != null ? Math.max(0, newTier.maxSeats - activeSubscribers) : null,
-      },
+      currentPlan: buildPlanSummary(refreshed, activeSubscribers, mapItemCount),
     })
   }
 
@@ -216,7 +215,9 @@ export async function POST(req: NextRequest) {
         data: {
           subscriberTier: newTier.label,
           monthlyAmount: newPrice,
+          maxMapItems: newTier.maxMapItems,
           lastSubscriberSync: now,
+          lastMapItemSync: now,
           pendingDowngradeTier: null,
           pendingDowngradeAt: null,
         },
@@ -230,22 +231,24 @@ export async function POST(req: NextRequest) {
                 amount: proratedAmount,
                 status: 'PENDING',
                 dueDate,
-                notes: `Tier upgrade: ${sub.subscriberTier ?? 'previous'} → ${newTier.label} | ${activeSubscribers} active subscribers | Prorated difference for remainder of billing period`,
+                notes: `Tier upgrade: ${sub.subscriberTier ?? 'previous'} → ${newTier.label} | ${activeSubscribers} clients / ${mapItemCount} map items | Prorated difference`,
               },
             }),
           ]
         : []),
     ])
 
+    await linkClientProduct(client.id, newTier.label)
+
     await maybeCreateTicket(client.id, client.name, {
       title: `License upgraded to ${newTier.label}`,
       category: 'billing',
       priority: 'MEDIUM',
       body:
-        `Your TurboISP license was automatically upgraded from ${sub.subscriberTier ?? 'unknown'} to ${newTier.label} ` +
-        `because licensed subscribers reached ${activeSubscribers}.\n` +
+        `Your TurboISP package was upgraded from ${sub.subscriberTier ?? 'unknown'} to ${newTier.label}.\n` +
+        `Clients: ${activeSubscribers} / ${newTier.maxSeats}. Map items: ${mapItemCount} / ${newTier.maxMapItems}.\n` +
         (proratedAmount > 0
-          ? `A prorated invoice of ${proratedAmount.toFixed(2)} was created for the remainder of this billing period.\n`
+          ? `A prorated invoice of ${proratedAmount.toFixed(2)} was created.\n`
           : '') +
         `Hardware: ${hardwareId}`,
       dedupeKey: `upgrade-${newTier.label}`,
@@ -256,6 +259,7 @@ export async function POST(req: NextRequest) {
       change: 'upgrade',
       message: `Tier upgraded from ${sub.subscriberTier ?? 'unknown'} to ${newTier.label}.`,
       activeSubscribers,
+      mapItemCount,
       previousTier: sub.subscriberTier,
       newTier: newTier.label,
       newMonthlyAmount: newPrice,
@@ -265,13 +269,16 @@ export async function POST(req: NextRequest) {
         proratedAmount > 0
           ? { amount: proratedAmount, dueDate: dueDate.toISOString() }
           : null,
-      currentPlan: {
-        ...buildPlanSummary(sub),
-        subscriberTier: newTier.label,
-        monthlyAmount: newPrice,
-        maxSeats: newTier.maxSeats,
-        remaining: newTier.maxSeats != null ? Math.max(0, newTier.maxSeats - activeSubscribers) : null,
-      },
+      currentPlan: buildPlanSummary(
+        {
+          ...sub,
+          subscriberTier: newTier.label,
+          monthlyAmount: newPrice,
+          maxMapItems: newTier.maxMapItems,
+        },
+        activeSubscribers,
+        mapItemCount,
+      ),
     })
   }
 
@@ -284,6 +291,7 @@ export async function POST(req: NextRequest) {
       pendingDowngradeTier: newTier.label,
       pendingDowngradeAt: alreadyPending ? sub.pendingDowngradeAt ?? now : now,
       lastSubscriberSync: now,
+      lastMapItemSync: now,
     },
   })
 
@@ -293,37 +301,59 @@ export async function POST(req: NextRequest) {
       category: 'billing',
       priority: 'MEDIUM',
       body:
-        `Licensed subscriber count has fallen to ${activeSubscribers}, which fits the ${newTier.label} tier ` +
-        `(current tier: ${sub.subscriberTier}).\n\n` +
-        `Your plan will automatically cycle down to ${newTier.label} at the next billing date. ` +
-        `No action is required. If your count rises again before then, the pending downgrade will be cancelled.\n` +
+        `Usage now fits the ${newTier.label} package (current: ${sub.subscriberTier}).\n` +
+        `Clients: ${activeSubscribers}. Map items: ${mapItemCount}.\n\n` +
+        `Your plan will cycle down to ${newTier.label} at the next billing date. ` +
+        `If usage rises again before then, the pending downgrade will be cancelled.\n` +
         `Hardware: ${hardwareId}`,
       dedupeKey: `downgrade-${sub.subscriberTier}-to-${newTier.label}`,
     })
   }
+
+  const currentTier = getTierByLabel(sub.subscriberTier ?? '')
 
   return NextResponse.json({
     ok: true,
     change: 'downgrade_pending',
     message: `Downgrade from ${sub.subscriberTier} to ${newTier.label} is scheduled for your next billing cycle.`,
     activeSubscribers,
+    mapItemCount,
     currentTier: sub.subscriberTier,
     pendingDowngradeTier: newTier.label,
     pendingDowngradeAt: now.toISOString(),
     approachingLimit: false,
-    currentPlan: {
-      ...buildPlanSummary({
+    currentPlan: buildPlanSummary(
+      {
         ...sub,
         pendingDowngradeTier: newTier.label,
-      }),
-      remaining:
-        PRICING_TIERS.find((t) => t.label === sub.subscriberTier)?.maxSeats != null
-          ? Math.max(
-              0,
-              (PRICING_TIERS.find((t) => t.label === sub.subscriberTier)!.maxSeats as number) -
-                activeSubscribers,
-            )
-          : null,
+        maxMapItems: currentTier?.maxMapItems ?? sub.maxMapItems,
+      },
+      activeSubscribers,
+      mapItemCount,
+    ),
+  })
+}
+
+async function linkClientProduct(clientId: string, tierLabel: string) {
+  const product = await prisma.product.findUnique({
+    where: { slug: 'turboisp' },
+    include: { tiers: { where: { name: tierLabel }, take: 1 } },
+  })
+  if (!product) return
+  const tierId = product.tiers[0]?.id ?? null
+  await prisma.clientProduct.upsert({
+    where: { clientId_productId: { clientId, productId: product.id } },
+    create: {
+      clientId,
+      productId: product.id,
+      tierId,
+      status: 'ACTIVE',
+      activatedAt: new Date(),
+    },
+    update: {
+      tierId,
+      status: 'ACTIVE',
+      activatedAt: new Date(),
     },
   })
 }
@@ -332,24 +362,31 @@ async function maybeApproachingLimitTicket(
   clientId: string,
   clientName: string | null,
   activeSubscribers: number,
-  maxSeats: number | null,
-  tierLabel: string,
+  mapItemCount: number,
+  tier: PricingTier,
   hardwareId: string,
 ): Promise<boolean> {
-  if (maxSeats == null) return false
-  const remaining = maxSeats - activeSubscribers
-  if (remaining < 0 || remaining > 10) return false
+  if (tier.maxSeats == null || tier.maxMapItems == null) return false
+  const clientRemaining = tier.maxSeats - activeSubscribers
+  const mapRemaining = tier.maxMapItems - mapItemCount
+  const nearClients = clientRemaining >= 0 && clientRemaining <= 10
+  const nearMaps = mapRemaining >= 0 && mapRemaining <= 10
+  if (!nearClients && !nearMaps) return false
+
+  const tight: string[] = []
+  if (nearClients) tight.push(`clients ${activeSubscribers}/${tier.maxSeats} (${clientRemaining} left)`)
+  if (nearMaps) tight.push(`map items ${mapItemCount}/${tier.maxMapItems} (${mapRemaining} left)`)
 
   await maybeCreateTicket(clientId, clientName, {
-    title: `License capacity: approaching ${tierLabel} limit`,
+    title: `License capacity: approaching ${tier.label} limit`,
     category: 'billing',
     priority: 'HIGH',
     body:
-      `You are within 10 licensed seats of your ${tierLabel} capacity.\n` +
-      `Current licensed subscribers: ${activeSubscribers} / ${maxSeats} (${remaining} remaining).\n` +
-      `TurboISP will automatically upgrade your tier when you exceed this limit.\n` +
+      `You are within 10 of a ${tier.label} package cap.\n` +
+      `${tight.join('; ')}.\n` +
+      `TurboISP will automatically upgrade when either meter exceeds this package.\n` +
       `Hardware: ${hardwareId}`,
-    dedupeKey: `approaching-${tierLabel}`,
+    dedupeKey: `approaching-${tier.label}`,
   })
   return true
 }
@@ -376,7 +413,6 @@ async function maybeCreateTicket(
   })
   if (existing) return existing.id
 
-  // Also dedupe by scanning recent messages for the sentinel key.
   const recent = await prisma.supportTicket.findFirst({
     where: {
       clientId,
@@ -406,22 +442,38 @@ async function maybeCreateTicket(
   return ticket.id
 }
 
-function buildPlanSummary(sub: {
-  status: string
-  subscriberTier: string | null
-  monthlyAmount: number | null
-  region: string | null
-  billingDate: number
-  pendingDowngradeTier?: string | null
-}) {
-  const tier = PRICING_TIERS.find((t) => t.label === sub.subscriberTier)
+function buildPlanSummary(
+  sub: {
+    status: string
+    subscriberTier: string | null
+    monthlyAmount: number | null
+    region: string | null
+    billingDate: number
+    maxMapItems?: number | null
+    pendingDowngradeTier?: string | null
+  },
+  activeSubscribers?: number,
+  mapItemCount?: number,
+) {
+  const tier = getTierByLabel(sub.subscriberTier ?? '') ?? PRICING_TIERS.find((t) => t.label === sub.subscriberTier)
+  const maxSeats = tier?.maxSeats ?? null
+  const maxMapItems = sub.maxMapItems ?? tier?.maxMapItems ?? null
   return {
     status: sub.status,
     subscriberTier: sub.subscriberTier,
     monthlyAmount: sub.monthlyAmount,
     region: sub.region ?? 'BR',
     billingDate: sub.billingDate,
-    maxSeats: tier?.maxSeats ?? null,
+    maxSeats,
+    maxMapItems,
+    remaining:
+      maxSeats != null && activeSubscribers != null
+        ? Math.max(0, maxSeats - activeSubscribers)
+        : null,
+    mapRemaining:
+      maxMapItems != null && mapItemCount != null
+        ? Math.max(0, maxMapItems - mapItemCount)
+        : null,
     pendingDowngradeTier: sub.pendingDowngradeTier ?? null,
   }
 }

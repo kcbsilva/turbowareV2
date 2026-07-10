@@ -106,7 +106,9 @@ export default function ProductsPage() {
         </div>
         <div>
           <h1 className="text-base font-bold text-foreground">Products & Pricing</h1>
-          <p className="text-[11px] text-muted-foreground">Assign subscriber plans to clients</p>
+          <p className="text-[11px] text-muted-foreground">
+            Product = TurboISP — dual-cap packages (clients + map items)
+          </p>
         </div>
       </div>
 
@@ -114,7 +116,7 @@ export default function ProductsPage() {
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-border flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-foreground">
-            Pricing Table
+            TurboISP Packages
           </h2>
           {/* Region tabs */}
           <div className="flex items-center gap-1">
@@ -151,7 +153,9 @@ export default function ProductsPage() {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
-              <th className="px-4 py-2.5 font-medium">Tier (subscribers)</th>
+              <th className="px-4 py-2.5 font-medium">Package</th>
+              <th className="px-4 py-2.5 font-medium text-right">Clients</th>
+              <th className="px-4 py-2.5 font-medium text-right">Map items</th>
               <th className="px-4 py-2.5 font-medium text-right">
                 {REGION_LABELS[tableRegion]} ({CURRENCY_SYMBOL[tableRegion]}) / month
               </th>
@@ -164,7 +168,13 @@ export default function ProductsPage() {
               return (
                 <tr key={tier.label} className="hover:bg-muted/30 transition">
                   <td className="px-4 py-2.5 text-foreground font-medium">
-                    {isLast ? '12,000+' : `Up to ${Number(tier.label).toLocaleString('en-US')}`}
+                    {isLast ? 'Enterprise' : `Tier ${tier.label}`}
+                  </td>
+                  <td className="px-4 py-2.5 text-right text-foreground tabular-nums">
+                    {tier.maxSeats == null ? '12,000+' : tier.maxSeats.toLocaleString('en-US')}
+                  </td>
+                  <td className="px-4 py-2.5 text-right text-foreground tabular-nums">
+                    {tier.maxMapItems == null ? 'Inquire' : tier.maxMapItems.toLocaleString('en-US')}
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     {price === 'inquire' ? (
@@ -178,6 +188,9 @@ export default function ProductsPage() {
             })}
           </tbody>
         </table>
+        <p className="px-4 py-2 text-[10px] text-muted-foreground border-t border-border">
+          Map items = FDH + Vault + FOSC + PED + Sites + Towers + Poles. Upgrade when either meter exceeds the package.
+        </p>
       </div>
 
       {/* ── Assign Plan Form ───────────────────────────────────────────────── */}
@@ -232,7 +245,7 @@ export default function ProductsPage() {
           {/* Tier select */}
           <div className="md:col-span-1">
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-              Subscriber Tier
+              Package
             </label>
             <div className="relative">
               <select
@@ -241,12 +254,12 @@ export default function ProductsPage() {
                 className="w-full appearance-none bg-background border border-border rounded-md px-3 py-1.5 text-xs text-foreground pr-8 focus:outline-none focus:ring-2 focus:ring-ring"
                 required
               >
-                <option value="">Select tier…</option>
+                <option value="">Select package…</option>
                 {PRICING_TIERS.filter((t) => t.maxSeats !== null).map((tier) => {
                   const price = tier.prices[formRegion]
                   return (
                     <option key={tier.label} value={tier.label}>
-                      Up to {Number(tier.label).toLocaleString('en-US')} — {fmt(price, formRegion)}/mo
+                      {tier.maxSeats?.toLocaleString('en-US')} clients / {tier.maxMapItems?.toLocaleString('en-US')} map — {fmt(price, formRegion)}/mo
                     </option>
                   )
                 })}
@@ -281,6 +294,16 @@ export default function ProductsPage() {
                 </span>
                 {' '}· Region:{' '}
                 <span className="font-bold text-foreground">{REGION_LABELS[formRegion]}</span>
+                {(() => {
+                  const t = PRICING_TIERS.find((x) => x.label === selectedTier)
+                  if (!t?.maxMapItems) return null
+                  return (
+                    <>
+                      {' '}· Map items:{' '}
+                      <span className="font-bold text-foreground">{t.maxMapItems.toLocaleString('en-US')}</span>
+                    </>
+                  )
+                })()}
               </p>
             </div>
           )}
@@ -319,7 +342,7 @@ export default function ProductsPage() {
               <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
                 <th className="px-4 py-2.5 font-medium">Client</th>
                 <th className="px-4 py-2.5 font-medium">Region</th>
-                <th className="px-4 py-2.5 font-medium">Tier</th>
+                <th className="px-4 py-2.5 font-medium">Package</th>
                 <th className="px-4 py-2.5 font-medium">Monthly</th>
               </tr>
             </thead>
@@ -355,7 +378,13 @@ export default function ProductsPage() {
                             backgroundColor: 'hsl(var(--accent)/0.08)',
                           }}
                         >
-                          Up to {Number(sub!.subscriberTier).toLocaleString('en-US')}
+                          {Number(sub!.subscriberTier).toLocaleString('en-US')} clients
+                          {(() => {
+                            const t = PRICING_TIERS.find((x) => x.label === sub!.subscriberTier)
+                            return t?.maxMapItems
+                              ? ` / ${t.maxMapItems.toLocaleString('en-US')} map`
+                              : ''
+                          })()}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>

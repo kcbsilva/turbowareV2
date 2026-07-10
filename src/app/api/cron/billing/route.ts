@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
-import { getMonthlyPrice, getPriceByLabel, nextBillingDate, type Region } from '@/lib/pricing'
+import { getMonthlyPrice, getPriceByLabel, getTierByLabel, nextBillingDate, type Region } from '@/lib/pricing'
 
 /**
  * GET /api/cron/billing
@@ -167,6 +167,7 @@ export async function GET(req: NextRequest) {
         if (sub.pendingDowngradeTier) {
           const region         = (sub.region ?? 'BR') as Region
           const downgradePrice = getPriceByLabel(sub.pendingDowngradeTier, region)
+          const downgradeTier  = getTierByLabel(sub.pendingDowngradeTier)
 
           if (downgradePrice !== 'inquire' && typeof downgradePrice === 'number') {
             await prisma.subscription.update({
@@ -174,6 +175,8 @@ export async function GET(req: NextRequest) {
               data:  {
                 subscriberTier:       sub.pendingDowngradeTier,
                 monthlyAmount:        downgradePrice,
+                maxMapItems:          downgradeTier?.maxMapItems ?? null,
+                seats:                downgradeTier?.maxSeats ?? sub.seats,
                 pendingDowngradeTier: null,
                 pendingDowngradeAt:   null,
               },
@@ -182,6 +185,7 @@ export async function GET(req: NextRequest) {
             // Refresh local sub fields for invoice generation below
             sub.subscriberTier       = sub.pendingDowngradeTier
             sub.monthlyAmount        = downgradePrice
+            sub.maxMapItems          = downgradeTier?.maxMapItems ?? sub.maxMapItems
             sub.pendingDowngradeTier = null
             sub.pendingDowngradeAt   = null
           } else {
