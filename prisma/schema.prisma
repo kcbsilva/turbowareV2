@@ -101,7 +101,9 @@ model Subscription {
   region               String?
   subscriberTier       String?
   monthlyAmount        Float?
+  maxMapItems          Int?
   lastSubscriberSync   DateTime?
+  lastMapItemSync      DateTime?
   pendingDowngradeTier String?
   pendingDowngradeAt   DateTime?
   invoices             Invoice[]
@@ -264,9 +266,10 @@ model ProductTier {
   id           String    @id @default(cuid())
   productId    String
   product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  name         String    // "Starter", "Pro", "Enterprise"
+  name         String    // "Starter", "Pro", "Enterprise" or tier label "150"
   description  String?
   maxSeats     Int?
+  maxMapItems  Int?      // licensed map plant items (FDH/Vault/FOSC/PED/Sites/Towers/Poles)
   priceBR      Float?
   priceCA      Float?
   priceUS      Float?

@@ -43,29 +43,55 @@ export type TierLabel = (typeof TIER_LABELS)[number]
 export interface PricingTier {
   label: TierLabel
   maxSeats: number | null // null = Inquire
+  maxMapItems: number | null // null = Inquire / unlimited enterprise
   prices: Record<Region, number | 'inquire'>
 }
 
+/** Dual-cap TurboISP packages: clients + map plant items. */
 export const PRICING_TIERS: PricingTier[] = [
-  { label: '150',   maxSeats: 150,   prices: { BR: 120,       CA: 300,       US: 375,       GB: 450       } },
-  { label: '200',   maxSeats: 200,   prices: { BR: 160,       CA: 320,       US: 400,       GB: 480       } },
-  { label: '400',   maxSeats: 400,   prices: { BR: 320,       CA: 640,       US: 800,       GB: 960       } },
-  { label: '500',   maxSeats: 500,   prices: { BR: 400,       CA: 800,       US: 1000,      GB: 1200      } },
-  { label: '1000',  maxSeats: 1000,  prices: { BR: 600,       CA: 1200,      US: 1500,      GB: 1800      } },
-  { label: '2000',  maxSeats: 2000,  prices: { BR: 800,       CA: 1600,      US: 2000,      GB: 2400      } },
-  { label: '4000',  maxSeats: 4000,  prices: { BR: 1200,      CA: 2400,      US: 3000,      GB: 3600      } },
-  { label: '6000',  maxSeats: 6000,  prices: { BR: 1500,      CA: 3000,      US: 3750,      GB: 4500      } },
-  { label: '8000',  maxSeats: 8000,  prices: { BR: 1800,      CA: 3600,      US: 4500,      GB: 5400      } },
-  { label: '10000', maxSeats: 10000, prices: { BR: 2200,      CA: 4400,      US: 5500,      GB: 6600      } },
-  { label: '12000', maxSeats: 12000, prices: { BR: 2600,      CA: 5200,      US: 6500,      GB: 7800      } },
-  { label: '12k+',  maxSeats: null,  prices: { BR: 'inquire', CA: 'inquire', US: 'inquire', GB: 'inquire' } },
+  { label: '150',   maxSeats: 150,   maxMapItems: 1000,  prices: { BR: 120,       CA: 300,       US: 375,       GB: 450       } },
+  { label: '200',   maxSeats: 200,   maxMapItems: 1500,  prices: { BR: 160,       CA: 320,       US: 400,       GB: 480       } },
+  { label: '400',   maxSeats: 400,   maxMapItems: 3000,  prices: { BR: 320,       CA: 640,       US: 800,       GB: 960       } },
+  { label: '500',   maxSeats: 500,   maxMapItems: 4000,  prices: { BR: 400,       CA: 800,       US: 1000,      GB: 1200      } },
+  { label: '1000',  maxSeats: 1000,  maxMapItems: 8000,  prices: { BR: 600,       CA: 1200,      US: 1500,      GB: 1800      } },
+  { label: '2000',  maxSeats: 2000,  maxMapItems: 15000, prices: { BR: 800,       CA: 1600,      US: 2000,      GB: 2400      } },
+  { label: '4000',  maxSeats: 4000,  maxMapItems: 30000, prices: { BR: 1200,      CA: 2400,      US: 3000,      GB: 3600      } },
+  { label: '6000',  maxSeats: 6000,  maxMapItems: 45000, prices: { BR: 1500,      CA: 3000,      US: 3750,      GB: 4500      } },
+  { label: '8000',  maxSeats: 8000,  maxMapItems: 60000, prices: { BR: 1800,      CA: 3600,      US: 4500,      GB: 5400      } },
+  { label: '10000', maxSeats: 10000, maxMapItems: 75000, prices: { BR: 2200,      CA: 4400,      US: 5500,      GB: 6600      } },
+  { label: '12000', maxSeats: 12000, maxMapItems: 90000, prices: { BR: 2600,      CA: 5200,      US: 6500,      GB: 7800      } },
+  { label: '12k+',  maxSeats: null,  maxMapItems: null,  prices: { BR: 'inquire', CA: 'inquire', US: 'inquire', GB: 'inquire' } },
 ]
 
-/** Get monthly price for a given subscriber count and region. Returns 'inquire' if > 12000. */
-export function getPriceForTier(subscriberCount: number, region: Region): number | 'inquire' {
-  const tier = PRICING_TIERS.find((t) => t.maxSeats !== null && subscriberCount <= t.maxSeats)
+/** Lowest tier that fits both client and map-item counts. Null = enterprise inquire. */
+export function getTierForUsage(subscriberCount: number, mapItemCount: number): PricingTier | null {
+  const clients = Math.max(0, subscriberCount)
+  const maps = Math.max(0, mapItemCount)
+  return (
+    PRICING_TIERS.find(
+      (t) =>
+        t.maxSeats !== null &&
+        t.maxMapItems !== null &&
+        clients <= t.maxSeats &&
+        maps <= t.maxMapItems,
+    ) ?? null
+  )
+}
+
+/** Get monthly price for dual-cap usage and region. */
+export function getPriceForUsage(
+  subscriberCount: number,
+  mapItemCount: number,
+  region: Region,
+): number | 'inquire' {
+  const tier = getTierForUsage(subscriberCount, mapItemCount)
   if (!tier) return 'inquire'
   return tier.prices[region]
+}
+
+/** @deprecated Prefer getPriceForUsage — clients-only lookup. */
+export function getPriceForTier(subscriberCount: number, region: Region): number | 'inquire' {
+  return getPriceForUsage(subscriberCount, 0, region)
 }
 
 /** Get monthly price by exact tier label and region. */
@@ -73,6 +99,10 @@ export function getPriceByLabel(tierLabel: string, region: Region): number | 'in
   const tier = PRICING_TIERS.find((t) => t.label === tierLabel)
   if (!tier) return 'inquire'
   return tier.prices[region]
+}
+
+export function getTierByLabel(tierLabel: string): PricingTier | undefined {
+  return PRICING_TIERS.find((t) => t.label === tierLabel)
 }
 
 /** Get installation fee for a region. */
