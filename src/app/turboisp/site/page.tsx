@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   ChevronRight,
   ChevronLeft,
@@ -191,9 +192,9 @@ export default function TurboISPSitePage() {
             <option value="pt">PT</option>
             <option value="fr">FR</option>
           </select>
-          <button className="text-sm px-4 py-2 rounded border border-sky-600 text-sky-700 hover:bg-sky-600 hover:text-white transition">
+          <Link href="/admin/login" className="text-sm px-4 py-2 rounded border border-sky-600 text-sky-700 hover:bg-sky-600 hover:text-white transition">
             {s({ en: "Login", pt: "Entrar", fr: "Connexion" })}
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -303,12 +304,12 @@ export default function TurboISPSitePage() {
 
         {/* CTAs under carousel */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-14">
-          <button className="px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition">
+          <Link href="/turboisp/register" className="px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition text-center">
             {s({ en: "Start free trial", pt: "Comece grátis", fr: "Essai gratuit" })}
-          </button>
-          <button className="px-8 py-4 border border-sky-600 rounded-lg font-semibold text-sky-700 hover:bg-sky-50 transition">
-            {s({ en: "Schedule demo", pt: "Agendar demo", fr: "Demander une démo" })}
-          </button>
+          </Link>
+          <Link href="/turboisp/pricing" className="px-8 py-4 border border-sky-600 rounded-lg font-semibold text-sky-700 hover:bg-sky-50 transition text-center">
+            {s({ en: "See pricing", pt: "Ver planos", fr: "Voir les tarifs" })}
+          </Link>
         </div>
 
         {/* Capabilities Pills */}
@@ -387,9 +388,9 @@ export default function TurboISPSitePage() {
               fr: "Commencez votre essai gratuit de 14 jours. Provisionnement en minutes.",
             })}
           </p>
-          <button className="px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition">
+          <Link href="/turboisp/register" className="inline-block px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition">
             {s({ en: "Start free trial", pt: "Comece grátis", fr: "Essai gratuit" })}
-          </button>
+          </Link>
         </div>
       </section>
 
