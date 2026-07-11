@@ -1,5 +1,7 @@
 .register-page {
   min-height: 100svh;
+  background: #040810;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .register-page .reg-signup-card {

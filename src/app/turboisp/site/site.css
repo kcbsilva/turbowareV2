@@ -1,14 +1,13 @@
+/*
+ * The app shell locks html/body scroll (globals.css). Instead of unlocking
+ * via client JS (breaks if hydration fails), the site wrapper is its own
+ * scroll container.
+ */
 .turboisp-site {
   font-family: var(--font-site), ui-sans-serif, system-ui, sans-serif;
   color: #0f172a;
   background: #ffffff;
-  min-height: 100svh;
-}
-
-html.turboisp-site-root,
-html.turboisp-site-root body {
-  overflow: auto !important;
-  height: auto !important;
-  min-height: 100svh;
-  background: #ffffff;
+  height: 100svh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
