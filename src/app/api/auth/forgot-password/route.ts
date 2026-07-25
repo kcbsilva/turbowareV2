@@ -1,32 +1,29 @@
+import { createHash, randomBytes } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
-import { sendAdminTemporaryPasswordEmail } from '@/lib/email'
-import { forgotPasswordRateLimiter } from '@/lib/rate-limit'
-import { generateTemporaryPassword } from '@/lib/temporary-password'
+import { sendAdminPasswordResetEmail } from '@/lib/email'
+import { clientIP, forgotPasswordRateLimiter } from '@/lib/rate-limit'
 
 const GENERIC_OK = {
   ok: true,
-  message: 'If an account exists for that email, a temporary password has been sent.',
+  message: 'If an account exists for that email, a password reset link has been sent.',
 }
 
-/** POST /api/auth/forgot-password — email a temporary admin password */
+/** POST /api/auth/forgot-password — email a single-use admin reset link */
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
-  if (!forgotPasswordRateLimiter.check(ip)) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please try again in 15 minutes.' },
-      { status: 429 },
-    )
-  }
-
   const { body, error } = await parseBody<{ email?: string }>(req)
   if (error) return badRequest()
 
   const email = body.email?.trim().toLowerCase() ?? ''
   if (!email) {
     return NextResponse.json({ error: 'Email is required.' }, { status: 400 })
+  }
+  if (!(await forgotPasswordRateLimiter.check(`${clientIP(req)}:${email}`))) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again in 15 minutes.' },
+      { status: 429 },
+    )
   }
 
   try {
@@ -39,20 +36,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(GENERIC_OK)
     }
 
-    const temporaryPassword = generateTemporaryPassword()
-    const passwordHash = await bcrypt.hash(temporaryPassword, 12)
+    const token = randomBytes(32).toString('hex')
+    const tokenHash = createHash('sha256').update(token).digest('hex')
 
     await prisma.adminUser.update({
       where: { id: user.id },
       data: {
-        passwordHash,
-        mustChangePassword: true,
-        mfaEnabled: false,
-        totpSecret: null,
+        passwordResetTokenHash: tokenHash,
+        passwordResetExpiresAt: new Date(Date.now() + 30 * 60 * 1000),
       },
     })
 
-    await sendAdminTemporaryPasswordEmail(user.email, temporaryPassword)
+    try {
+      await sendAdminPasswordResetEmail(user.email, token)
+    } catch (err) {
+      await prisma.adminUser.updateMany({
+        where: { id: user.id, passwordResetTokenHash: tokenHash },
+        data: { passwordResetTokenHash: null, passwordResetExpiresAt: null },
+      })
+      throw err
+    }
     return NextResponse.json(GENERIC_OK)
   } catch (err) {
     console.error('[auth/forgot-password] Failed:', err)

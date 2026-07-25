@@ -15,9 +15,9 @@ const statusStyles: Record<LicenseStatus, string> = {
 export default async function LicensesPage({
   searchParams,
 }: {
-  searchParams: { status?: string; search?: string }
+  searchParams: Promise<{ status?: string; search?: string }>
 }) {
-  const { status, search } = searchParams
+  const { status, search } = await searchParams
   const validStatus = Object.values(LicenseStatus).includes(status as LicenseStatus)
     ? (status as LicenseStatus)
     : undefined

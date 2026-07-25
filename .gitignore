@@ -27,6 +27,8 @@ yarn-error.log*
 
 # OS
 .DS_Store
+._*
+**/._*
 Thumbs.db
 
 # Editor
@@ -35,6 +37,7 @@ Thumbs.db
 
 # Claude Code local config
 .claude/
+.claude/worktrees/
 
 # Vercel
 .vercel

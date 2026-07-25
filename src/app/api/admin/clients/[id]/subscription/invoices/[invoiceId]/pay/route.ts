@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-type Params = { params: { id: string; invoiceId: string } }
+type Params = { params: Promise<{ id: string; invoiceId: string }> }
 
 // POST /api/admin/clients/[id]/subscription/invoices/[invoiceId]/pay
 // Admin marks an invoice as paid. If all setup invoices paid → activate subscription + license.
 export async function POST(_req: NextRequest, { params }: Params) {
+  const { invoiceId } = await params
   const invoice = await prisma.invoice.findUnique({
-    where: { id: params.invoiceId },
+    where: { id: invoiceId },
     include: { subscription: { include: { invoices: true } } },
   })
 
@@ -17,14 +18,14 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
   // Mark invoice paid
   await prisma.invoice.update({
-    where: { id: params.invoiceId },
+    where: { id: invoiceId },
     data:  { status: 'PAID', paidAt: new Date() },
   })
 
   // Check if all non-GRACE_FEE invoices are now paid
   const sub      = invoice.subscription
   const allPaid  = sub.invoices
-    .filter((i) => i.id !== params.invoiceId) // exclude current (before DB update)
+    .filter((i) => i.id !== invoiceId) // exclude current (before DB update)
     .every((i) => i.status === 'PAID' || i.type === 'GRACE_FEE')
 
   if (allPaid && (sub.status === 'TRIAL' || sub.status === 'PENDING_PAYMENT')) {

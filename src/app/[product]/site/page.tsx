@@ -8,17 +8,18 @@ import {
 } from "@/lib/project-site-content";
 
 type PageProps = {
-  params: {
+  params: Promise<{
     product: string;
-  };
+  }>;
 };
 
 export function generateStaticParams() {
   return PRODUCT_SITE_SLUGS.map((product) => ({ product }));
 }
 
-export function generateMetadata({ params }: PageProps): Metadata {
-  const product = PRODUCT_SITES[params.product];
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { product: slug } = await params;
+  const product = PRODUCT_SITES[slug];
 
   if (!product) {
     return {};
@@ -30,8 +31,9 @@ export function generateMetadata({ params }: PageProps): Metadata {
   };
 }
 
-export default function ProductSiteRoute({ params }: PageProps) {
-  const product = PRODUCT_SITES[params.product];
+export default async function ProductSiteRoute({ params }: PageProps) {
+  const { product: slug } = await params;
+  const product = PRODUCT_SITES[slug];
 
   if (!product) {
     notFound();

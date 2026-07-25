@@ -7,7 +7,7 @@ import { sendVerificationEmail } from '@/lib/email'
 import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
 import { deleteTurboISPTenantBySlug } from '@/lib/turboisp-bootstrap'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 const baseClientSelect = {
   id: true,
@@ -51,7 +51,8 @@ async function getClientForAdmin(id: string) {
 
 // GET /api/admin/clients/[id]
 export async function GET(_req: NextRequest, { params }: Params) {
-  const client = await getClientForAdmin(params.id)
+  const { id } = await params
+  const client = await getClientForAdmin(id)
 
   if (!client) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -62,6 +63,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 // PATCH /api/admin/clients/[id] — update fields
 export async function PATCH(req: NextRequest, { params }: Params) {
+  const { id } = await params
   const { body: parsed, error } = await parseBody<{ name?: string; email?: string; phone?: string; company?: string; cnpj?: string; internalNotes?: string; newPassword?: string }>(req)
   if (error) return badRequest()
   const { name, email, phone, company, cnpj, internalNotes, newPassword } = parsed
@@ -78,7 +80,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   // Detect email change — if email is changing, reset verification
   const existing = await prisma.client.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: { email: true },
   })
 
@@ -87,7 +89,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const verificationToken = emailChanged && newEmail ? crypto.randomBytes(32).toString('hex') : undefined
 
   await prisma.client.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       ...(name !== undefined ? { name: name.trim() } : {}),
       ...(email !== undefined ? { email: newEmail } : {}),
@@ -115,7 +117,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
   }
 
-  const client = await getClientForAdmin(params.id)
+  const client = await getClientForAdmin(id)
   if (!client) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { password: _, ...safe } = client
@@ -124,8 +126,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // DELETE /api/admin/clients/[id]
 export async function DELETE(_req: NextRequest, { params }: Params) {
+  const { id } = await params
   const client = await prisma.client.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: { id: true, subdomain: true },
   })
   if (!client) {
@@ -150,7 +153,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   }
 
   try {
-    await prisma.client.delete({ where: { id: params.id } })
+    await prisma.client.delete({ where: { id } })
   } catch (err) {
     console.error('[admin/clients] Client delete failed:', err)
     return NextResponse.json({ error: 'Delete failed' }, { status: 500 })

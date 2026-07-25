@@ -5,13 +5,14 @@ import { sendTemporaryPasswordEmail } from '@/lib/email'
 import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
 import { generateTemporaryPassword } from '@/lib/temporary-password'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 // POST /api/admin/clients/[id]/reset-password
 export async function POST(_req: NextRequest, { params }: Params) {
+  const { id } = await params
   try {
     const client = await prisma.client.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { id: true, email: true },
     })
 

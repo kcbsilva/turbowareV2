@@ -3,12 +3,13 @@ import { prisma } from '@/lib/prisma'
 
 type Status = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'CANCELLED'
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const { status, notes } = await req.json().catch(() => ({})) as { status: Status; notes?: string }
   if (!status) return NextResponse.json({ error: 'status required' }, { status: 400 })
 
   const activation = await prisma.clientProduct.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       status,
       notes:       notes ?? null,

@@ -38,30 +38,28 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
   })
 }
 
-export async function sendAdminTemporaryPasswordEmail(to: string, temporaryPassword: string): Promise<void> {
-  const loginUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+export async function sendAdminPasswordResetEmail(to: string, token: string): Promise<void> {
+  const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const resetUrl = `${appUrl}/admin/reset-password?token=${encodeURIComponent(token)}`
   const from = process.env.SMTP_FROM ?? 'TurbowareV2 <noreply@turboware.com>'
   const transporter = createTransporter()
 
   await transporter.sendMail({
     from,
     to,
-    subject: 'Temporary Turboware admin password',
+    subject: 'Reset your Turboware admin password',
     text: [
-      'A temporary admin password was requested for your Turboware account.',
+      'A password reset was requested for your Turboware account.',
       '',
-      `Temporary password: ${temporaryPassword}`,
+      `Reset password: ${resetUrl}`,
       '',
-      `Sign in: ${loginUrl}/admin/login`,
-      '',
-      'You will be asked to set a new password immediately after signing in.',
+      'This link expires in 30 minutes and can only be used once.',
       'If you did not request this, contact your platform administrator.',
     ].join('\n'),
     html: [
-      '<p>A temporary admin password was requested for your Turboware account.</p>',
-      `<p><strong>Temporary password:</strong> ${temporaryPassword}</p>`,
-      `<p><a href="${loginUrl}/admin/login">Sign in to Turboware Admin</a></p>`,
-      '<p>You will be asked to set a new password immediately after signing in.</p>',
+      '<p>A password reset was requested for your Turboware account.</p>',
+      `<p><a href="${resetUrl}">Reset your password</a></p>`,
+      '<p>This link expires in 30 minutes and can only be used once.</p>',
       '<p>If you did not request this, contact your platform administrator.</p>',
     ].join(''),
   })

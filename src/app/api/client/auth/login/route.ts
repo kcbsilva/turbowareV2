@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import { signClientToken, CLIENT_COOKIE_NAME } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
-import { loginRateLimiter } from '@/lib/rate-limit'
+import { clientIP, loginRateLimiter } from '@/lib/rate-limit'
 import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
 
 async function findClientForLogin(normalized: string, raw: string) {
@@ -36,8 +36,8 @@ export async function POST(req: NextRequest) {
   if (error) return badRequest()
   const { cnpj, password } = body
 
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
-  if (!loginRateLimiter.check(ip)) {
+  const ip = clientIP(req)
+  if (!(await loginRateLimiter.check(ip))) {
     return NextResponse.json(
       { error: 'Too many login attempts. Please try again in 15 minutes.' },
       { status: 429 },

@@ -14,10 +14,11 @@ const statusStyles: Record<LicenseStatus, string> = {
   EXPIRED: 'text-muted-foreground border-border bg-muted/50',
 }
 
-export default async function LicenseDetailPage({ params }: { params: { id: string } }) {
+export default async function LicenseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const [license, clients] = await Promise.all([
     prisma.license.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         activations: { orderBy: { activatedAt: 'desc' } },
         client: { select: { id: true, name: true } },

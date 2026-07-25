@@ -1,55 +1,49 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// Mock Date to control time
+const { queryRaw } = vi.hoisted(() => ({
+  queryRaw: vi.fn(),
+}))
+
+vi.mock('@/lib/prisma', () => ({
+  prisma: { $queryRaw: queryRaw },
+}))
+
+import { RateLimiter } from '../rate-limit'
+
 describe('RateLimiter', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
+    queryRaw.mockReset()
   })
 
   it('allows requests below limit', async () => {
-    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
-    const { RateLimiter } = await import('../rate-limit')
-    const limiter = new RateLimiter({ max: 5, windowMs: 15 * 60 * 1000 })
+    queryRaw.mockResolvedValue([{ allowed: true }])
+    const limiter = new RateLimiter({ namespace: 'login', max: 5, windowMs: 15 * 60 * 1000 })
 
-    for (let i = 0; i < 5; i++) {
-      expect(limiter.check('1.2.3.4')).toBe(true)
-    }
+    await expect(limiter.check('1.2.3.4')).resolves.toBe(true)
+    expect(queryRaw).toHaveBeenCalledOnce()
   })
 
   it('blocks requests over limit', async () => {
-    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
-    vi.resetModules()
-    const { RateLimiter } = await import('../rate-limit')
-    const limiter = new RateLimiter({ max: 5, windowMs: 15 * 60 * 1000 })
+    queryRaw.mockResolvedValue([{ allowed: false }])
+    const limiter = new RateLimiter({ namespace: 'login', max: 5, windowMs: 15 * 60 * 1000 })
 
-    for (let i = 0; i < 5; i++) limiter.check('1.2.3.4')
-    expect(limiter.check('1.2.3.4')).toBe(false)
+    await expect(limiter.check('1.2.3.4')).resolves.toBe(false)
   })
 
-  it('resets after window expires', async () => {
-    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
-    vi.resetModules()
-    const { RateLimiter } = await import('../rate-limit')
-    const limiter = new RateLimiter({ max: 5, windowMs: 15 * 60 * 1000 })
+  it('fails closed if the database returns no decision', async () => {
+    queryRaw.mockResolvedValue([])
+    const limiter = new RateLimiter({ namespace: 'login', max: 5, windowMs: 15 * 60 * 1000 })
 
-    for (let i = 0; i < 5; i++) limiter.check('1.2.3.4')
-
-    // Advance 16 minutes
-    vi.advanceTimersByTime(16 * 60 * 1000)
-    expect(limiter.check('1.2.3.4')).toBe(true)
+    await expect(limiter.check('1.2.3.4')).resolves.toBe(false)
   })
 
-  it('does not affect other IPs', async () => {
-    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
-    vi.resetModules()
-    const { RateLimiter } = await import('../rate-limit')
-    const limiter = new RateLimiter({ max: 5, windowMs: 15 * 60 * 1000 })
+  it('namespaces and bounds the persisted subject key', async () => {
+    queryRaw.mockResolvedValue([{ allowed: true }])
+    const limiter = new RateLimiter({ namespace: 'password-reset', max: 3, windowMs: 900_000 })
 
-    for (let i = 0; i < 6; i++) limiter.check('1.2.3.4')
-    expect(limiter.check('9.9.9.9')).toBe(true)
+    await limiter.check('x'.repeat(600))
+    const taggedTemplateArgs = queryRaw.mock.calls[0]
+    expect(taggedTemplateArgs[1]).toMatch(/^password-reset:/)
+    expect(taggedTemplateArgs[1]).toHaveLength(500)
   })
 })
