@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getPriceByLabel, getTierByLabel, type Region } from '@/lib/pricing'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 // POST /api/admin/clients/[id]/plan
 export async function POST(req: NextRequest, { params }: Params) {
+  const { id } = await params
   const { subscriberTier, region } = await req.json()
 
   if (!subscriberTier || !region) {
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'This tier requires a custom quote. Please contact sales.' }, { status: 400 })
   }
 
-  const existing = await prisma.subscription.findUnique({ where: { clientId: params.id } })
+  const existing = await prisma.subscription.findUnique({ where: { clientId: id } })
   if (!existing) {
     return NextResponse.json({ error: 'No subscription found for this client.' }, { status: 404 })
   }
@@ -53,9 +54,9 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (product) {
     const tierId = product.tiers[0]?.id ?? null
     await prisma.clientProduct.upsert({
-      where: { clientId_productId: { clientId: params.id, productId: product.id } },
+      where: { clientId_productId: { clientId: id, productId: product.id } },
       create: {
-        clientId: params.id,
+        clientId: id,
         productId: product.id,
         tierId,
         status: 'ACTIVE',

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import logo from "../assets/TurboISP-logo.png";
 import {
   ChevronRight,
   ChevronLeft,
@@ -174,15 +176,29 @@ export default function TurboISPSitePage() {
   const SlideIcon = slide.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-sky-50 to-white text-slate-900">
+    <div id="top" className="min-h-screen bg-gradient-to-b from-white via-sky-50 to-white text-slate-900">
       {/* Navigation */}
-      <nav className="relative z-40 flex items-center justify-between px-6 py-6 lg:px-12 border-b border-slate-100">
-        <div className="text-2xl font-bold">
-          <span className="bg-gradient-to-r from-sky-500 to-blue-700 bg-clip-text text-transparent">turbo</span>
-          <span className="text-slate-900">isp</span>
+      <nav className="sticky top-0 z-40 flex items-center justify-between px-6 py-4 lg:px-12 border-b border-slate-100 bg-white/85 backdrop-blur-md">
+        <a href="#top" className="flex items-center">
+          <Image src={logo} alt="TurboISP" priority className="h-16 w-auto -my-4" />
+        </a>
+
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+          <a href="#platform" className="hover:text-sky-600 transition">
+            {s({ en: "Platform", pt: "Plataforma", fr: "Plateforme" })}
+          </a>
+          <a href="#why" className="hover:text-sky-600 transition">
+            {s({ en: "Why TurboISP", pt: "Por que TurboISP", fr: "Pourquoi TurboISP" })}
+          </a>
+          <a href="#results" className="hover:text-sky-600 transition">
+            {s({ en: "Results", pt: "Resultados", fr: "Résultats" })}
+          </a>
+          <Link href="/turboisp/pricing" className="hover:text-sky-600 transition">
+            {s({ en: "Pricing", pt: "Planos", fr: "Tarifs" })}
+          </Link>
         </div>
 
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4">
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value as Lang)}
@@ -195,11 +211,14 @@ export default function TurboISPSitePage() {
           <Link href="/admin/login" className="text-sm px-4 py-2 rounded border border-sky-600 text-sky-700 hover:bg-sky-600 hover:text-white transition">
             {s({ en: "Login", pt: "Entrar", fr: "Connexion" })}
           </Link>
+          <Link href="/turboisp/register" className="hidden lg:block text-sm px-4 py-2 rounded bg-gradient-to-r from-sky-500 to-blue-600 text-white font-medium hover:shadow-md hover:shadow-sky-200 transition">
+            {s({ en: "Start free trial", pt: "Comece grátis", fr: "Essai gratuit" })}
+          </Link>
         </div>
       </nav>
 
       {/* Hero: This is TurboISP + carousel */}
-      <section className="relative px-6 pt-20 pb-24 lg:px-12">
+      <section id="platform" className="relative px-6 pt-20 pb-24 lg:px-12 scroll-mt-20">
         <div className="max-w-5xl mx-auto text-center mb-14">
           <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-slate-900 mb-6">
             {s({ en: "This is ", pt: "Isto é o ", fr: "Voici " })}
@@ -323,7 +342,7 @@ export default function TurboISPSitePage() {
       </section>
 
       {/* Values Section */}
-      <section className="relative px-6 lg:px-12 py-24 bg-slate-50">
+      <section id="why" className="relative px-6 lg:px-12 py-24 bg-slate-50 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-sky-600 text-sm font-mono uppercase tracking-wider">{s({ en: "Why TurboISP", pt: "Por que TurboISP", fr: "Pourquoi TurboISP" })}</span>
@@ -352,7 +371,7 @@ export default function TurboISPSitePage() {
       </section>
 
       {/* Metrics Section */}
-      <section className="relative px-6 lg:px-12 py-24 bg-gradient-to-r from-sky-600 to-blue-700 text-white">
+      <section id="results" className="relative px-6 lg:px-12 py-24 bg-gradient-to-r from-sky-600 to-blue-700 text-white scroll-mt-20">
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="p-8">

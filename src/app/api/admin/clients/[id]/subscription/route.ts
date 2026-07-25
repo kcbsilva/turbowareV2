@@ -4,12 +4,13 @@ import { parseBody, badRequest } from '@/lib/api'
 import { isValidTransition } from '@/lib/transitions'
 import { SubscriptionStatus } from '@prisma/client'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 // GET /api/admin/clients/[id]/subscription
 export async function GET(_req: NextRequest, { params }: Params) {
+  const { id } = await params
   const sub = await prisma.subscription.findUnique({
-    where: { clientId: params.id },
+    where: { clientId: id },
     include: {
       invoices: { orderBy: { createdAt: 'desc' } },
       license:  { select: { key: true, status: true, maxSeats: true } },
@@ -20,6 +21,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 // PATCH /api/admin/clients/[id]/subscription — update status manually
 export async function PATCH(req: NextRequest, { params }: Params) {
+  const { id } = await params
   const { body, error } = await parseBody<{ status?: string }>(req)
   if (error) return badRequest()
   const { status } = body
@@ -32,7 +34,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     )
   }
 
-  const sub = await prisma.subscription.findUnique({ where: { clientId: params.id } })
+  const sub = await prisma.subscription.findUnique({ where: { clientId: id } })
   if (!sub) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   if (!isValidTransition(sub.status, status)) {

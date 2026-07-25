@@ -3,13 +3,14 @@ import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { sendVerificationEmail } from '@/lib/email'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 // POST /api/admin/clients/[id]/resend-verification
 export async function POST(_req: NextRequest, { params }: Params) {
+  const { id } = await params
   try {
     const client = await prisma.client.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         email: true,

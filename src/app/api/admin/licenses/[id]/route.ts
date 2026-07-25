@@ -4,12 +4,13 @@ import { resolveStatus } from '@/lib/license'
 import { LicenseStatus } from '@prisma/client'
 import { parseBody, badRequest } from '@/lib/api'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 // GET /api/admin/licenses/[id]
 export async function GET(_req: NextRequest, { params }: Params) {
+  const { id } = await params
   const license = await prisma.license.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { activations: { orderBy: { activatedAt: 'desc' } } },
   })
 
@@ -25,6 +26,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 // PATCH /api/admin/licenses/[id] — update status, notes, expiry, seats
 export async function PATCH(req: NextRequest, { params }: Params) {
+  const { id } = await params
   const { body: parsed, error } = await parseBody<{ status?: string; notes?: string; maxSeats?: unknown; expiresAt?: string; product?: string; clientId?: string }>(req)
   if (error) return badRequest()
   const { status, notes, maxSeats, expiresAt, product, clientId } = parsed
@@ -43,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   const license = await prisma.license.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       ...(status !== undefined ? { status: status as LicenseStatus } : {}),
       ...(notes !== undefined ? { notes: notes?.trim() || null } : {}),
@@ -61,6 +63,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // DELETE /api/admin/licenses/[id]
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  await prisma.license.delete({ where: { id: params.id } })
+  const { id } = await params
+  await prisma.license.delete({ where: { id } })
   return NextResponse.json({ ok: true })
 }

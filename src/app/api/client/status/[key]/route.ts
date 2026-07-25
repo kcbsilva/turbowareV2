@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { resolveStatus } from '@/lib/license'
 
-type Params = { params: { key: string } }
+type Params = { params: Promise<{ key: string }> }
 
 /**
  * GET /api/client/status/[key]
@@ -10,8 +10,9 @@ type Params = { params: { key: string } }
  * Returns only the effective status of a license key (active/inactive).
  */
 export async function GET(_req: NextRequest, { params }: Params) {
+  const { key } = await params
   const license = await prisma.license.findUnique({
-    where: { key: params.key },
+    where: { key },
     select: { status: true, expiresAt: true },
   })
 

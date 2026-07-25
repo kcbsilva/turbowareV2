@@ -127,7 +127,7 @@ export default function LoginForm() {
 
   const titles: Record<Step, { title: string; subtitle: string }> = {
     login: { title: 'Turboware Admin', subtitle: 'License & billing management' },
-    forgot: { title: 'Reset password', subtitle: 'We will email a temporary password' },
+    forgot: { title: 'Reset password', subtitle: 'We will email a single-use reset link' },
     mfa: { title: 'Turboware Admin', subtitle: 'Enter the 6-digit code from your authenticator app' },
     newPassword: { title: 'Set new password', subtitle: 'Choose a new password before continuing' },
   }
@@ -239,7 +239,7 @@ export default function LoginForm() {
             <div className="mb-5">
               {forgotSent ? (
                 <p className="text-sm" style={{ color: 'rgba(165,180,210,0.85)' }}>
-                  If an account exists for that email, a temporary password has been sent. Check your inbox, sign in, then set a new password.
+                  If an account exists for that email, a single-use reset link has been sent. Check your inbox to continue.
                 </p>
               ) : (
                 <>
@@ -377,7 +377,7 @@ export default function LoginForm() {
               {loading
                 ? 'Please wait…'
                 : step === 'forgot'
-                  ? 'Send temporary password'
+                  ? 'Send reset link'
                   : step === 'mfa'
                     ? 'Verify'
                     : step === 'newPassword'

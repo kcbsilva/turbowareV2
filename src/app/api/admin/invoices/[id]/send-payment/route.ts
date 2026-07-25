@@ -11,11 +11,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma }                    from '@/lib/prisma'
 import { requestPayment }            from '@/lib/payments'
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 export async function POST(_req: NextRequest, { params }: Params): Promise<NextResponse> {
+  const { id } = await params
   const invoice = await prisma.invoice.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: { id: true, status: true },
   })
 
@@ -32,7 +33,7 @@ export async function POST(_req: NextRequest, { params }: Params): Promise<NextR
   }
 
   try {
-    const { paymentUrl } = await requestPayment(params.id)
+    const { paymentUrl } = await requestPayment(id)
     return NextResponse.json({ paymentUrl })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Gateway error'

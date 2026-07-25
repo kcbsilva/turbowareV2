@@ -3,13 +3,13 @@ import { prisma } from '@/lib/prisma'
 import { signAdminToken, setAdminAuthCookie } from '@/lib/auth'
 import { decryptTotpSecret, verifyTotpCode } from '@/lib/mfa'
 import { MFA_PENDING_COOKIE, verifyMfaPendingToken } from '@/lib/mfa-pending'
-import { loginRateLimiter } from '@/lib/rate-limit'
+import { clientIP, loginRateLimiter } from '@/lib/rate-limit'
 import { parseBody, badRequest } from '@/lib/api'
 
 /** POST — second login step: verify TOTP and issue admin session cookie */
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
-  if (!loginRateLimiter.check(`mfa:${ip}`)) {
+  const ip = clientIP(req)
+  if (!(await loginRateLimiter.check(`mfa:${ip}`))) {
     return NextResponse.json(
       { error: 'Too many attempts. Please try again in 15 minutes.' },
       { status: 429 },

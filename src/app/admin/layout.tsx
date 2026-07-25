@@ -3,7 +3,7 @@ import { WorktopDesktop } from '@/components/WorktopDesktop'
 import { COOKIE_NAME, verifyAdminToken } from '@/lib/auth'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
   const isAuthenticated = token ? await verifyAdminToken(token) : false
 

@@ -71,11 +71,19 @@ async function bootstrapInTransaction(
 
   const group = await client.query<{ id: string }>(
     `SELECT id::text FROM acl_groups
-     WHERE name = 'Administrators' AND COALESCE(is_archived, false) = false
+     WHERE name = 'Super Administrators' AND COALESCE(is_archived, false) = false
      ORDER BY id LIMIT 1`,
   )
-  const groupId = group.rows[0]?.id
-  if (!groupId) throw new Error('administrators group not found')
+  let groupId = group.rows[0]?.id
+  if (!groupId) {
+    const fallback = await client.query<{ id: string }>(
+      `SELECT id::text FROM acl_groups
+       WHERE name = 'Administrators' AND COALESCE(is_archived, false) = false
+       ORDER BY id LIMIT 1`,
+    )
+    groupId = fallback.rows[0]?.id
+  }
+  if (!groupId) throw new Error('bootstrap ACL group not found')
 
   try {
     await client.query(

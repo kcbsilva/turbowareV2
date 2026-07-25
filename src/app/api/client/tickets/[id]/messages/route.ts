@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getClientId } from '@/lib/client-auth'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const clientId = getClientId(req)
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const ticket = await prisma.supportTicket.findFirst({ where: { id: params.id, clientId } })
+  const ticket = await prisma.supportTicket.findFirst({ where: { id, clientId } })
   if (!ticket) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   if (ticket.status === 'CLOSED') {
@@ -20,10 +21,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const [message] = await prisma.$transaction([
     prisma.ticketMessage.create({
-      data: { ticketId: params.id, body: body.trim(), authorType: 'CLIENT', authorName: client?.name ?? 'Client' },
+      data: { ticketId: id, body: body.trim(), authorType: 'CLIENT', authorName: client?.name ?? 'Client' },
     }),
     prisma.supportTicket.update({
-      where: { id: params.id },
+      where: { id },
       data: { status: ticket.status === 'RESOLVED' ? 'OPEN' : undefined, updatedAt: new Date() },
     }),
   ])
