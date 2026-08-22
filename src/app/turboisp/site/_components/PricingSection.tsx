@@ -169,70 +169,62 @@ export function PricingSection({ lang }: { lang: Lang }) {
                       </p>
                     </div>
                     {!isCloud && (
-                      <div className="relative shrink-0">
-                        <button
-                          type="button"
-                          aria-expanded={infoOpen}
-                          aria-label={s({
-                            en: `About the ${planName(tier)} self-hosted plan`,
-                            pt: `Sobre o plano self-hosted ${planName(tier)}`,
-                            fr: `À propos du forfait auto-hébergé ${planName(tier)}`,
-                          })}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenInfo(infoOpen ? null : tier.label);
-                          }}
-                          className={`mt-0.5 p-1 rounded-full border transition ${
-                            infoOpen
-                              ? "border-sky-500 text-sky-600 bg-sky-50"
-                              : "border-slate-200 text-slate-400 hover:border-sky-300 hover:text-sky-600"
-                          }`}
-                        >
-                          <Info className="w-3.5 h-3.5" />
-                        </button>
-                        {infoOpen && (
-                          <div
-                            role="tooltip"
-                            className="absolute right-0 top-8 z-20 w-56 rounded-lg border border-slate-200 bg-white p-3 text-left shadow-lg"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <p className="text-[11px] font-semibold text-slate-900 mb-1.5">
-                              {s({
-                                en: "Minimum recommended server",
-                                pt: "Servidor mínimo recomendado",
-                                fr: "Serveur minimum recommandé",
-                              })}
-                            </p>
-                            {spec ? (
-                              <ul className="text-[11px] text-slate-600 space-y-1 leading-snug tabular-nums">
-                                <li>{spec.vcpu} vCPUs</li>
-                                <li>{spec.ramGb} GB RAM</li>
-                                <li>
-                                  {formatDisk(spec.diskGb)}{" "}
-                                  {s({ en: "disk", pt: "disco", fr: "disque" })}
-                                </li>
-                              </ul>
-                            ) : (
-                              <p className="text-[11px] text-slate-600 leading-snug">
-                                {s({
-                                  en: "We'll size CPU, RAM, and disk with you.",
-                                  pt: "Dimensionamos CPU, RAM e disco com você.",
-                                  fr: "Nous dimensionnons CPU, RAM et disque avec vous.",
-                                })}
-                              </p>
-                            )}
-                            <p className="text-[11px] text-slate-500 mt-2 leading-snug">
-                              {s({
-                                en: "You provide the hardware, backups, and OS updates.",
-                                pt: "Você fornece hardware, backups e updates do SO.",
-                                fr: "Vous fournissez le matériel, les sauvegardes et les MAJ OS.",
-                              })}
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      <button
+                        type="button"
+                        aria-expanded={infoOpen}
+                        aria-label={s({
+                          en: `About the ${planName(tier)} self-hosted plan`,
+                          pt: `Sobre o plano self-hosted ${planName(tier)}`,
+                          fr: `À propos du forfait auto-hébergé ${planName(tier)}`,
+                        })}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenInfo(infoOpen ? null : tier.label);
+                        }}
+                        className={`mt-0.5 p-1 rounded-full border transition shrink-0 ${
+                          infoOpen
+                            ? "border-sky-500 text-sky-600 bg-sky-50"
+                            : "border-slate-200 text-slate-400 hover:border-sky-300 hover:text-sky-600"
+                        }`}
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                      </button>
                     )}
                   </div>
+
+                  {!isCloud && infoOpen && (
+                    <div
+                      role="tooltip"
+                      className="absolute inset-x-3 top-12 z-20 rounded-lg border border-slate-200 bg-white p-3 text-left shadow-lg"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <p className="text-[11px] font-semibold text-slate-900 mb-1.5">
+                        {s({
+                          en: "Minimum recommended server",
+                          pt: "Servidor mínimo recomendado",
+                          fr: "Serveur minimum recommandé",
+                        })}
+                      </p>
+                      {spec ? (
+                        <ul className="text-[11px] text-slate-600 space-y-1 leading-snug tabular-nums">
+                          <li>{spec.vcpu} vCPUs</li>
+                          <li>{spec.ramGb} GB RAM</li>
+                          <li>
+                            {formatDisk(spec.diskGb)}{" "}
+                            {s({ en: "disk", pt: "disco", fr: "disque" })}
+                          </li>
+                        </ul>
+                      ) : (
+                        <p className="text-[11px] text-slate-600 leading-snug">
+                          {s({
+                            en: "We'll size CPU, RAM, and disk with you.",
+                            pt: "Dimensionamos CPU, RAM e disco com você.",
+                            fr: "Nous dimensionnons CPU, RAM et disque avec vous.",
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {tier.maxMapItems != null && (
                     <p className="text-[11px] text-slate-500 mb-4">
