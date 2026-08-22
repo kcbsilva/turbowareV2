@@ -209,12 +209,33 @@ export default function TurboISPSitePage() {
             <option value="pt">PT</option>
             <option value="fr">FR</option>
           </select>
-          <Link href="/admin/login" className="text-sm px-4 py-2 rounded border border-sky-600 text-sky-700 hover:bg-sky-600 hover:text-white transition">
-            {s({ en: "Login", pt: "Entrar", fr: "Connexion" })}
-          </Link>
-          <Link href="/turboisp/register" className="hidden lg:block text-sm px-4 py-2 rounded bg-gradient-to-r from-sky-500 to-blue-600 text-white font-medium hover:shadow-md hover:shadow-sky-200 transition">
-            {s({ en: "Start free trial", pt: "Comece grátis", fr: "Essai gratuit" })}
-          </Link>
+          <div className="relative inline-flex h-9 items-stretch overflow-hidden rounded-full border border-slate-800">
+            <Link
+              href="/admin/login"
+              className="relative z-10 flex items-center justify-center bg-sky-400 pl-4 pr-6 text-sm font-semibold text-black hover:bg-sky-500 transition-colors"
+            >
+              {s({ en: "Sign in", pt: "Entrar", fr: "Connexion" })}
+            </Link>
+            <Link
+              href="/turboisp/register"
+              className="relative z-10 flex items-center justify-center bg-white pl-6 pr-4 text-sm font-semibold text-black hover:bg-slate-100 transition-colors"
+            >
+              {s({ en: "Sign up", pt: "Cadastrar", fr: "Inscription" })}
+            </Link>
+            <svg
+              className="pointer-events-none absolute left-1/2 top-1/2 z-20 h-9 w-9 -translate-x-1/2 -translate-y-1/2"
+              viewBox="0 0 100 100"
+              aria-hidden
+            >
+              <circle cx="50" cy="50" r="50" fill="#ffffff" />
+              <path
+                d="M50,0 a50,50 0 0,0 0,100 a25,25 0 0,0 0,-50 a25,25 0 0,1 0,-50"
+                fill="#38bdf8"
+              />
+              <circle cx="50" cy="25" r="9" fill="#ffffff" />
+              <circle cx="50" cy="75" r="9" fill="#38bdf8" />
+            </svg>
+          </div>
         </div>
       </nav>
 

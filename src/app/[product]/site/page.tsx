@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${product.name} | Turboware`,
+    title: product.name,
     description: product.heroSubtitle,
   };
 }
