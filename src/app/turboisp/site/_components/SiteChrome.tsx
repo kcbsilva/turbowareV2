@@ -33,7 +33,7 @@ export function SiteNavbar({ lang, onLangChange, labels }: Props) {
           <a href="#modules" className="turbo-nav-link">{labels.modules}</a>
           <a href="#valores" className="turbo-nav-link">{labels.why}</a>
           <a href="#metricas" className="turbo-nav-link">{labels.results}</a>
-          <Link href="/turboisp/pricing" className="turbo-nav-link">{labels.pricing}</Link>
+          <a href="#pricing" className="turbo-nav-link">{labels.pricing}</a>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
@@ -88,7 +88,7 @@ export function SiteFooter({
           <a href="#modules" className="hover:text-[#fca311]/80 transition">{labels.modules}</a>
           <a href="#valores" className="hover:text-[#fca311]/80 transition">{labels.why}</a>
           <a href="#metricas" className="hover:text-[#fca311]/80 transition">{labels.results}</a>
-          <Link href="/turboisp/pricing" className="hover:text-[#fca311]/80 transition">{labels.pricing}</Link>
+          <a href="#pricing" className="hover:text-[#fca311]/80 transition">{labels.pricing}</a>
           <a href={turboispSignupUrl()} className="hover:text-[#fca311]/80 transition">{labels.demo}</a>
           <Link href="/admin/login" className="hover:text-white/60 transition">{labels.admin}</Link>
         </div>

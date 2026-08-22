@@ -20,6 +20,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { type Lang, pick } from "./_components/constants";
+import { PricingSection } from "./_components/PricingSection";
 
 // Drop your screenshots in /public/slides/ with these filenames.
 const SLIDES = [
@@ -193,9 +194,9 @@ export default function TurboISPSitePage() {
           <a href="#results" className="hover:text-sky-600 transition">
             {s({ en: "Results", pt: "Resultados", fr: "Résultats" })}
           </a>
-          <Link href="/turboisp/pricing" className="hover:text-sky-600 transition">
+          <a href="#pricing" className="hover:text-sky-600 transition">
             {s({ en: "Pricing", pt: "Planos", fr: "Tarifs" })}
-          </Link>
+          </a>
         </div>
 
         <div className="flex items-center gap-4">
@@ -326,9 +327,9 @@ export default function TurboISPSitePage() {
           <Link href="/turboisp/register" className="px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition text-center">
             {s({ en: "Start free trial", pt: "Comece grátis", fr: "Essai gratuit" })}
           </Link>
-          <Link href="/turboisp/pricing" className="px-8 py-4 border border-sky-600 rounded-lg font-semibold text-sky-700 hover:bg-sky-50 transition text-center">
+          <a href="#pricing" className="px-8 py-4 border border-sky-600 rounded-lg font-semibold text-sky-700 hover:bg-sky-50 transition text-center">
             {s({ en: "See pricing", pt: "Ver planos", fr: "Voir les tarifs" })}
-          </Link>
+          </a>
         </div>
 
         {/* Capabilities Pills */}
@@ -390,8 +391,10 @@ export default function TurboISPSitePage() {
         </div>
       </section>
 
+      <PricingSection lang={lang} />
+
       {/* CTA Section */}
-      <section className="relative px-6 lg:px-12 py-24">
+      <section className="relative px-6 lg:px-12 py-24 bg-slate-50">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-slate-900">
             {s({
