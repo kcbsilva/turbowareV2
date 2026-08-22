@@ -47,6 +47,29 @@ export interface PricingTier {
   prices: Record<Region, number | 'inquire'>
 }
 
+/** Minimum self-hosted server for a plan. Null = custom / inquire. */
+export type SelfHostedSpec = { vcpu: number; ramGb: number; diskGb: number }
+
+/** Up to 500: 4 vCPU / 8 GB / 500 GB. 1000 doubles that. 2000 doubles vCPUs. 6000 doubles RAM and +500 GB disk. */
+export const SELF_HOSTED_SPECS: Record<TierLabel, SelfHostedSpec | null> = {
+  '150':   { vcpu: 4,  ramGb: 8,  diskGb: 500 },
+  '200':   { vcpu: 4,  ramGb: 8,  diskGb: 500 },
+  '400':   { vcpu: 4,  ramGb: 8,  diskGb: 500 },
+  '500':   { vcpu: 4,  ramGb: 8,  diskGb: 500 },
+  '1000':  { vcpu: 8,  ramGb: 16, diskGb: 1000 },
+  '2000':  { vcpu: 16, ramGb: 16, diskGb: 1000 },
+  '4000':  { vcpu: 16, ramGb: 16, diskGb: 1000 },
+  '6000':  { vcpu: 16, ramGb: 32, diskGb: 1500 },
+  '8000':  null,
+  '10000': null,
+  '12000': null,
+  '12k+':  null,
+}
+
+export function formatDisk(diskGb: number): string {
+  return diskGb >= 1000 ? `${diskGb / 1000} TB` : `${diskGb} GB`
+}
+
 /** Dual-cap TurboISP packages: clients + map plant items. */
 export const PRICING_TIERS: PricingTier[] = [
   { label: '150',   maxSeats: 150,   maxMapItems: 1000,  prices: { BR: 120,       CA: 300,       US: 375,       GB: 450       } },
