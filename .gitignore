@@ -35,7 +35,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Claude Code local config
+# Local agent/editor worktrees
 .claude/
 .claude/worktrees/
 
