@@ -277,20 +277,6 @@ export function PricingSection({ lang }: { lang: Lang }) {
             <ChevronRight size={18} />
           </button>
         </div>
-
-        <p className="text-[11px] text-slate-500 text-center mt-5 leading-relaxed max-w-md mx-auto">
-          {isCloud
-            ? s({
-                en: "Includes hosting, updates, and backups. Setup covers DNS and onboarding.",
-                pt: "Inclui hospedagem, updates e backups. O setup cobre DNS e onboarding.",
-                fr: "Hébergement, mises à jour et sauvegardes inclus. Le setup couvre DNS et onboarding.",
-              })
-            : s({
-                en: "You provide the server. Setup covers on-prem install and onboarding.",
-                pt: "Você fornece o servidor. O setup cobre instalação on-prem e onboarding.",
-                fr: "Vous fournissez le serveur. Le setup couvre l'install on-prem et l'onboarding.",
-              })}
-        </p>
       </div>
     </section>
   );

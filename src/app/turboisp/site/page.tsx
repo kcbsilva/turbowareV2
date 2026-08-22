@@ -7,6 +7,7 @@ import logo from "../assets/TurboISP-logo.png";
 import {
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   Zap,
   Shield,
   Globe,
@@ -200,41 +201,42 @@ export default function TurboISPSitePage() {
         </div>
 
         <div className="flex items-center gap-4">
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value as Lang)}
-            className="bg-transparent text-sm border border-slate-300 px-3 py-2 rounded text-slate-700 cursor-pointer hover:border-sky-500 transition"
-          >
-            <option value="en">EN</option>
-            <option value="pt">PT</option>
-            <option value="fr">FR</option>
-          </select>
+          <label className="relative inline-flex h-9 items-center">
+            <span className="sr-only">{s({ en: "Language", pt: "Idioma", fr: "Langue" })}</span>
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value as Lang)}
+              className="h-9 appearance-none rounded-full border border-slate-800 bg-white pl-3.5 pr-8 text-sm font-semibold text-black cursor-pointer hover:bg-slate-50 focus:outline-none focus:border-sky-500"
+            >
+              <option value="en">EN</option>
+              <option value="pt">PT</option>
+              <option value="fr">FR</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-black" />
+          </label>
           <div className="relative inline-flex h-9 items-stretch overflow-hidden rounded-full border border-slate-800">
             <Link
               href="/admin/login"
-              className="relative z-10 flex items-center justify-center bg-sky-400 pl-4 pr-6 text-sm font-semibold text-black hover:bg-sky-500 transition-colors"
+              className="flex items-center bg-sky-400 pl-4 pr-2 text-sm font-semibold text-black hover:bg-sky-500 transition-colors"
             >
               {s({ en: "Sign in", pt: "Entrar", fr: "Connexion" })}
             </Link>
+            <span
+              className="pointer-events-none relative flex w-3 shrink-0 items-center justify-center bg-sky-400 text-sm font-bold leading-none text-black"
+              aria-hidden
+            >
+              <span
+                className="absolute inset-y-0 right-0 w-1.5 bg-white"
+                style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }}
+              />
+              /
+            </span>
             <Link
               href="/turboisp/register"
-              className="relative z-10 flex items-center justify-center bg-white pl-6 pr-4 text-sm font-semibold text-black hover:bg-slate-100 transition-colors"
+              className="flex items-center bg-white pl-2 pr-4 text-sm font-semibold text-black hover:bg-slate-100 transition-colors"
             >
               {s({ en: "Sign up", pt: "Cadastrar", fr: "Inscription" })}
             </Link>
-            <svg
-              className="pointer-events-none absolute left-1/2 top-1/2 z-20 h-9 w-9 -translate-x-1/2 -translate-y-1/2"
-              viewBox="0 0 100 100"
-              aria-hidden
-            >
-              <circle cx="50" cy="50" r="50" fill="#ffffff" />
-              <path
-                d="M50,0 a50,50 0 0,0 0,100 a25,25 0 0,0 0,-50 a25,25 0 0,1 0,-50"
-                fill="#38bdf8"
-              />
-              <circle cx="50" cy="25" r="9" fill="#ffffff" />
-              <circle cx="50" cy="75" r="9" fill="#38bdf8" />
-            </svg>
           </div>
         </div>
       </nav>
