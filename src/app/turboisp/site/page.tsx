@@ -198,6 +198,9 @@ export default function TurboISPSitePage() {
           <a href="#pricing" className="hover:text-sky-600 transition">
             {s({ en: "Pricing", pt: "Planos", fr: "Tarifs" })}
           </a>
+          <Link href="/turboisp/wiki" className="hover:text-sky-600 transition">
+            {s({ en: "Wiki", pt: "Wiki", fr: "Wiki" })}
+          </Link>
         </div>
 
         <div className="flex items-center gap-4">
@@ -441,7 +444,13 @@ export default function TurboISPSitePage() {
 
       {/* Footer */}
       <footer className="px-6 lg:px-12 py-12 border-t border-slate-200 text-center text-slate-500 text-sm">
-        <p>© 2026 TurboISP. {s({ en: "All rights reserved.", pt: "Todos os direitos reservados.", fr: "Tous droits réservés." })}</p>
+        <p>
+          <Link href="/turboisp/wiki" className="text-sky-600 hover:text-sky-700">
+            {s({ en: "Wiki", pt: "Wiki", fr: "Wiki" })}
+          </Link>
+          <span className="mx-2 text-slate-300">·</span>
+          © 2026 TurboISP. {s({ en: "All rights reserved.", pt: "Todos os direitos reservados.", fr: "Tous droits réservés." })}
+        </p>
       </footer>
     </div>
   );

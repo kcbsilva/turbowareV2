@@ -1,0 +1,3 @@
+# SOC 2 CC8 / ISO A.8.4 — privileged source paths require review.
+
+.github/workflows/** kcb.silvaa@outlook.com

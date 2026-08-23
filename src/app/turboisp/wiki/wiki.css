@@ -1,0 +1,75 @@
+/* Wiki is an editorial surface. Force light tokens even if html.dark is set. */
+html.wiki-light {
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 199 89% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 204 28% 94%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 28% 95%;
+  --muted-foreground: 215 14% 38%;
+  --accent: 199 80% 94%;
+  --accent-foreground: 199 80% 24%;
+  --destructive: 0 72% 46%;
+  --border: 214 22% 88%;
+  --input: 214 22% 88%;
+  --ring: 199 89% 42%;
+  --radius: 0.75rem;
+}
+
+html.wiki-light,
+html.wiki-light body {
+  color-scheme: light;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.wiki-root {
+  font-family: var(--font-site), ui-sans-serif, system-ui, sans-serif;
+  height: 100svh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.wiki-mono {
+  font-family: var(--font-wiki-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.wiki-fiber {
+  position: relative;
+}
+
+.wiki-fiber::before {
+  content: "";
+  position: absolute;
+  top: 0.45rem;
+  bottom: 0.45rem;
+  left: 0.4375rem;
+  width: 1px;
+  background: color-mix(in oklch, hsl(var(--primary)) 35%, hsl(var(--border)));
+}
+
+.wiki-splice {
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  width: 0.5625rem;
+  height: 0.5625rem;
+  border-radius: 999px;
+  background: hsl(var(--background));
+  box-shadow: 0 0 0 1.5px hsl(var(--primary));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wiki-root * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
