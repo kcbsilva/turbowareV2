@@ -47,8 +47,13 @@ function Callout({ block }: { block: Extract<Block, { type: 'callout' }> }) {
   const title =
     block.kind === 'warn' ? wikiCopy.warn : block.kind === 'need' ? wikiCopy.need : wikiCopy.tip
   return (
-    <Alert className={block.kind === 'warn' ? 'border-destructive/30' : undefined}>
-      <Icon />
+    <Alert
+      className={cn(
+        '*:[svg]:translate-y-[2px]',
+        block.kind === 'warn' ? 'border-destructive/30' : undefined,
+      )}
+    >
+      <Icon className="size-4" />
       <AlertTitle>{pick(lang, title)}</AlertTitle>
       <AlertDescription>{pick(lang, block.text)}</AlertDescription>
     </Alert>
@@ -78,9 +83,9 @@ function Body({ article }: { article: Article }) {
         if (block.type === 'path') return <PathTrail key={key} trail={block} />
         if (block.type === 'steps') {
           return (
-            <ol key={key} className="wiki-fiber relative ml-1 space-y-6 pl-6">
+            <ol key={key} className="wiki-fiber space-y-6">
               {block.items.map((item, idx) => (
-                <li key={item.title.en} className="relative">
+                <li key={item.title.en}>
                   <span className="wiki-splice" aria-hidden />
                   <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
                     {pick(lang, wikiCopy.step)} {idx + 1}

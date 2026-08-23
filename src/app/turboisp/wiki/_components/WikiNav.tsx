@@ -48,20 +48,20 @@ export function WikiNav({ onNavigate }: { onNavigate?: () => void }) {
             return (
               <AccordionItem key={cat.id} value={cat.id} className="border-border/70">
                 <AccordionTrigger className="px-2 py-2 text-[13px] hover:no-underline">
-                  <span className="flex w-full items-center justify-between gap-2 pr-2">
+                  <span className="min-w-0 flex-1 truncate text-left">
                     {pick(lang, cat.title)}
-                    <span className="text-[11px] font-normal text-muted-foreground">
-                      {items.length}
-                    </span>
+                  </span>
+                  <span className="tabular-nums text-[11px] font-normal text-muted-foreground">
+                    {items.length}
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-2">
-                  <ul className="wiki-fiber ml-2 space-y-0.5 pl-4">
+                  <ul className="wiki-fiber space-y-0.5">
                     {items.map((article) => {
                       const href = `/turboisp/wiki/${article.slug}`
                       const isActive = pathname === href
                       return (
-                        <li key={article.slug} className="relative py-0.5">
+                        <li key={article.slug} className="py-0.5">
                           <span className="wiki-splice" aria-hidden />
                           <Link
                             href={href}

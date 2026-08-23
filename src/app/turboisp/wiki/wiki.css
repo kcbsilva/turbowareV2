@@ -41,26 +41,39 @@ html.wiki-light body {
   font-family: var(--font-wiki-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* Lucide SVGs sit on the text baseline unless they are block-level. */
+.wiki-root :where(svg) {
+  display: block;
+  flex-shrink: 0;
+}
+
 .wiki-fiber {
+  --wiki-rail: 0.4375rem;
+  --wiki-dot: 0.5rem;
   position: relative;
 }
 
 .wiki-fiber::before {
   content: "";
   position: absolute;
-  top: 0.45rem;
-  bottom: 0.45rem;
-  left: 0.4375rem;
+  top: 0.55rem;
+  bottom: 0.55rem;
+  left: var(--wiki-rail);
   width: 1px;
   background: color-mix(in oklch, hsl(var(--primary)) 35%, hsl(var(--border)));
 }
 
+.wiki-fiber > li {
+  position: relative;
+  padding-left: 1.375rem;
+}
+
 .wiki-splice {
   position: absolute;
-  left: 0;
-  top: 0.35rem;
-  width: 0.5625rem;
-  height: 0.5625rem;
+  top: 0.45rem;
+  left: calc(var(--wiki-rail) - var(--wiki-dot) / 2);
+  width: var(--wiki-dot);
+  height: var(--wiki-dot);
   border-radius: 999px;
   background: hsl(var(--background));
   box-shadow: 0 0 0 1.5px hsl(var(--primary));

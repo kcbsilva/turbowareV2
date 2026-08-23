@@ -37,7 +37,7 @@ function WikiHeader() {
           <SheetTrigger
             render={<Button variant="ghost" size="icon-sm" className="lg:hidden" />}
           >
-            <MenuIcon />
+            <MenuIcon className="size-4" />
             <span className="sr-only">{pick(lang, wikiCopy.openMenu)}</span>
           </SheetTrigger>
           <SheetContent side="left" className="w-80 p-0">
@@ -52,7 +52,7 @@ function WikiHeader() {
 
         <Link href="/turboisp/wiki" className="flex shrink-0 items-center gap-2">
           <Image src={logo} alt="TurboISP" className="h-8 w-auto" height={32} />
-          <span className="hidden items-center gap-1.5 text-sm font-medium sm:flex">
+          <span className="hidden items-center gap-1.5 text-sm font-medium leading-none sm:flex">
             <BookOpenIcon className="size-3.5 text-primary" />
             {pick(lang, wikiCopy.brand)}
           </span>

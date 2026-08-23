@@ -54,8 +54,8 @@ export function WikiHome() {
             <Link key={job.slug} href={`/turboisp/wiki/${job.slug}`} className="group">
               <Card size="sm" className="h-full transition-colors group-hover:ring-primary/30">
                 <CardHeader>
-                  <div className="mb-2 flex size-8 items-center justify-center rounded-lg bg-secondary text-primary">
-                    <Icon className="size-4" />
+                  <div className="mb-2 flex size-8 items-center justify-center rounded-lg bg-secondary text-primary [&_svg]:size-4">
+                    <Icon />
                   </div>
                   <CardTitle className="text-[15px]">{pick(lang, job.label)}</CardTitle>
                   <CardDescription>{pick(lang, job.blurb)}</CardDescription>

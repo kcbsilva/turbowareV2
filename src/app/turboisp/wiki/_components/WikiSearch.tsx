@@ -46,8 +46,8 @@ export function WikiSearch() {
         onClick={() => setOpen(true)}
         className="h-8 w-full max-w-xs justify-between gap-3 px-2.5 text-muted-foreground sm:w-72"
       >
-        <span className="flex min-w-0 items-center gap-2">
-          <SearchIcon className="size-3.5 shrink-0" />
+        <span className="flex min-w-0 items-center gap-2 leading-none">
+          <SearchIcon className="size-3.5" />
           <span className="truncate">{pick(lang, wikiCopy.search)}</span>
         </span>
         <KbdGroup className="hidden sm:inline-flex">
@@ -63,7 +63,7 @@ export function WikiSearch() {
         description={pick(lang, wikiCopy.search)}
         className="sm:max-w-lg"
       >
-        <Command>
+        <Command className="[&_[data-slot=command-item]>svg:last-child]:hidden">
           <CommandInput placeholder={pick(lang, wikiCopy.search)} />
           <CommandList>
             <CommandEmpty>{pick(lang, wikiCopy.searchEmpty)}</CommandEmpty>
