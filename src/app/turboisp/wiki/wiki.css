@@ -19,6 +19,14 @@ html.wiki-light {
   --input: 214 22% 88%;
   --ring: 199 89% 42%;
   --radius: 0.75rem;
+  --sidebar: oklch(0.985 0.008 230);
+  --sidebar-foreground: oklch(0.22 0.03 250);
+  --sidebar-primary: oklch(0.55 0.12 220);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.95 0.025 220);
+  --sidebar-accent-foreground: oklch(0.28 0.06 230);
+  --sidebar-border: oklch(0.91 0.015 230);
+  --sidebar-ring: oklch(0.55 0.12 220);
 }
 
 html.wiki-light,
@@ -31,8 +39,7 @@ html.wiki-light body {
 .wiki-root {
   font-family: var(--font-site), ui-sans-serif, system-ui, sans-serif;
   height: 100svh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   background: hsl(var(--background));
   color: hsl(var(--foreground));
 }
