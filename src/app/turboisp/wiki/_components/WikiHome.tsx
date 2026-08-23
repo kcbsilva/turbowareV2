@@ -53,18 +53,18 @@ export function WikiHome() {
           return (
             <Link key={job.slug} href={`/turboisp/wiki/${job.slug}`} className="group">
               <Card size="sm" className="h-full transition-colors group-hover:ring-primary/30">
-                <CardHeader>
-                  <div className="mb-2 flex size-8 items-center justify-center rounded-lg bg-secondary text-primary [&_svg]:size-4">
-                    <Icon />
+                <CardHeader className="flex flex-col items-start gap-3">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-secondary text-primary">
+                    <Icon className="size-4" />
+                  </span>
+                  <div className="space-y-1">
+                    <CardTitle className="text-[15px]">{pick(lang, job.label)}</CardTitle>
+                    <CardDescription>{pick(lang, job.blurb)}</CardDescription>
                   </div>
-                  <CardTitle className="text-[15px]">{pick(lang, job.label)}</CardTitle>
-                  <CardDescription>{pick(lang, job.blurb)}</CardDescription>
                   {article && (
-                    <CardDescription className="pt-1">
-                      <Badge variant="outline">
-                        {article.minutes} {pick(lang, wikiCopy.minutes)}
-                      </Badge>
-                    </CardDescription>
+                    <Badge variant="outline">
+                      {article.minutes} {pick(lang, wikiCopy.minutes)}
+                    </Badge>
                   )}
                 </CardHeader>
               </Card>

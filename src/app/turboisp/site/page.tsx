@@ -18,6 +18,7 @@ import {
   Receipt,
   Wrench,
   BarChart3,
+  AppWindow,
   ImageIcon,
 } from "lucide-react";
 import { type Lang, pick } from "./_components/constants";
@@ -25,6 +26,22 @@ import { PricingSection } from "./_components/PricingSection";
 
 // Drop your screenshots in /public/slides/ with these filenames.
 const SLIDES = [
+  {
+    id: "worktop",
+    image: "/slides/worktop.png",
+    icon: AppWindow,
+    tag: { en: "Desktop / Worktop", pt: "Desktop / Worktop", fr: "Bureau / Worktop" },
+    title: {
+      en: "The feel of a desktop, just like you're used to",
+      pt: "A sensação de um desktop, do jeito que você já conhece",
+      fr: "L'ambiance d'un bureau, comme celui que vous connaissez déjà",
+    },
+    description: {
+      en: "Windows, a taskbar, and apps you already know how to use. Open the map, subscribers, billing — drag them around like you would on your own computer.",
+      pt: "Janelas, barra de tarefas e aplicativos que você já sabe usar. Abra o mapa, os assinantes, o billing — arraste como no seu próprio computador.",
+      fr: "Fenêtres, barre des tâches et applications que vous savez déjà utiliser. Ouvrez la carte, les abonnés, la facturation — déplacez-les comme sur votre ordinateur.",
+    },
+  },
   {
     id: "network-map",
     image: "/slides/network-map.png",
@@ -310,7 +327,7 @@ export default function TurboISPSitePage() {
             </button>
 
             {/* Tab-style dots with labels on desktop */}
-            <div className="hidden md:flex gap-2">
+            <div className="hidden md:flex flex-wrap justify-center gap-2 max-w-3xl">
               {SLIDES.map((sl, idx) => (
                 <button
                   key={sl.id}

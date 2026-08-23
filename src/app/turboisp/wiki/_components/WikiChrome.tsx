@@ -20,7 +20,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarRail,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -36,7 +35,7 @@ function WikiHeader() {
 
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/85 px-3 backdrop-blur-md sm:px-4">
-      <SidebarTrigger />
+      <SidebarTrigger className="md:hidden" />
       <Link href="/turboisp/wiki" className="flex shrink-0 items-center gap-2 md:hidden">
         <Image src={logo} alt="TurboISP" className="h-7 w-auto" height={28} />
       </Link>
@@ -72,7 +71,7 @@ function WikiSidebar() {
   const { lang } = useWikiLang()
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar">
+    <Sidebar collapsible="offcanvas" variant="sidebar">
       <SidebarHeader className="border-b border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -96,7 +95,6 @@ function WikiSidebar() {
       <SidebarContent>
         <WikiNav />
       </SidebarContent>
-      <SidebarRail />
     </Sidebar>
   )
 }
@@ -104,9 +102,9 @@ function WikiSidebar() {
 function WikiChromeInner({ children }: { children: ReactNode }) {
   return (
     <TooltipProvider delay={200}>
-      <SidebarProvider className="h-full min-h-0">
+      <SidebarProvider className="h-full min-h-0" enableKeyboardShortcut={false}>
         <WikiSidebar />
-        <SidebarInset className="min-w-0 overflow-y-auto">
+        <SidebarInset className="min-w-0 w-auto overflow-y-auto">
           <WikiHeader />
           <div className="px-4 py-8 sm:px-8 lg:px-10">{children}</div>
         </SidebarInset>
