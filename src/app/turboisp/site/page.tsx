@@ -284,8 +284,8 @@ export default function TurboISPSitePage() {
           onMouseLeave={() => setPaused(false)}
         >
           <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-2xl shadow-slate-200/60">
-            {/* Image area — 16:9 */}
-            <div className="relative aspect-video bg-slate-100">
+            {/* Image area — matches ~1920×838 worktop screenshots */}
+            <div className="relative aspect-[1920/838] bg-slate-900">
               {broken[slide.id] ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-sky-50 to-slate-100">
                   <SlideIcon className="w-16 h-16 text-sky-300" strokeWidth={1.25} />
@@ -299,7 +299,7 @@ export default function TurboISPSitePage() {
                 <img
                   src={slide.image}
                   alt={slide.title[lang]}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 h-full w-full object-contain"
                   onError={() => setBroken((b) => ({ ...b, [slide.id]: true }))}
                 />
               )}
