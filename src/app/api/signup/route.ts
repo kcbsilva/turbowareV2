@@ -8,14 +8,10 @@ import {
   createTurboISPTenant,
   deleteTurboISPTenant,
 } from '@/lib/turboisp-bootstrap'
+import { isPublicSignupEnabled } from '@/lib/public-signup'
 import { isValidSignupSlug, normalizeSignupSlug } from '@/lib/signup-slug'
 import { regionForCountry } from '@/lib/signup-countries'
 import { signupCorsPreflight, withSignupCors } from '@/lib/signup-cors'
-
-function signupEnabled(): boolean {
-  const v = (process.env.PUBLIC_SIGNUP_ENABLED ?? '').trim().toLowerCase()
-  return v === '' || v === '1' || v === 'true' || v === 'yes'
-}
 
 function apiError(req: NextRequest, message: string, status: number) {
   return withSignupCors(req, NextResponse.json({ error: message }, { status }))
@@ -30,7 +26,7 @@ export async function POST(req: NextRequest) {
   const preflight = signupCorsPreflight(req)
   if (preflight) return preflight
 
-  if (!signupEnabled()) {
+  if (!isPublicSignupEnabled()) {
     return apiError(req, 'public signup is disabled', 403)
   }
 

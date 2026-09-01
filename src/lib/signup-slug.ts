@@ -1,3 +1,5 @@
+import { PUBLIC_TENANT_SIGNUP_ENABLED, TURBOISP_SALES_MAILTO } from '@/lib/public-signup'
+
 const SLUG_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/
 
 export function normalizeSignupSlug(raw: string): string {
@@ -21,8 +23,9 @@ export function turboispAppBase(): string {
   ).replace(/\/$/, '')
 }
 
-/** TurboISP React app public signup (turboisp-react /signup). */
+/** TurboISP React app public signup, or sales mailto while self-serve is paused. */
 export function turboispSignupUrl(): string {
+  if (!PUBLIC_TENANT_SIGNUP_ENABLED) return TURBOISP_SALES_MAILTO
   return `${turboispAppBase()}/signup`
 }
 

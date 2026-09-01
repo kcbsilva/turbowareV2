@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { isPublicSignupEnabled } from '@/lib/public-signup'
 import { isValidSignupSlug, normalizeSignupSlug } from '@/lib/signup-slug'
 import { RESERVED_SLUGS } from '@/lib/slug'
 import { signupCorsPreflight, withSignupCors } from '@/lib/signup-cors'
@@ -7,11 +8,6 @@ import { isTurboISPTenantSlugTaken } from '@/lib/turboisp-tenant-slug-check'
 
 const REASON_INVALID = 'invalid slug'
 const REASON_TAKEN = 'slug already in use'
-
-function signupEnabled(): boolean {
-  const v = (process.env.PUBLIC_SIGNUP_ENABLED ?? '').trim().toLowerCase()
-  return v === '' || v === '1' || v === 'true' || v === 'yes'
-}
 
 /** GET /api/signup/check-slug?slug= — React signup compatibility */
 export async function OPTIONS(req: NextRequest) {
@@ -22,7 +18,7 @@ export async function GET(req: NextRequest) {
   const preflight = signupCorsPreflight(req)
   if (preflight) return preflight
 
-  if (!signupEnabled()) {
+  if (!isPublicSignupEnabled()) {
     return withSignupCors(req, NextResponse.json({ error: 'public signup is disabled' }, { status: 403 }))
   }
 

@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { turboISPQuery } from '@/lib/turboisp-db'
+import { isPublicSignupEnabled } from '@/lib/public-signup'
 import { normalizeSlug, RESERVED_SLUGS, slugFqdn } from '@/lib/slug'
 
 /** GET /api/register/slug?name=xyz — check slug availability (Turboware + TurboISP) */
 export async function GET(req: NextRequest) {
+  if (!isPublicSignupEnabled()) {
+    return NextResponse.json({ error: 'public signup is disabled' }, { status: 403 })
+  }
+
   const name = normalizeSlug(req.nextUrl.searchParams.get('name') || '')
 
   if (!name || name.length < 3) {

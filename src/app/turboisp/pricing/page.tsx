@@ -111,7 +111,7 @@ export default function PricingPage() {
               className="text-xs font-semibold px-4 py-1.5 rounded-md transition hover:opacity-90 shadow-sm"
               style={{ backgroundColor: "#1AABF0", color: "#ffffff" }}
             >
-              Get Started
+              Contact sales
             </a>
           </div>
         </div>
@@ -307,7 +307,7 @@ export default function PricingPage() {
             className="text-sm mb-6"
             style={{ color: "rgba(255,255,255,0.45)" }}
           >
-            Register your ISP and get 14 days free — no credit card required.
+            Register your ISP — contact sales to get started.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <a
@@ -315,7 +315,7 @@ export default function PricingPage() {
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition hover:opacity-90"
               style={{ backgroundColor: "#1AABF0", color: "#ffffff" }}
             >
-              Get Started <ArrowRight className="w-4 h-4" />
+              Contact sales <ArrowRight className="w-4 h-4" />
             </a>
           </div>
         </div>
@@ -356,7 +356,7 @@ export default function PricingPage() {
               href={turboispSignupUrl()}
               className="hover:text-white/60 transition"
             >
-              Register
+              Contact
             </a>
             <Link
               href="/admin/login"

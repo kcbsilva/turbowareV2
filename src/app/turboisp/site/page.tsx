@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { type Lang, pick } from "./_components/constants";
 import { PricingSection } from "./_components/PricingSection";
+import { TURBOISP_SALES_MAILTO } from "@/lib/public-signup";
 
 // Drop your screenshots in /public/slides/ with these filenames.
 const SLIDES = [
@@ -234,30 +235,12 @@ export default function TurboISPSitePage() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-black" />
           </label>
-          <div className="relative inline-flex h-9 items-stretch overflow-hidden rounded-full border border-slate-800">
-            <Link
-              href="/admin/login"
-              className="flex items-center bg-sky-400 pl-4 pr-2 text-sm font-semibold text-black hover:bg-sky-500 transition-colors"
-            >
-              {s({ en: "Sign in", pt: "Entrar", fr: "Connexion" })}
-            </Link>
-            <span
-              className="pointer-events-none relative flex w-3 shrink-0 items-center justify-center bg-sky-400 text-sm font-bold leading-none text-black"
-              aria-hidden
-            >
-              <span
-                className="absolute inset-y-0 right-0 w-1.5 bg-white"
-                style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }}
-              />
-              /
-            </span>
-            <Link
-              href="/turboisp/register"
-              className="flex items-center bg-white pl-2 pr-4 text-sm font-semibold text-black hover:bg-slate-100 transition-colors"
-            >
-              {s({ en: "Sign up", pt: "Cadastrar", fr: "Inscription" })}
-            </Link>
-          </div>
+          <Link
+            href="/admin/login"
+            className="inline-flex h-9 items-center rounded-full border border-slate-800 bg-sky-400 px-4 text-sm font-semibold text-black hover:bg-sky-500 transition-colors"
+          >
+            {s({ en: "Sign in", pt: "Entrar", fr: "Connexion" })}
+          </Link>
         </div>
       </nav>
 
@@ -367,9 +350,9 @@ export default function TurboISPSitePage() {
 
         {/* CTAs under carousel */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-14">
-          <Link href="/turboisp/register" className="px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition text-center">
-            {s({ en: "Start free trial", pt: "Comece grátis", fr: "Essai gratuit" })}
-          </Link>
+          <a href={TURBOISP_SALES_MAILTO} className="px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition text-center">
+            {s({ en: "Talk to sales", pt: "Fale com vendas", fr: "Parler aux ventes" })}
+          </a>
           <a href="#pricing" className="px-8 py-4 border border-sky-600 rounded-lg font-semibold text-sky-700 hover:bg-sky-50 transition text-center">
             {s({ en: "See pricing", pt: "Ver planos", fr: "Voir les tarifs" })}
           </a>
@@ -448,14 +431,14 @@ export default function TurboISPSitePage() {
           </h2>
           <p className="text-lg text-slate-600 mb-12">
             {s({
-              en: "Start your free 14-day trial. Provisioning takes minutes.",
-              pt: "Comece seu trial gratuito de 14 dias. Provisionamento em minutos.",
-              fr: "Commencez votre essai gratuit de 14 jours. Provisionnement en minutes.",
+              en: "Self-serve signup is paused for now. Contact us to get your ISP set up.",
+              pt: "O cadastro automático está pausado por enquanto. Fale conosco para configurar sua operadora.",
+              fr: "L'inscription en libre-service est en pause. Contactez-nous pour configurer votre FAI.",
             })}
           </p>
-          <Link href="/turboisp/register" className="inline-block px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition">
-            {s({ en: "Start free trial", pt: "Comece grátis", fr: "Essai gratuit" })}
-          </Link>
+          <a href={TURBOISP_SALES_MAILTO} className="inline-block px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition">
+            {s({ en: "Talk to sales", pt: "Fale com vendas", fr: "Parler aux ventes" })}
+          </a>
         </div>
       </section>
 

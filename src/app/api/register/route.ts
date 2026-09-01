@@ -6,6 +6,7 @@ import { turboISPQuery } from '@/lib/turboisp-db'
 import { parseBody, badRequest } from '@/lib/api'
 import { sendVerificationEmail } from '@/lib/email'
 import { verifyRecaptcha } from '@/lib/recaptcha'
+import { isPublicSignupEnabled } from '@/lib/public-signup'
 import { normalizeSlug } from '@/lib/slug'
 
 const VALID_REGIONS = new Set(['BR', 'CA', 'US', 'GB'])
@@ -13,6 +14,10 @@ const VALID_REGIONS = new Set(['BR', 'CA', 'US', 'GB'])
 // POST /api/register — public signup that creates a pending client record,
 // provisions a TurboISP tenant + admin user, and starts a 14-day trial.
 export async function POST(req: NextRequest) {
+  if (!isPublicSignupEnabled()) {
+    return NextResponse.json({ error: 'public signup is disabled' }, { status: 403 })
+  }
+
   const { body: parsed, error } = await parseBody(req)
   if (error) return badRequest()
   const {
