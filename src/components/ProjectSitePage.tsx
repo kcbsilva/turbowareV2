@@ -367,7 +367,7 @@ export function ProjectSitePage({ product }: Props) {
               src={turbowareLogo}
               alt="Turboware"
               height={48}
-              className="h-10 w-auto brightness-0 invert opacity-60"
+              className="h-10 w-auto"
             />
             <p className="max-w-md text-[11px] leading-relaxed">{product.footerNote}</p>
           </div>

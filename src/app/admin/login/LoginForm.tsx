@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Key, ShieldCheck, Mail } from 'lucide-react'
+import Image from 'next/image'
+import { ShieldCheck, Mail } from 'lucide-react'
+import turbowareLogo from '@/app/assets/turboware-logo.png'
 
 type Step = 'login' | 'forgot' | 'mfa' | 'newPassword'
 
@@ -156,16 +158,30 @@ export default function LoginForm() {
 
       <div className="relative w-full max-w-sm px-4">
         <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
-            style={{ backgroundColor: '#fca311' }}
-          >
-            {step === 'mfa'
-              ? <ShieldCheck className="w-7 h-7" style={{ color: '#081124' }} />
-              : step === 'forgot'
-                ? <Mail className="w-7 h-7" style={{ color: '#081124' }} />
-                : <Key className="w-7 h-7" style={{ color: '#081124' }} />}
-          </div>
+          {step === 'mfa' ? (
+            <div
+              className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
+              style={{ backgroundColor: '#fca311' }}
+            >
+              <ShieldCheck className="w-7 h-7" style={{ color: '#081124' }} />
+            </div>
+          ) : step === 'forgot' ? (
+            <div
+              className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
+              style={{ backgroundColor: '#fca311' }}
+            >
+              <Mail className="w-7 h-7" style={{ color: '#081124' }} />
+            </div>
+          ) : (
+            <Image
+              src={turbowareLogo}
+              alt="Turboware"
+              className="mx-auto mb-4 h-14 w-14"
+              height={56}
+              width={56}
+              priority
+            />
+          )}
           <h1 className="text-2xl font-bold" style={{ color: '#f5f5f5' }}>{title}</h1>
           <p className="text-xs mt-1" style={{ color: 'rgba(165,180,210,0.6)' }}>{subtitle}</p>
         </div>

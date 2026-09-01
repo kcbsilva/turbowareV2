@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
-import { Key } from 'lucide-react'
 import { turboispSignupUrl } from '@/lib/signup-slug'
+import turbowareLogo from '@/app/assets/turboware-logo.png'
 
 const BG = '#e5e5e5'
 
@@ -70,12 +71,14 @@ export default function ClientLoginPage() {
       <div className="relative w-full max-w-sm px-4">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 shadow-md"
-            style={{ backgroundColor: '#fca311' }}
-          >
-            <Key className="w-7 h-7" style={{ color: '#081124' }} />
-          </div>
+          <Image
+            src={turbowareLogo}
+            alt="Turboware"
+            className="mx-auto mb-4 h-14 w-14"
+            height={56}
+            width={56}
+            priority
+          />
           <h1 className="text-2xl font-bold" style={{ color: '#0a1428' }}>Client Portal</h1>
           <p className="text-xs mt-1" style={{ color: 'rgba(10,20,40,0.45)' }}>
             Sign in to manage your licenses

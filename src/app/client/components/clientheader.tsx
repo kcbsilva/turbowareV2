@@ -1,9 +1,11 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { LayoutDashboard, User, Ticket, CreditCard, LogOut, Sun, Moon, Zap } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
+import turbowareLogo from '@/app/assets/turboware-logo.png'
 
 const NAV = [
   { href: '/client/dashboard',       label: 'Dashboard',  icon: LayoutDashboard },
@@ -29,9 +31,7 @@ export default function ClientHeader() {
 
         {/* Logo */}
         <Link href="/client/dashboard" className="flex items-center gap-2 shrink-0">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#fca311' }}>
-            <span className="text-[13px] font-black" style={{ color: '#081124' }}>T</span>
-          </div>
+          <Image src={turbowareLogo} alt="Turboware" className="h-7 w-7" height={28} width={28} />
           <span className="text-sm font-bold tracking-tight text-white hidden sm:block">Turboware</span>
           <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border hidden sm:inline"
             style={{ color: '#fca311', borderColor: 'rgba(252,163,17,0.3)', backgroundColor: 'rgba(252,163,17,0.08)' }}>

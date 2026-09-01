@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   Key,
   LayoutDashboard,
@@ -14,6 +15,7 @@ import {
   Package,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
+import turbowareLogo from "@/app/assets/turboware-logo.png";
 
 const menuItems = [
   {
@@ -228,12 +230,12 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
           }}
           aria-label="Open start menu"
         >
-          <Key
+          <Image
+            src={turbowareLogo}
+            alt=""
             className="h-5 w-5"
-            style={{
-              color: startOpen ? "#fca311" : "white",
-              filter: "drop-shadow(0 2px 10px rgba(20,60,140,0.55))",
-            }}
+            height={20}
+            width={20}
           />
           <span
             className="text-[11px] font-semibold text-white hidden sm:block"
