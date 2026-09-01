@@ -56,12 +56,6 @@ function WikiHeader() {
         <Link href="/turboisp/site" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
           {pick(lang, wikiCopy.site)}
         </Link>
-        <Link
-          href="/admin/login"
-          className={cn(buttonVariants({ size: 'sm' }), 'hidden sm:inline-flex')}
-        >
-          {pick(lang, wikiCopy.signIn)}
-        </Link>
       </div>
     </header>
   )

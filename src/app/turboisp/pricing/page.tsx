@@ -10,8 +10,7 @@ import {
   CURRENCY_SYMBOL,
   type Region,
 } from "@/lib/pricing";
-import { turboispSignupUrl } from "@/lib/signup-slug";
-import { ArrowRight, CheckCircle, Mail } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 type RegionConfig = {
   code: Region;
@@ -97,23 +96,6 @@ export default function PricingPage() {
               Pricing
             </Link>
           </nav>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin/login"
-              className="text-xs px-3 py-1.5 transition"
-              style={{ color: "rgba(10,20,40,0.45)" }}
-            >
-              Login
-            </Link>
-            <a
-              href={turboispSignupUrl()}
-              className="text-xs font-semibold px-4 py-1.5 rounded-md transition hover:opacity-90 shadow-sm"
-              style={{ backgroundColor: "#1AABF0", color: "#ffffff" }}
-            >
-              Contact sales
-            </a>
-          </div>
         </div>
       </header>
 
@@ -257,18 +239,12 @@ export default function PricingPage() {
                 </div>
                 <div className="text-right">
                   {isInquire ? (
-                    <a
-                      href="mailto:sales@turboisp.com"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md border transition hover:opacity-80"
-                      style={{
-                        color: "#1AABF0",
-                        borderColor: "rgba(26,171,240,0.3)",
-                        backgroundColor: "rgba(26,171,240,0.05)",
-                      }}
+                    <p
+                      className="text-sm font-semibold"
+                      style={{ color: "rgba(10,20,40,0.45)" }}
                     >
-                      <Mail className="w-3 h-3" />
-                      Contact us
-                    </a>
+                      On request
+                    </p>
                   ) : (
                     <div>
                       <p
@@ -289,35 +265,6 @@ export default function PricingPage() {
               </div>
             );
           })}
-        </div>
-      </section>
-
-      {/* ── CTA ─────────────────────────────────────────────────────────────── */}
-      <section className="relative z-10 max-w-4xl mx-auto px-6 pb-16">
-        <div
-          className="rounded-2xl p-10 text-center"
-          style={{
-            background: "linear-gradient(135deg, #0a1428 0%, #14213d 100%)",
-          }}
-        >
-          <h2 className="text-2xl font-bold text-white mb-2">
-            Ready to get started?
-          </h2>
-          <p
-            className="text-sm mb-6"
-            style={{ color: "rgba(255,255,255,0.45)" }}
-          >
-            Register your ISP — contact sales to get started.
-          </p>
-          <div className="flex items-center justify-center gap-4 flex-wrap">
-            <a
-              href={turboispSignupUrl()}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition hover:opacity-90"
-              style={{ backgroundColor: "#1AABF0", color: "#ffffff" }}
-            >
-              Contact sales <ArrowRight className="w-4 h-4" />
-            </a>
-          </div>
         </div>
       </section>
 
@@ -351,18 +298,6 @@ export default function PricingPage() {
               className="hover:text-white/60 transition"
             >
               Pricing
-            </Link>
-            <a
-              href={turboispSignupUrl()}
-              className="hover:text-white/60 transition"
-            >
-              Contact
-            </a>
-            <Link
-              href="/admin/login"
-              className="hover:text-white/60 transition"
-            >
-              Admin
             </Link>
           </div>
           <p className="text-[10px]">

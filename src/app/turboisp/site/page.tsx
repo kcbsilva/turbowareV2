@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { type Lang, pick } from "./_components/constants";
 import { PricingSection } from "./_components/PricingSection";
-import { TURBOISP_SALES_MAILTO } from "@/lib/public-signup";
 
 // Drop your screenshots in /public/slides/ with these filenames.
 const SLIDES = [
@@ -235,12 +234,6 @@ export default function TurboISPSitePage() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-black" />
           </label>
-          <Link
-            href="/admin/login"
-            className="inline-flex h-9 items-center rounded-full border border-slate-800 bg-sky-400 px-4 text-sm font-semibold text-black hover:bg-sky-500 transition-colors"
-          >
-            {s({ en: "Sign in", pt: "Entrar", fr: "Connexion" })}
-          </Link>
         </div>
       </nav>
 
@@ -350,9 +343,6 @@ export default function TurboISPSitePage() {
 
         {/* CTAs under carousel */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-14">
-          <a href={TURBOISP_SALES_MAILTO} className="px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition text-center">
-            {s({ en: "Talk to sales", pt: "Fale com vendas", fr: "Parler aux ventes" })}
-          </a>
           <a href="#pricing" className="px-8 py-4 border border-sky-600 rounded-lg font-semibold text-sky-700 hover:bg-sky-50 transition text-center">
             {s({ en: "See pricing", pt: "Ver planos", fr: "Voir les tarifs" })}
           </a>
@@ -418,29 +408,6 @@ export default function TurboISPSitePage() {
       </section>
 
       <PricingSection lang={lang} />
-
-      {/* CTA Section */}
-      <section className="relative px-6 lg:px-12 py-24 bg-slate-50">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-slate-900">
-            {s({
-              en: "Ready to Unify Your Operation?",
-              pt: "Pronto para Unificar sua Operação?",
-              fr: "Prêt à Unifier votre Opération ?",
-            })}
-          </h2>
-          <p className="text-lg text-slate-600 mb-12">
-            {s({
-              en: "Self-serve signup is paused for now. Contact us to get your ISP set up.",
-              pt: "O cadastro automático está pausado por enquanto. Fale conosco para configurar sua operadora.",
-              fr: "L'inscription en libre-service est en pause. Contactez-nous pour configurer votre FAI.",
-            })}
-          </p>
-          <a href={TURBOISP_SALES_MAILTO} className="inline-block px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-sky-200 transition">
-            {s({ en: "Talk to sales", pt: "Fale com vendas", fr: "Parler aux ventes" })}
-          </a>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="px-6 lg:px-12 py-12 border-t border-slate-200 text-center text-slate-500 text-sm">

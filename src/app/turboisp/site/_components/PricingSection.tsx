@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Cloud, Info, Mail, Server } from "lucide-react";
+import { ChevronLeft, ChevronRight, Cloud, Info, Server } from "lucide-react";
 import {
   PRICING_TIERS,
   INSTALLATION_FEES,
@@ -243,13 +243,9 @@ export function PricingSection({ lang }: { lang: Lang }) {
                   )}
 
                   {isInquire ? (
-                    <a
-                      href="mailto:sales@turboisp.com"
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-600 hover:text-sky-700"
-                    >
-                      <Mail className="w-3.5 h-3.5" />
-                      {s({ en: "Contact us", pt: "Fale conosco", fr: "Nous contacter" })}
-                    </a>
+                    <p className="text-sm font-semibold text-slate-500">
+                      {s({ en: "On request", pt: "Sob consulta", fr: "Sur demande" })}
+                    </p>
                   ) : (
                     <div>
                       <p className="text-xl font-black tabular-nums text-slate-900">
