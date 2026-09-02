@@ -301,7 +301,7 @@ export default function PricingPage() {
             </Link>
           </div>
           <p className="text-[10px]">
-            © {new Date().getFullYear()} TurboISP. All rights reserved.
+            {new Date().getFullYear()} - TurboISP
           </p>
         </div>
       </footer>

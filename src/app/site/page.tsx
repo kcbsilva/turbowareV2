@@ -259,7 +259,7 @@ export default function SitePage() {
                 </div>
 
                 <footer className="w-full pr-38 pt-4 text-right text-[11px] uppercase tracking-[0.28em] text-white/40 sm:pr-56">
-                  © {new Date().getFullYear()} Turboware
+                  {new Date().getFullYear()} - Turboware
                 </footer>
               </div>
             </section>

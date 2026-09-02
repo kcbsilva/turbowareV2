@@ -518,7 +518,7 @@ export default function TurboISPSitePage() {
             {s({ en: "Wiki", pt: "Wiki", fr: "Wiki" })}
           </Link>
           <span className="mx-2 text-slate-300">·</span>
-          © 2026 TurboISP. {s({ en: "All rights reserved.", pt: "Todos os direitos reservados.", fr: "Tous droits réservés." })}
+          {new Date().getFullYear()} - TurboISP
         </p>
       </footer>
     </div>

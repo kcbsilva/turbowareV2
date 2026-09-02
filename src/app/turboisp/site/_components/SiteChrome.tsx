@@ -77,7 +77,6 @@ export function SiteFooter({
     pricing: string
     demo: string
     admin: string
-    copy: string
   }
 }) {
   return (
@@ -92,7 +91,7 @@ export function SiteFooter({
           <a href={turboispSignupUrl()} className="hover:text-[#fca311]/80 transition">{labels.demo}</a>
           <Link href="/admin/login" className="hover:text-white/60 transition">{labels.admin}</Link>
         </div>
-        <p>© {new Date().getFullYear()} TurboISP. {labels.copy}</p>
+        <p>{new Date().getFullYear()} - TurboISP</p>
       </div>
     </footer>
   )
