@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "../assets/TurboISP-logo.png";
@@ -171,11 +171,23 @@ const VALUES = [
   },
 ];
 
+const SECTION_NAV = [
+  { id: "platform", label: { en: "Platform", pt: "Plataforma", fr: "Plateforme" } },
+  { id: "why", label: { en: "Why TurboISP", pt: "Por que TurboISP", fr: "Pourquoi TurboISP" } },
+  { id: "results", label: { en: "Results", pt: "Resultados", fr: "Résultats" } },
+  { id: "pricing", label: { en: "Pricing", pt: "Planos", fr: "Tarifs" } },
+] as const;
+
 export default function TurboISPSitePage() {
   const [lang, setLang] = useState<Lang>("pt");
   const [slideIndex, setSlideIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [broken, setBroken] = useState<Record<string, boolean>>({});
+  const [activeSection, setActiveSection] = useState<(typeof SECTION_NAV)[number]["id"]>("platform");
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, ready: false });
+  const sectionNavRef = useRef<HTMLDivElement>(null);
+  const sectionLinkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const scrollLockRef = useRef<(typeof SECTION_NAV)[number]["id"] | null>(null);
 
   const s = <T extends Record<Lang, string>>(map: T) => pick(map, lang);
 
@@ -191,6 +203,73 @@ export default function TurboISPSitePage() {
     return () => clearInterval(timer);
   }, [paused, nextSlide]);
 
+  useEffect(() => {
+    const ids = SECTION_NAV.map((item) => item.id);
+    const hash = window.location.hash.replace("#", "");
+    if (ids.includes(hash as (typeof ids)[number])) {
+      setActiveSection(hash as (typeof SECTION_NAV)[number]["id"]);
+    }
+
+    const updateActive = () => {
+      if (scrollLockRef.current) return;
+      const offset = 110;
+      let current = ids[0];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        if (el.getBoundingClientRect().top - offset <= 0) current = id;
+      }
+      setActiveSection(current as (typeof SECTION_NAV)[number]["id"]);
+    };
+
+    updateActive();
+    window.addEventListener("scroll", updateActive, { passive: true });
+    window.addEventListener("resize", updateActive);
+    return () => {
+      window.removeEventListener("scroll", updateActive);
+      window.removeEventListener("resize", updateActive);
+    };
+  }, []);
+
+  const measureIndicator = useCallback(() => {
+    const nav = sectionNavRef.current;
+    const link = sectionLinkRefs.current[activeSection];
+    if (!nav || !link) return;
+    const navRect = nav.getBoundingClientRect();
+    const linkRect = link.getBoundingClientRect();
+    setIndicator({
+      left: linkRect.left - navRect.left,
+      width: linkRect.width,
+      ready: true,
+    });
+  }, [activeSection]);
+
+  useLayoutEffect(() => {
+    measureIndicator();
+  }, [measureIndicator, lang]);
+
+  useEffect(() => {
+    const nav = sectionNavRef.current;
+    if (!nav || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => measureIndicator());
+    observer.observe(nav);
+    window.addEventListener("resize", measureIndicator);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measureIndicator);
+    };
+  }, [measureIndicator]);
+
+  const scrollToSection = (id: (typeof SECTION_NAV)[number]["id"]) => {
+    scrollLockRef.current = id;
+    setActiveSection(id);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    history.replaceState(null, "", `#${id}`);
+    window.setTimeout(() => {
+      if (scrollLockRef.current === id) scrollLockRef.current = null;
+    }, 700);
+  };
+
   const slide = SLIDES[slideIndex];
   const SlideIcon = slide.icon;
 
@@ -202,22 +281,45 @@ export default function TurboISPSitePage() {
           <Image src={logo} alt="TurboISP" priority className="h-16 w-auto -my-4" />
         </a>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-          <a href="#platform" className="hover:text-sky-600 transition">
-            {s({ en: "Platform", pt: "Plataforma", fr: "Plateforme" })}
-          </a>
-          <a href="#why" className="hover:text-sky-600 transition">
-            {s({ en: "Why TurboISP", pt: "Por que TurboISP", fr: "Pourquoi TurboISP" })}
-          </a>
-          <a href="#results" className="hover:text-sky-600 transition">
-            {s({ en: "Results", pt: "Resultados", fr: "Résultats" })}
-          </a>
-          <a href="#pricing" className="hover:text-sky-600 transition">
-            {s({ en: "Pricing", pt: "Planos", fr: "Tarifs" })}
-          </a>
-          <Link href="/turboisp/wiki" className="hover:text-sky-600 transition">
+        <div
+          ref={sectionNavRef}
+          className="relative hidden md:flex items-center gap-8 text-sm font-medium text-slate-600 pb-1"
+        >
+          {SECTION_NAV.map((item) => {
+            const isActive = activeSection === item.id;
+            return (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                ref={(el) => {
+                  sectionLinkRefs.current[item.id] = el;
+                }}
+                onClick={(event) => {
+                  event.preventDefault();
+                  scrollToSection(item.id);
+                }}
+                className={`relative py-1 transition-colors duration-300 ${
+                  isActive ? "text-sky-600" : "hover:text-sky-600"
+                }`}
+              >
+                {s(item.label)}
+              </a>
+            );
+          })}
+          <Link href="/turboisp/wiki" className="relative py-1 hover:text-sky-600 transition-colors duration-300">
             {s({ en: "Wiki", pt: "Wiki", fr: "Wiki" })}
           </Link>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute bottom-0 h-[2.5px] origin-left rounded-full bg-sky-600"
+            style={{
+              width: indicator.width,
+              opacity: indicator.ready ? 1 : 0,
+              transform: `translateX(${indicator.left}px)`,
+              transition:
+                "transform 480ms cubic-bezier(0.22, 1.35, 0.36, 1), width 480ms cubic-bezier(0.22, 1.35, 0.36, 1), opacity 200ms ease",
+            }}
+          />
         </div>
 
         <div className="flex items-center gap-4">
