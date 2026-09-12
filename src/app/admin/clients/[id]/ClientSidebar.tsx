@@ -19,18 +19,18 @@ interface Props {
 
 export function ClientSidebar({ active, onSelect }: Props) {
   return (
-    <div className="flex flex-col items-center h-full w-16 pt-14 pb-2 space-y-2 bg-[#FFFDF8] border-r border-[#E6E0D6] shrink-0">
+    <div className="flex flex-col items-center h-full w-16 pt-14 pb-2 space-y-2 bg-[#FBFEFC] border-r border-[#D5E8E3] shrink-0">
       {ITEMS.map(({ id, icon: Icon, label }) => (
         <div key={id} className="relative group">
           <button
             onClick={() => onSelect(id)}
-            className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-150 hover:bg-[#FFF4D6] focus:outline-none
-              ${active === id ? 'bg-[#FFF4D6] scale-105' : ''}`}
+            className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-150 hover:bg-[#E6F5F2] focus:outline-none
+              ${active === id ? 'bg-[#E6F5F2] scale-105' : ''}`}
             aria-label={label}
           >
             <Icon
               className={`w-5 h-5 transition-colors ${
-                active === id ? 'text-[#8A5A00]' : 'text-[#5C6570]'
+                active === id ? 'text-[#0F766E]' : 'text-[#5C6570]'
               }`}
             />
           </button>

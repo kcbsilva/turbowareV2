@@ -44,7 +44,7 @@ interface TicketFull extends Omit<TicketRow, '_count'> {
 
 const STATUS_STYLES: Record<Status, { label: string; cls: string; icon: React.ElementType }> = {
   OPEN:        { label: 'Open',        cls: 'tw-badge-sky', icon: Clock },
-  IN_PROGRESS: { label: 'In Progress', cls: 'tw-badge-saffron', icon: AlertCircle },
+  IN_PROGRESS: { label: 'In Progress', cls: 'tw-badge-peach', icon: AlertCircle },
   RESOLVED:    { label: 'Resolved',    cls: 'tw-badge-teal', icon: CheckCircle },
   CLOSED:      { label: 'Closed',      cls: 'tw-badge-mute', icon: XCircle },
 }
@@ -163,7 +163,7 @@ export default function AdminTicketsPage() {
             const isAdmin = msg.authorType === 'ADMIN'
             return (
               <div key={msg.id} className={`flex gap-3 ${isAdmin ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${isAdmin ? 'bg-[#E39B12] text-[#1B2430]' : 'bg-[#F1EEE8] text-[#5C6570]'}`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${isAdmin ? 'bg-[#0D9488] text-white' : 'bg-[#E6F5F2] text-[#5C6570]'}`}>
                   {isAdmin ? 'A' : 'C'}
                 </div>
                 <div className={`max-w-[80%] ${isAdmin ? 'items-end flex flex-col' : ''}`}>

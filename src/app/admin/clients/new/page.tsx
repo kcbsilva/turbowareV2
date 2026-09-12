@@ -116,7 +116,7 @@ export default function NewClientPage() {
             </div>
           )}
           {result.warnings.length > 0 && (
-            <ul className="text-amber-400 space-y-1">
+            <ul className="text-[#C45C3A] space-y-1">
               {result.warnings.map((w) => <li key={w}>{w}</li>)}
             </ul>
           )}

@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 
 const statusStyles: Record<LicenseStatus, string> = {
   ACTIVE: badge.teal,
-  SUSPENDED: badge.saffron,
+  SUSPENDED: badge.peach,
   REVOKED: badge.coral,
   EXPIRED: badge.mute,
 }

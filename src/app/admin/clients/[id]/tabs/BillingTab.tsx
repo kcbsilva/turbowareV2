@@ -34,7 +34,7 @@ interface Subscription {
 
 const STATUS_STYLES = {
   TRIAL:           badge.sky,
-  PENDING_PAYMENT: badge.saffron,
+  PENDING_PAYMENT: badge.peach,
   ACTIVE:          badge.teal,
   SUSPENDED:       badge.coral,
   CANCELLED:       badge.mute,
@@ -168,9 +168,9 @@ export function BillingTab({ clientId }: Props) {
 
       {/* Pending invoices — admin can mark as paid */}
       {pendingInvs.length > 0 && (
-        <div className={`${card} border-yellow-500/20`}>
-          <div className="px-4 py-2.5 border-b border-yellow-500/20 flex items-center gap-2">
-            <AlertTriangle className="w-3.5 h-3.5 text-[#E39B12]" />
+        <div className={`${card} border-[#F5C9BC]`}>
+          <div className="px-4 py-2.5 border-b border-[#F5C9BC] flex items-center gap-2">
+            <AlertTriangle className="w-3.5 h-3.5 text-[#C45C3A]" />
             <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Pending Invoices</h2>
           </div>
           <div className="divide-y divide-border">
@@ -189,7 +189,7 @@ export function BillingTab({ clientId }: Props) {
                       </p>
                     )}
                   </div>
-                  <p className="text-sm font-bold font-mono text-[#8A5A00] shrink-0">{formatBRL(inv.amount)}</p>
+                  <p className="text-sm font-bold font-mono text-[#0F766E] shrink-0">{formatBRL(inv.amount)}</p>
                 </div>
 
                 {/* Existing payment link */}
@@ -222,7 +222,7 @@ export function BillingTab({ clientId }: Props) {
                   <button
                     onClick={() => sendPaymentLink(inv.id, 'asaas')}
                     disabled={!!sending}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md border border-[#B7E0D8] text-[#0F7A6C] hover:bg-[#E6F5F2] transition disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md border border-[#B7E0D8] text-[#0D9488] hover:bg-[#E6F5F2] transition disabled:opacity-50"
                   >
                     {sending === `${inv.id}-asaas` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                     {sending === `${inv.id}-asaas` ? 'Gerando…' : inv.paymentGateway === 'ASAAS' ? 'Regenerar Asaas' : 'Asaas (Pix/Boleto)'}
@@ -259,7 +259,7 @@ export function BillingTab({ clientId }: Props) {
             {sub.gracePeriodEndsAt && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Expires</span>
-                <span className={new Date(sub.gracePeriodEndsAt) > new Date() ? 'text-[#8A5A00]' : 'text-muted-foreground'}>
+                <span className={new Date(sub.gracePeriodEndsAt) > new Date() ? 'text-[#0F766E]' : 'text-muted-foreground'}>
                   {new Date(sub.gracePeriodEndsAt).toLocaleDateString('pt-BR')}
                   {new Date(sub.gracePeriodEndsAt) > new Date() ? ' (active)' : ' (expired)'}
                 </span>
@@ -284,7 +284,7 @@ export function BillingTab({ clientId }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-mono text-foreground">{formatBRL(inv.amount)}</span>
-                  <CheckCircle className="w-3.5 h-3.5 text-[#0F7A6C]" />
+                  <CheckCircle className="w-3.5 h-3.5 text-[#0D9488]" />
                 </div>
               </div>
             ))}

@@ -41,9 +41,9 @@ interface TimelineEvent {
 }
 
 const statusColors: Record<LicenseStatus, string> = {
-  ACTIVE:    'text-[#0F7A6C]',
-  SUSPENDED: 'text-[#8A5A00]',
-  REVOKED:   'text-[#C23B2E]',
+  ACTIVE:    'text-[#0D9488]',
+  SUSPENDED: 'text-[#0F766E]',
+  REVOKED:   'text-[#E85D4C]',
   EXPIRED:   'text-[#5C6570]',
 }
 

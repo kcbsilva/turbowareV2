@@ -21,7 +21,7 @@ interface InvoiceRow {
 }
 
 const STATUS_CLS: Record<InvoiceRow['status'], string> = {
-  PENDING: badge.saffron,
+  PENDING: badge.peach,
   PAID: badge.teal,
   OVERDUE: badge.coral,
   WAIVED: badge.mute,

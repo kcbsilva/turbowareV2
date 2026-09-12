@@ -19,7 +19,7 @@ export function ClientHeader({ clientId, name, company, createdAt }: Props) {
           {displayTrade}
         </span>
         <span
-          className="tw-badge tw-badge-saffron uppercase"
+          className="tw-badge tw-badge-teal uppercase"
         >
           Client
         </span>

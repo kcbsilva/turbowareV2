@@ -108,7 +108,7 @@ export function LicenseActions({ license, effectiveStatus, clients }: Props) {
             <button
               onClick={() => updateStatus('ACTIVE')}
               disabled={!!loading}
-              className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-medium rounded-md transition"
+              className="px-3 py-1.5 bg-[#0D9488] hover:brightness-105 disabled:opacity-50 text-white text-xs font-medium rounded-md transition"
             >
               {loading === 'ACTIVE' ? 'Activating…' : 'Set Active'}
             </button>
@@ -117,16 +117,14 @@ export function LicenseActions({ license, effectiveStatus, clients }: Props) {
             <button
               onClick={() => updateStatus('SUSPENDED')}
               disabled={!!loading}
-              className="px-3 py-1.5 bg-yellow-800 hover:bg-yellow-700 disabled:opacity-50 text-white text-xs font-medium rounded-md transition"
-            >
-              {loading === 'SUSPENDED' ? 'Suspending…' : 'Suspend'}
+              className="px-3 py-1.5 bg-[#C45C3A] hover:brightness-105 disabled:opacity-50 text-white text-xs font-medium rounded-md transition"
             </button>
           )}
           {canManage && effectiveStatus !== 'REVOKED' && (
             <button
               onClick={() => updateStatus('REVOKED')}
               disabled={!!loading}
-              className="px-3 py-1.5 bg-red-900 hover:bg-red-800 disabled:opacity-50 text-white text-xs font-medium rounded-md transition"
+              className="px-3 py-1.5 bg-[#E85D4C] hover:brightness-105 disabled:opacity-50 text-white text-xs font-medium rounded-md transition"
             >
               {loading === 'REVOKED' ? 'Revoking…' : 'Revoke'}
             </button>

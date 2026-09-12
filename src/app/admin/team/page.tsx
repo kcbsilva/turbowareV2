@@ -24,8 +24,8 @@ interface CurrentUser {
 }
 
 const ROLE_BADGE: Record<string, string> = {
-  owner: badge.saffron,
-  admin: badge.saffron,
+  owner: badge.teal,
+  admin: badge.teal,
   support: badge.sky,
   helper: badge.sky,
 }
@@ -188,7 +188,7 @@ export default function TeamPage() {
                   <td className="px-4 py-3 font-medium text-foreground">
                     {user.name}
                     {user.mustChangePassword && (
-                      <span className="ml-2 text-[10px] text-amber-400">must change password</span>
+                      <span className="ml-2 text-[10px] text-[#C45C3A]">must change password</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-foreground">{user.email}</td>

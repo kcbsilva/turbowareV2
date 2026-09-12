@@ -9,37 +9,37 @@
    ========================================= */
 
 :root {
-  --background: 40 36% 95%;
+  --background: 160 33% 97%;
   --foreground: 214 28% 15%;
 
-  --card: 43 100% 99%;
+  --card: 150 40% 99%;
   --card-foreground: 214 28% 15%;
 
-  --popover: 43 100% 99%;
+  --popover: 150 40% 99%;
   --popover-foreground: 214 28% 15%;
 
-  --primary: 214 28% 15%;
-  --primary-foreground: 43 100% 99%;
+  --primary: 172 84% 32%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 40 20% 93%;
+  --secondary: 160 25% 94%;
   --secondary-foreground: 214 28% 15%;
 
-  --muted: 40 20% 93%;
+  --muted: 160 25% 94%;
   --muted-foreground: 213 10% 40%;
 
-  --accent: 39 85% 48%;
-  --accent-foreground: 214 28% 15%;
+  --accent: 172 84% 32%;
+  --accent-foreground: 0 0% 100%;
 
-  --destructive: 5 62% 47%;
+  --destructive: 8 78% 60%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 38 24% 87%;
-  --input: 38 24% 87%;
-  --ring: 39 85% 48%;
+  --border: 168 22% 86%;
+  --input: 168 22% 86%;
+  --ring: 172 84% 32%;
   --radius: 0.5rem;
 
-  --scrollbar-track: #f1eee8;
-  --scrollbar-thumb: #c4b8a8;
+  --scrollbar-track: #e6f5f2;
+  --scrollbar-thumb: #0d9488;
 }
 
 .dark {
@@ -112,7 +112,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(252, 163, 17, 0.06) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(13, 148, 136, 0.08) 1px, transparent 1px);
   background-size: 28px 28px;
   pointer-events: none;
 }
@@ -122,7 +122,7 @@ body {
    ============================ */
 .window-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #fca311 #0f1f45;
+  scrollbar-color: #0d9488 #e6f5f2;
 }
 
 .window-scroll::-webkit-scrollbar {
@@ -131,11 +131,11 @@ body {
 }
 
 .window-scroll::-webkit-scrollbar-track {
-  background: #0f1f45;
+  background: #e6f5f2;
 }
 
 .window-scroll::-webkit-scrollbar-thumb {
-  background: #fca311;
+  background: #0d9488;
   border-radius: 3px;
 }
 
@@ -148,41 +148,41 @@ body {
   }
   :root {
 
-    --background: 40 36% 95%;
+    --background: 160 33% 97%;
 
     --foreground: 214 28% 15%;
 
-    --card: 43 100% 99%;
+    --card: 150 40% 99%;
 
     --card-foreground: 214 28% 15%;
 
-    --popover: 43 100% 99%;
+    --popover: 150 40% 99%;
 
     --popover-foreground: 214 28% 15%;
 
-    --primary: 214 28% 15%;
+    --primary: 172 84% 32%;
 
-    --primary-foreground: 43 100% 99%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 40 20% 93%;
+    --secondary: 160 25% 94%;
 
     --secondary-foreground: 214 28% 15%;
 
-    --muted: 40 20% 93%;
+    --muted: 160 25% 94%;
 
     --muted-foreground: 213 10% 40%;
 
-    --accent: 39 85% 48%;
+    --accent: 172 84% 32%;
 
-    --accent-foreground: 214 28% 15%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 5 62% 47%;
+    --destructive: 8 78% 60%;
 
-    --border: 38 24% 87%;
+    --border: 168 22% 86%;
 
-    --input: 38 24% 87%;
+    --input: 168 22% 86%;
 
-    --ring: 39 85% 48%;
+    --ring: 172 84% 32%;
 
     --chart-1: oklch(0.87 0 0);
 
@@ -291,29 +291,34 @@ body {
   .tw-badge {
     @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold;
   }
+  .tw-badge-peach {
+    background-color: #fff0eb;
+    color: #c45c3a;
+    border-color: #f5c9bc;
+  }
   .tw-badge-saffron {
-    background-color: #fff4d6;
-    color: #8a5a00;
-    border-color: #f0d48a;
+    background-color: #fff0eb;
+    color: #c45c3a;
+    border-color: #f5c9bc;
   }
   .tw-badge-teal {
     background-color: #e6f5f2;
-    color: #0f7a6c;
+    color: #0d9488;
     border-color: #b7e0d8;
   }
   .tw-badge-sky {
-    background-color: #eaf2fb;
+    background-color: #eaf4fb;
     color: #2b6cb0;
     border-color: #c5d9f0;
   }
   .tw-badge-coral {
     background-color: #fdecea;
-    color: #c23b2e;
-    border-color: #f3c4be;
+    color: #e85d4c;
+    border-color: #f5c4be;
   }
   .tw-badge-mute {
-    background-color: #f1eee8;
+    background-color: #eef6f4;
     color: #5c6570;
-    border-color: #e6e0d6;
+    border-color: #d5e8e3;
   }
 }

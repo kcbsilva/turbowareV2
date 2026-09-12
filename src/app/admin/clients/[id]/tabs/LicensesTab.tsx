@@ -25,7 +25,7 @@ interface Props {
 
 const statusStyles: Record<LicenseStatus, { badge: string; label: string }> = {
   ACTIVE:    { badge: badge.teal, label: 'Active'    },
-  SUSPENDED: { badge: badge.saffron, label: 'Suspended' },
+  SUSPENDED: { badge: badge.peach, label: 'Suspended' },
   REVOKED:   { badge: badge.coral, label: 'Revoked'   },
   EXPIRED:   { badge: badge.mute, label: 'Expired'   },
 }
@@ -127,7 +127,7 @@ export function LicensesTab({ clientId, licenses }: Props) {
                     <button
                       onClick={() => updateStatus(l.id, 'SUSPENDED')}
                       disabled={!!actionLoading}
-                      className="px-2 py-1 text-[10px] rounded bg-yellow-900/30 text-yellow-300 hover:bg-yellow-900/50 border border-yellow-800/50 transition disabled:opacity-50"
+                      className="px-2 py-1 text-[10px] rounded bg-[#FFF0EB] text-[#C45C3A] hover:bg-[#FDECEA] border border-[#F5C9BC] transition disabled:opacity-50"
                     >
                       {actionLoading === l.id + 'SUSPENDED' ? <RefreshCw size={10} className="animate-spin" /> : 'Suspend'}
                     </button>
@@ -136,7 +136,7 @@ export function LicensesTab({ clientId, licenses }: Props) {
                     <button
                       onClick={() => updateStatus(l.id, 'ACTIVE')}
                       disabled={!!actionLoading}
-                      className="px-2 py-1 text-[10px] rounded bg-emerald-900/30 text-emerald-300 hover:bg-emerald-900/50 border border-emerald-800/50 transition disabled:opacity-50"
+                      className="px-2 py-1 text-[10px] rounded bg-[#E6F5F2] text-[#0D9488] hover:bg-[#D5E8E3] border border-[#B7E0D8] transition disabled:opacity-50"
                     >
                       {actionLoading === l.id + 'ACTIVE' ? <RefreshCw size={10} className="animate-spin" /> : 'Activate'}
                     </button>
@@ -145,7 +145,7 @@ export function LicensesTab({ clientId, licenses }: Props) {
                     <button
                       onClick={() => updateStatus(l.id, 'REVOKED')}
                       disabled={!!actionLoading}
-                      className="px-2 py-1 text-[10px] rounded bg-red-900/30 text-red-300 hover:bg-red-900/50 border border-red-800/50 transition disabled:opacity-50"
+                      className="px-2 py-1 text-[10px] rounded bg-[#FDECEA] text-[#E85D4C] hover:bg-[#F5C4BE]/40 border border-[#F5C4BE] transition disabled:opacity-50"
                     >
                       {actionLoading === l.id + 'REVOKED' ? <RefreshCw size={10} className="animate-spin" /> : 'Revoke'}
                     </button>
