@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { ShieldCheck, Mail } from 'lucide-react'
-import turbowareLogo from '@/app/assets/turboware-logo.png'
+import { TurboAuthShell } from '@/components/TurboAuthShell'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 type Step = 'login' | 'forgot' | 'mfa' | 'newPassword'
 
@@ -112,132 +113,72 @@ export default function LoginForm() {
     }
   }
 
-  const inputStyle = {
-    backgroundColor: 'hsl(222 45% 6%)',
-    border: '1px solid hsl(222 30% 22%)',
-    color: 'hsl(0 0% 96%)',
-    boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.3)',
-  } as const
-
-  function focusInput(e: React.FocusEvent<HTMLInputElement>) {
-    e.currentTarget.style.outline = '2px solid #fca311'
-    e.currentTarget.style.outlineOffset = '0px'
-  }
-  function blurInput(e: React.FocusEvent<HTMLInputElement>) {
-    e.currentTarget.style.outline = 'none'
-  }
-
   const titles: Record<Step, { title: string; subtitle: string }> = {
-    login: { title: 'Turboware Admin', subtitle: 'License & billing management' },
+    login: { title: 'Turboware Admin', subtitle: 'License, billing, and tenant operations' },
     forgot: { title: 'Reset password', subtitle: 'We will email a single-use reset link' },
-    mfa: { title: 'Turboware Admin', subtitle: 'Enter the 6-digit code from your authenticator app' },
+    mfa: { title: 'Two-factor verification', subtitle: 'Enter the 6-digit code from your authenticator app' },
     newPassword: { title: 'Set new password', subtitle: 'Choose a new password before continuing' },
   }
 
   const { title, subtitle } = titles[step]
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #060c1a 0%, #0a1428 40%, #071020 70%, #060c1a 100%)',
-      }}
-    >
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(252,163,17,0.06) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-        }}
-      />
-
-      <div
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(20,33,61,0.6) 0%, transparent 70%)' }}
-      />
-
-      <div className="relative w-full max-w-sm px-4">
-        <div className="text-center mb-8">
+    <TurboAuthShell actionHref="/client/login" actionLabel="Portal do cliente">
+      <div className="reg-signup-card w-full max-w-md p-7 sm:p-8 rounded-2xl">
+        <div className="text-center mb-7">
           {step === 'mfa' ? (
-            <div
-              className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
-              style={{ backgroundColor: '#fca311' }}
-            >
-              <ShieldCheck className="w-7 h-7" style={{ color: '#081124' }} />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-gradient-to-br from-[#fca311]/25 to-[#1AABF0]/15 border border-[#fca311]/35">
+              <ShieldCheck className="w-6 h-6 text-[#fca311]" />
             </div>
           ) : step === 'forgot' ? (
-            <div
-              className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
-              style={{ backgroundColor: '#fca311' }}
-            >
-              <Mail className="w-7 h-7" style={{ color: '#081124' }} />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-gradient-to-br from-[#fca311]/25 to-[#1AABF0]/15 border border-[#fca311]/35">
+              <Mail className="w-6 h-6 text-[#fca311]" />
             </div>
           ) : (
-            <Image
-              src={turbowareLogo}
-              alt="Turboware"
-              className="mx-auto mb-4 h-14 w-14"
-              height={56}
-              width={56}
-              priority
-            />
+            <div className="turbo-badge mb-5">
+              <span className="turbo-badge-dot" />
+              Operator portal
+            </div>
           )}
-          <h1 className="text-2xl font-bold" style={{ color: '#f5f5f5' }}>{title}</h1>
-          <p className="text-xs mt-1" style={{ color: 'rgba(165,180,210,0.6)' }}>{subtitle}</p>
+          <h1 className="reg-title text-2xl font-semibold tracking-tight">{title}</h1>
+          <p className="reg-desc text-sm mt-2 leading-relaxed">{subtitle}</p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-2xl p-7 shadow-2xl"
-          style={{
-            backgroundColor: 'hsl(222 38% 11% / 0.97)',
-            border: '1px solid hsl(222 30% 22% / 0.8)',
-            backdropFilter: 'blur(12px)',
-          }}
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           {step === 'login' && (
             <>
-              <div className="mb-4">
-                <label className="block text-xs font-medium mb-2" style={{ color: 'hsl(214 18% 70%)' }}>
-                  Email
-                </label>
+              <div>
+                <label htmlFor="admin-email" className="reg-label">Email</label>
                 <input
+                  id="admin-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-md text-sm transition focus:outline-none"
-                  style={inputStyle}
-                  onFocus={focusInput}
-                  onBlur={blurInput}
+                  className="reg-input"
                   placeholder="admin@example.com"
                   autoComplete="email"
                   autoFocus
                 />
               </div>
 
-              <div className="mb-2">
-                <label className="block text-xs font-medium mb-2" style={{ color: 'hsl(214 18% 70%)' }}>
-                  Password
-                </label>
+              <div>
+                <label htmlFor="admin-password" className="reg-label">Password</label>
                 <input
+                  id="admin-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-md text-sm transition focus:outline-none"
-                  style={inputStyle}
-                  onFocus={focusInput}
-                  onBlur={blurInput}
-                  placeholder="Enter password"
+                  className="reg-input"
+                  placeholder="••••••••"
                   autoComplete="current-password"
                   required
                 />
               </div>
 
-              <div className="mb-5 text-right">
+              <div className="text-right -mt-1">
                 <button
                   type="button"
-                  className="text-xs underline"
-                  style={{ color: 'rgba(165,180,210,0.6)' }}
+                  className="text-xs text-white/45 hover:text-white underline underline-offset-2"
                   onClick={() => {
                     setStep('forgot')
                     setForgotEmail(email)
@@ -252,24 +193,20 @@ export default function LoginForm() {
           )}
 
           {step === 'forgot' && (
-            <div className="mb-5">
+            <div>
               {forgotSent ? (
-                <p className="text-sm" style={{ color: 'rgba(165,180,210,0.85)' }}>
+                <p className="text-sm text-white/70 leading-relaxed">
                   If an account exists for that email, a single-use reset link has been sent. Check your inbox to continue.
                 </p>
               ) : (
                 <>
-                  <label className="block text-xs font-medium mb-2" style={{ color: 'hsl(214 18% 70%)' }}>
-                    Email
-                  </label>
+                  <label htmlFor="admin-forgot-email" className="reg-label">Email</label>
                   <input
+                    id="admin-forgot-email"
                     type="email"
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-md text-sm transition focus:outline-none"
-                    style={inputStyle}
-                    onFocus={focusInput}
-                    onBlur={blurInput}
+                    className="reg-input"
                     placeholder="admin@example.com"
                     autoComplete="email"
                     required
@@ -279,8 +216,7 @@ export default function LoginForm() {
               )}
               <button
                 type="button"
-                className="mt-4 text-xs underline"
-                style={{ color: 'rgba(165,180,210,0.6)' }}
+                className="mt-4 text-xs text-white/45 hover:text-white underline underline-offset-2"
                 onClick={() => {
                   setStep('login')
                   setForgotSent(false)
@@ -293,21 +229,17 @@ export default function LoginForm() {
           )}
 
           {step === 'mfa' && (
-            <div className="mb-5">
-              <label className="block text-xs font-medium mb-2" style={{ color: 'hsl(214 18% 70%)' }}>
-                Authenticator code
-              </label>
+            <div>
+              <label htmlFor="admin-mfa" className="reg-label">Authenticator code</label>
               <input
+                id="admin-mfa"
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={6}
                 value={mfaCode}
                 onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                className="w-full px-3 py-2.5 rounded-md text-sm tracking-[0.3em] text-center transition focus:outline-none"
-                style={inputStyle}
-                onFocus={focusInput}
-                onBlur={blurInput}
+                className="reg-input tracking-[0.3em] text-center"
                 placeholder="000000"
                 autoComplete="one-time-code"
                 autoFocus
@@ -315,8 +247,7 @@ export default function LoginForm() {
               />
               <button
                 type="button"
-                className="mt-3 text-xs underline"
-                style={{ color: 'rgba(165,180,210,0.6)' }}
+                className="mt-3 text-xs text-white/45 hover:text-white underline underline-offset-2"
                 onClick={() => { setStep('login'); setMfaCode(''); setError('') }}
               >
                 Back to sign in
@@ -326,36 +257,28 @@ export default function LoginForm() {
 
           {step === 'newPassword' && (
             <>
-              <div className="mb-4">
-                <label className="block text-xs font-medium mb-2" style={{ color: 'hsl(214 18% 70%)' }}>
-                  New password
-                </label>
+              <div>
+                <label htmlFor="admin-new-password" className="reg-label">New password</label>
                 <input
+                  id="admin-new-password"
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-md text-sm transition focus:outline-none"
-                  style={inputStyle}
-                  onFocus={focusInput}
-                  onBlur={blurInput}
+                  className="reg-input"
                   placeholder="At least 8 characters"
                   autoComplete="new-password"
                   required
                   autoFocus
                 />
               </div>
-              <div className="mb-5">
-                <label className="block text-xs font-medium mb-2" style={{ color: 'hsl(214 18% 70%)' }}>
-                  Confirm password
-                </label>
+              <div>
+                <label htmlFor="admin-confirm-password" className="reg-label">Confirm password</label>
                 <input
+                  id="admin-confirm-password"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-md text-sm transition focus:outline-none"
-                  style={inputStyle}
-                  onFocus={focusInput}
-                  onBlur={blurInput}
+                  className="reg-input"
                   placeholder="Repeat password"
                   autoComplete="new-password"
                   required
@@ -364,18 +287,7 @@ export default function LoginForm() {
             </>
           )}
 
-          {error && (
-            <p
-              className="mb-4 text-xs rounded-md px-3 py-2"
-              style={{
-                color: 'hsl(356 72% 65%)',
-                backgroundColor: 'hsl(356 72% 10%)',
-                border: '1px solid hsl(356 72% 25%)',
-              }}
-            >
-              {error}
-            </p>
-          )}
+          {error && <p className="reg-error" role="alert">{error}</p>}
 
           {!(step === 'forgot' && forgotSent) && (
             <button
@@ -385,10 +297,7 @@ export default function LoginForm() {
                 (step === 'mfa' && mfaCode.length !== 6) ||
                 (step === 'forgot' && !forgotEmail.trim())
               }
-              className="w-full py-2.5 text-sm font-semibold rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: '#fca311', color: '#081124' }}
-              onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.backgroundColor = '#f59e0b' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = '#fca311' }}
+              className={cn(buttonVariants({ size: 'lg' }), 'turbo-btn-primary w-full h-11 rounded-lg')}
             >
               {loading
                 ? 'Please wait…'
@@ -403,10 +312,10 @@ export default function LoginForm() {
           )}
         </form>
 
-        <p className="text-center text-[10px] mt-4" style={{ color: 'rgba(165,180,210,0.3)' }}>
-          TurboISP Platform — Client Management
+        <p className="text-center text-[11px] mt-5 text-white/30">
+          TurboISP Platform — operator access
         </p>
       </div>
-    </div>
+    </TurboAuthShell>
   )
 }
