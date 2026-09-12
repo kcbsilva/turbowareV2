@@ -11,6 +11,8 @@ import {
   canChangeBillingDate, canActivateGrace,
   formatBRL, BILLING_DATE_LOCK_MONTHS
 } from '@/lib/pricing'
+import { ExtendGraceDialog } from '@/components/ExtendGraceDialog'
+import { MAX_CLIENT_GRACE_DAYS } from '@/lib/grace-period'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -301,9 +303,7 @@ function ActivationWizard({ onActivated }: { onActivated: () => void }) {
 // ── Subscription Dashboard ────────────────────────────────────────────────────
 
 function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefresh: () => void }) {
-  const [graceConfirm, setGraceConfirm] = useState(false)
-  const [graceLoading, setGraceLoading] = useState(false)
-  const [graceError, setGraceError]     = useState('')
+  const [graceOpen, setGraceOpen] = useState(false)
   const [changingDate, setChangingDate] = useState(false)
   const [newDate, setNewDate]           = useState<number | ''>('')
   const [dateLoading, setDateLoading]   = useState(false)
@@ -317,14 +317,6 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
   const dateCheck    = canChangeBillingDate(sub.billingDateChangedAt ? new Date(sub.billingDateChangedAt) : null)
   const graceOk      = canActivateGrace(sub.gracePeriodUsedAt ? new Date(sub.gracePeriodUsedAt) : null)
   const graceActive  = sub.gracePeriodEndsAt && new Date(sub.gracePeriodEndsAt) > new Date()
-
-  async function activateGrace() {
-    setGraceLoading(true); setGraceError('')
-    const res = await fetch('/api/client/subscription/grace', { method: 'POST' })
-    setGraceLoading(false)
-    if (res.ok) { setGraceConfirm(false); onRefresh() }
-    else { const d = await res.json().catch(() => ({})); setGraceError(d.error || 'Failed.') }
-  }
 
   async function changeDate() {
     if (!newDate) return
@@ -394,35 +386,38 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
             <h3 className="text-sm font-semibold text-foreground">Subscription Suspended</h3>
           </div>
           <p className="text-xs text-muted-foreground mb-4">
-            Access suspended due to outstanding balance. Pay your invoices below, or activate a grace period for 3 extra days.
+            Access suspended due to outstanding balance. Pay your invoices below, or extend grace for extra days.
           </p>
 
           {graceOk ? (
-            graceConfirm ? (
-              <div className="space-y-3">
-                <div className="flex gap-2.5 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                  <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
-                  <p className="text-xs text-yellow-300 leading-relaxed">
-                    This will restore access for <strong>3 days</strong> and add a <strong>R$5,00 fee</strong> to your next bill. Can only be used <strong>once per month</strong>.
-                  </p>
-                </div>
-                {graceError && <p className="text-xs text-destructive">{graceError}</p>}
-                <div className="flex gap-2">
-                  <button onClick={() => { setGraceConfirm(false); setGraceError('') }} className="flex-1 py-2 text-xs border border-border rounded-md text-muted-foreground hover:text-foreground transition">Cancel</button>
-                  <button onClick={activateGrace} disabled={graceLoading} className="flex-1 py-2 text-xs font-semibold rounded-md transition hover:opacity-90 disabled:opacity-50" style={{ backgroundColor: '#fca311', color: '#081124' }}>
-                    {graceLoading ? 'Activating…' : 'Confirm Grace Period'}
-                  </button>
-                </div>
-              </div>
-            ) : (
+            <>
               <button
-                onClick={() => setGraceConfirm(true)}
+                type="button"
+                onClick={() => setGraceOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md border border-[#fca311]/40 text-[#fca311] hover:bg-[#fca311]/10 transition"
               >
                 <Clock className="w-3.5 h-3.5" />
-                Activate 3-Day Grace Period <span className="text-muted-foreground font-normal">(+R$5,00 on next bill)</span>
+                Extend Grace <span className="text-muted-foreground font-normal">(+R$5,00 on next bill)</span>
               </button>
-            )
+              <ExtendGraceDialog
+                open={graceOpen}
+                onOpenChange={setGraceOpen}
+                currentEndsAt={sub.gracePeriodEndsAt}
+                maxDays={MAX_CLIENT_GRACE_DAYS}
+                feeHint="Adds a R$5,00 fee to the next bill. Once per calendar month."
+                confirmLabel="Confirm grace"
+                onConfirm={async (payload) => {
+                  const res = await fetch('/api/client/subscription/grace', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                  })
+                  const data = await res.json().catch(() => ({}))
+                  if (!res.ok) throw new Error(data.error || 'Failed.')
+                  onRefresh()
+                }}
+              />
+            </>
           ) : (
             <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
               <AlertTriangle className="w-3 h-3 text-yellow-500/70" />

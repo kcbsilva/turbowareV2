@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { CheckCircle, AlertTriangle, Clock, RefreshCw, Loader2, CreditCard, ExternalLink, Send } from 'lucide-react'
 import { formatBRL, getMonthlyPrice } from '@/lib/pricing'
 import { badge } from '@/lib/badges'
+import { ExtendGraceDialog } from '@/components/ExtendGraceDialog'
+import { MAX_ADMIN_GRACE_DAYS } from '@/lib/grace-period'
 
 interface Invoice {
   id: string
@@ -54,6 +56,7 @@ export function BillingTab({ clientId }: Props) {
   const [loading, setLoading]   = useState(true)
   const [paying, setPaying]     = useState<string | null>(null)
   const [sending, setSending]   = useState<string | null>(null)  // `${invoiceId}-asaas` | `${invoiceId}-stripe`
+  const [graceOpen, setGraceOpen] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -122,9 +125,20 @@ export function BillingTab({ clientId }: Props) {
       <div className={card}>
         <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
           <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Subscription</h2>
-          <button onClick={load} className="text-muted-foreground hover:text-foreground transition" title="Refresh">
-            <RefreshCw className="w-3 h-3" />
-          </button>
+          <div className="flex items-center gap-2">
+            {sub.status !== 'CANCELLED' && (
+              <button
+                type="button"
+                onClick={() => setGraceOpen(true)}
+                className="rounded-md border border-[#fca311]/40 px-2 py-1 text-[10px] font-semibold text-[#c47b00] hover:bg-[#fca311]/10"
+              >
+                Extend Grace
+              </button>
+            )}
+            <button onClick={load} className="text-muted-foreground hover:text-foreground transition" title="Refresh">
+              <RefreshCw className="w-3 h-3" />
+            </button>
+          </div>
         </div>
         <div className="px-4 py-3 grid grid-cols-2 gap-3 text-xs">
           <div>
@@ -243,6 +257,24 @@ export function BillingTab({ clientId }: Props) {
           </div>
         </div>
       )}
+
+      <ExtendGraceDialog
+        open={graceOpen}
+        onOpenChange={setGraceOpen}
+        currentEndsAt={sub.gracePeriodEndsAt}
+        maxDays={MAX_ADMIN_GRACE_DAYS}
+        confirmLabel="Extend grace"
+        onConfirm={async (payload) => {
+          const res = await fetch(`/api/admin/clients/${clientId}/subscription/grace`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+          const data = await res.json().catch(() => ({}))
+          if (!res.ok) throw new Error(data.error || 'Failed to extend grace.')
+          await load()
+        }}
+      />
 
       {/* Grace period info */}
       {sub.gracePeriodUsedAt && (
