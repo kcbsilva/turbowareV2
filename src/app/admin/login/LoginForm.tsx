@@ -1,11 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { ShieldCheck, Mail } from 'lucide-react'
-import { TurboAuthShell } from '@/components/TurboAuthShell'
-import { buttonVariants } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import {
+  LoginEmailField,
+  LoginMfaCodeField,
+  LoginPasswordField,
+  LoginShell,
+  loginLinkClass,
+} from '@/components/auth/LoginShell'
 
 type Step = 'login' | 'forgot' | 'mfa' | 'newPassword'
 
@@ -22,7 +25,7 @@ export default function LoginForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -113,209 +116,129 @@ export default function LoginForm() {
     }
   }
 
-  const titles: Record<Step, { title: string; subtitle: string }> = {
-    login: { title: 'Turboware Admin', subtitle: 'License, billing, and tenant operations' },
-    forgot: { title: 'Reset password', subtitle: 'We will email a single-use reset link' },
-    mfa: { title: 'Two-factor verification', subtitle: 'Enter the 6-digit code from your authenticator app' },
-    newPassword: { title: 'Set new password', subtitle: 'Choose a new password before continuing' },
+  const titles: Record<Step, { title: string; subtitle: string; submit: string }> = {
+    login: { title: 'Turboware Admin', subtitle: 'License, billing, and tenant operations', submit: 'Sign in' },
+    forgot: { title: 'Reset password', subtitle: 'We will email a single-use reset link', submit: 'Send reset link' },
+    mfa: { title: 'Two-factor verification', subtitle: 'Enter the 6-digit code from your authenticator app', submit: 'Verify' },
+    newPassword: { title: 'Set new password', subtitle: 'Choose a new password before continuing', submit: 'Save password' },
   }
 
-  const { title, subtitle } = titles[step]
+  const { title, subtitle, submit } = titles[step]
 
   return (
-    <TurboAuthShell actionHref="/client/login" actionLabel="Portal do cliente">
-      <div className="reg-signup-card w-full max-w-md p-7 sm:p-8 rounded-2xl">
-        <div className="text-center mb-7">
-          {step === 'mfa' ? (
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-gradient-to-br from-[#fca311]/25 to-[#1AABF0]/15 border border-[#fca311]/35">
-              <ShieldCheck className="w-6 h-6 text-[#fca311]" />
-            </div>
-          ) : step === 'forgot' ? (
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-gradient-to-br from-[#fca311]/25 to-[#1AABF0]/15 border border-[#fca311]/35">
-              <Mail className="w-6 h-6 text-[#fca311]" />
-            </div>
-          ) : (
-            <div className="turbo-badge mb-5">
-              <span className="turbo-badge-dot" />
-              Operator portal
-            </div>
-          )}
-          <h1 className="reg-title text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="reg-desc text-sm mt-2 leading-relaxed">{subtitle}</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {step === 'login' && (
-            <>
-              <div>
-                <label htmlFor="admin-email" className="reg-label">Email</label>
-                <input
-                  id="admin-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="reg-input"
-                  placeholder="admin@example.com"
-                  autoComplete="email"
-                  autoFocus
-                />
-              </div>
-
-              <div>
-                <label htmlFor="admin-password" className="reg-label">Password</label>
-                <input
-                  id="admin-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="reg-input"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  required
-                />
-              </div>
-
-              <div className="text-right -mt-1">
-                <button
-                  type="button"
-                  className="text-xs text-white/45 hover:text-white underline underline-offset-2"
-                  onClick={() => {
-                    setStep('forgot')
-                    setForgotEmail(email)
-                    setForgotSent(false)
-                    setError('')
-                  }}
-                >
-                  Forgot password?
-                </button>
-              </div>
-            </>
-          )}
-
-          {step === 'forgot' && (
-            <div>
-              {forgotSent ? (
-                <p className="text-sm text-white/70 leading-relaxed">
-                  If an account exists for that email, a single-use reset link has been sent. Check your inbox to continue.
-                </p>
-              ) : (
-                <>
-                  <label htmlFor="admin-forgot-email" className="reg-label">Email</label>
-                  <input
-                    id="admin-forgot-email"
-                    type="email"
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    className="reg-input"
-                    placeholder="admin@example.com"
-                    autoComplete="email"
-                    required
-                    autoFocus
-                  />
-                </>
-              )}
-              <button
-                type="button"
-                className="mt-4 text-xs text-white/45 hover:text-white underline underline-offset-2"
-                onClick={() => {
-                  setStep('login')
-                  setForgotSent(false)
-                  setError('')
-                }}
-              >
-                Back to sign in
-              </button>
-            </div>
-          )}
-
-          {step === 'mfa' && (
-            <div>
-              <label htmlFor="admin-mfa" className="reg-label">Authenticator code</label>
-              <input
-                id="admin-mfa"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                value={mfaCode}
-                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                className="reg-input tracking-[0.3em] text-center"
-                placeholder="000000"
-                autoComplete="one-time-code"
-                autoFocus
-                required
-              />
-              <button
-                type="button"
-                className="mt-3 text-xs text-white/45 hover:text-white underline underline-offset-2"
-                onClick={() => { setStep('login'); setMfaCode(''); setError('') }}
-              >
-                Back to sign in
-              </button>
-            </div>
-          )}
-
-          {step === 'newPassword' && (
-            <>
-              <div>
-                <label htmlFor="admin-new-password" className="reg-label">New password</label>
-                <input
-                  id="admin-new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="reg-input"
-                  placeholder="At least 8 characters"
-                  autoComplete="new-password"
-                  required
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label htmlFor="admin-confirm-password" className="reg-label">Confirm password</label>
-                <input
-                  id="admin-confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="reg-input"
-                  placeholder="Repeat password"
-                  autoComplete="new-password"
-                  required
-                />
-              </div>
-            </>
-          )}
-
-          {error && <p className="reg-error" role="alert">{error}</p>}
-
-          {!(step === 'forgot' && forgotSent) && (
+    <LoginShell
+      title={title}
+      subtitle={subtitle}
+      error={error}
+      isSubmitting={loading}
+      submitDisabled={
+        (step === 'mfa' && mfaCode.length !== 6) ||
+        (step === 'forgot' && !forgotEmail.trim())
+      }
+      showSubmit={!(step === 'forgot' && forgotSent)}
+      submitLabel={submit}
+      submitPendingLabel="Please wait…"
+      onSubmit={handleSubmit}
+      footer={
+        <p className="text-xs text-[#1a2333]/45">TurboISP Platform — operator access</p>
+      }
+    >
+      {step === 'login' && (
+        <>
+          <LoginEmailField
+            id="admin-email"
+            label="Email"
+            value={email}
+            onChange={setEmail}
+            autoFocus
+          />
+          <LoginPasswordField
+            id="admin-password"
+            label="Password"
+            value={password}
+            onChange={setPassword}
+          />
+          <div className="text-right -mt-1">
             <button
-              type="submit"
-              disabled={
-                loading ||
-                (step === 'mfa' && mfaCode.length !== 6) ||
-                (step === 'forgot' && !forgotEmail.trim())
-              }
-              className={cn(buttonVariants({ size: 'lg' }), 'turbo-btn-primary w-full h-11 rounded-lg')}
+              type="button"
+              className={loginLinkClass}
+              onClick={() => {
+                setStep('forgot')
+                setForgotEmail(email)
+                setForgotSent(false)
+                setError('')
+              }}
             >
-              {loading
-                ? 'Please wait…'
-                : step === 'forgot'
-                  ? 'Send reset link'
-                  : step === 'mfa'
-                    ? 'Verify'
-                    : step === 'newPassword'
-                      ? 'Save password'
-                      : 'Sign in'}
+              Forgot password?
             </button>
-          )}
-        </form>
+          </div>
+        </>
+      )}
 
-        <p className="text-center text-[11px] mt-5 text-white/30">
-          TurboISP Platform — operator access
-        </p>
-      </div>
-    </TurboAuthShell>
+      {step === 'forgot' && (
+        <div>
+          {forgotSent ? (
+            <p className="text-sm leading-relaxed text-[#1a2333]/70">
+              If an account exists for that email, a single-use reset link has been sent. Check your inbox to continue.
+            </p>
+          ) : (
+            <LoginEmailField
+              id="admin-forgot-email"
+              label="Email"
+              value={forgotEmail}
+              onChange={setForgotEmail}
+              required
+              autoFocus
+            />
+          )}
+          <button
+            type="button"
+            className={`${loginLinkClass} mt-4 text-xs`}
+            onClick={() => {
+              setStep('login')
+              setForgotSent(false)
+              setError('')
+            }}
+          >
+            Back to sign in
+          </button>
+        </div>
+      )}
+
+      {step === 'mfa' && (
+        <div>
+          <LoginMfaCodeField value={mfaCode} onChange={setMfaCode} />
+          <button
+            type="button"
+            className={`${loginLinkClass} mt-3 text-xs`}
+            onClick={() => { setStep('login'); setMfaCode(''); setError('') }}
+          >
+            Back to sign in
+          </button>
+        </div>
+      )}
+
+      {step === 'newPassword' && (
+        <>
+          <LoginPasswordField
+            id="admin-new-password"
+            label="New password"
+            value={newPassword}
+            onChange={setNewPassword}
+            autoComplete="new-password"
+            placeholder="At least 8 characters"
+            autoFocus
+          />
+          <LoginPasswordField
+            id="admin-confirm-password"
+            label="Confirm password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            autoComplete="new-password"
+            placeholder="Repeat password"
+          />
+        </>
+      )}
+    </LoginShell>
   )
 }
