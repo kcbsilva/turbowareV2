@@ -185,6 +185,7 @@ model AdminUser {
   mfaEnabled         Boolean  @default(false)
   totpSecret         String?  // AES-256-GCM encrypted TOTP seed
   mustChangePassword Boolean  @default(false)
+  active             Boolean  @default(true)
   passwordResetTokenHash String? @unique
   passwordResetExpiresAt DateTime?
   createdAt          DateTime @default(now())

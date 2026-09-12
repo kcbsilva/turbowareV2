@@ -30,6 +30,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
       }
 
+      const isActive = (user as { active?: boolean }).active ?? true
+      if (!isActive) {
+        return NextResponse.json({ error: 'This account has been deactivated' }, { status: 403 })
+      }
+
       const mustChangePassword =
         (user as { mustChangePassword?: boolean }).mustChangePassword ?? false
 

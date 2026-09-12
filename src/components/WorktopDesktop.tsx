@@ -6,8 +6,14 @@ import { WorktopWindow } from './WorktopWindow'
 import { Taskbar } from './Taskbar'
 
 const routeTitles: Record<string, string> = {
-  '/admin':            'Clients',
+  '/admin':              'Dashboard',
   '/admin/clients':      'Clients',
+  '/admin/clients/new':  'New Tenant',
+  '/admin/licenses':     'Licenses',
+  '/admin/licenses/new': 'New License',
+  '/admin/tickets':      'Tickets',
+  '/admin/invoices':     'Invoices',
+  '/admin/team':         'Team',
   '/admin/products':     'Products',
   '/admin/security':     'Security',
 }

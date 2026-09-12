@@ -35,8 +35,12 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.adminUser.findUnique({
     where: { id: userId },
-    select: { id: true, name: true, email: true, role: true, mfaEnabled: true, totpSecret: true },
+    select: { id: true, name: true, email: true, role: true, mfaEnabled: true, totpSecret: true, active: true },
   })
+
+  if (user && user.active === false) {
+    return NextResponse.json({ error: 'This account has been deactivated' }, { status: 403 })
+  }
 
   if (!user?.mfaEnabled || !user.totpSecret) {
     return NextResponse.json({ error: 'MFA is not configured for this account' }, { status: 400 })

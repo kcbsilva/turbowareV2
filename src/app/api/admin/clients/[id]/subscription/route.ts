@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 import { isValidTransition } from '@/lib/transitions'
+import { applySubscriptionLicenseSync } from '@/lib/billing'
 import { SubscriptionStatus } from '@prisma/client'
 
 type Params = { params: Promise<{ id: string }> }
@@ -52,5 +53,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       license:  { select: { key: true, status: true, maxSeats: true } },
     },
   })
+
+  await applySubscriptionLicenseSync({
+    clientId: updated.clientId,
+    licenseId: updated.licenseId,
+    subscriptionStatus: updated.status,
+  })
+
   return NextResponse.json(updated)
 }

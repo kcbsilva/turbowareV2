@@ -4,6 +4,7 @@ import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 import { sendVerificationEmail } from '@/lib/email'
+import { requireOwnerSession } from '@/lib/auth'
 import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
 import { deleteTurboISPTenantBySlug } from '@/lib/turboisp-bootstrap'
 
@@ -125,7 +126,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 // DELETE /api/admin/clients/[id]
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
+  const { error } = await requireOwnerSession(req)
+  if (error) return error
+
   const { id } = await params
   const client = await prisma.client.findUnique({
     where: { id },

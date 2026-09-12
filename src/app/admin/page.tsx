@@ -1,42 +1,44 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { Users, KeyRound, UserCheck, UserX, TrendingUp } from 'lucide-react'
+import { Users, KeyRound, UserCheck, TrendingUp, Ticket } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
 async function getStats() {
-  const clients = await prisma.client.findMany({
-    select: {
-      id: true,
-      name: true,
-      company: true,
-      email: true,
-      cnpj: true,
-      createdAt: true,
-      _count: { select: { licenses: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  })
+  const [clients, openTickets] = await Promise.all([
+    prisma.client.findMany({
+      select: {
+        id: true,
+        name: true,
+        company: true,
+        email: true,
+        cnpj: true,
+        createdAt: true,
+        _count: { select: { licenses: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.supportTicket.count({ where: { status: { in: ['OPEN', 'IN_PROGRESS'] } } }),
+  ])
 
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
   const total       = clients.length
   const withLicense = clients.filter((c) => c._count.licenses > 0).length
-  const noLicense   = total - withLicense
   const newThisMonth = clients.filter((c) => new Date(c.createdAt) >= startOfMonth).length
   const recent       = clients.slice(0, 8)
 
-  return { total, withLicense, noLicense, newThisMonth, recent }
+  return { total, withLicense, newThisMonth, recent, openTickets }
 }
 
 export default async function DashboardPage() {
-  const { total, withLicense, noLicense, newThisMonth, recent } = await getStats()
+  const { total, withLicense, newThisMonth, recent, openTickets } = await getStats()
 
   const cards = [
     { label: 'Total Clients',    value: total,        icon: Users,     color: 'text-primary' },
     { label: 'With Licenses',    value: withLicense,  icon: UserCheck, color: 'text-emerald-400' },
-    { label: 'No Licenses',      value: noLicense,    icon: UserX,     color: 'text-muted-foreground' },
+    { label: 'Open Tickets',     value: openTickets,  icon: Ticket,    color: 'text-[#fca311]' },
     { label: 'New This Month',   value: newThisMonth, icon: TrendingUp,color: 'text-[#fca311]' },
   ]
 
@@ -44,16 +46,24 @@ export default async function DashboardPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-bold text-foreground">Clients</h1>
-          <p className="text-muted-foreground text-xs mt-0.5">Overview of your client base</p>
+          <h1 className="text-lg font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground text-xs mt-0.5">Tenants, licenses, and support at a glance</p>
         </div>
-        <Link
-          href="/admin/clients"
-          className="px-3 py-1.5 text-xs font-semibold rounded-md transition"
-          style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
-        >
-          View all clients →
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/tickets"
+            className="px-3 py-1.5 text-xs font-medium rounded-md border border-border hover:bg-muted"
+          >
+            Tickets{openTickets > 0 ? ` (${openTickets})` : ''}
+          </Link>
+          <Link
+            href="/admin/clients/new"
+            className="px-3 py-1.5 text-xs font-semibold rounded-md transition"
+            style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+          >
+            Set up tenant
+          </Link>
+        </div>
       </div>
 
       {/* Stat cards */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { License, LicenseStatus } from '@prisma/client'
 
@@ -17,6 +17,14 @@ export function LicenseActions({ license, effectiveStatus, clients }: Props) {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [selectedClientId, setSelectedClientId] = useState(license.clientId || '')
+  const [canManage, setCanManage] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setCanManage(Boolean(d?.canManage)))
+      .catch(() => undefined)
+  }, [])
 
   async function updateStatus(status: LicenseStatus) {
     setLoading(status)
@@ -114,7 +122,7 @@ export function LicenseActions({ license, effectiveStatus, clients }: Props) {
               {loading === 'SUSPENDED' ? 'Suspending…' : 'Suspend'}
             </button>
           )}
-          {effectiveStatus !== 'REVOKED' && (
+          {canManage && effectiveStatus !== 'REVOKED' && (
             <button
               onClick={() => updateStatus('REVOKED')}
               disabled={!!loading}
@@ -123,6 +131,7 @@ export function LicenseActions({ license, effectiveStatus, clients }: Props) {
               {loading === 'REVOKED' ? 'Revoking…' : 'Revoke'}
             </button>
           )}
+          {canManage && (
           <button
             onClick={deleteLicense}
             disabled={!!loading}
@@ -130,6 +139,7 @@ export function LicenseActions({ license, effectiveStatus, clients }: Props) {
           >
             {loading === 'DELETE' ? 'Deleting…' : 'Delete License'}
           </button>
+          )}
         </div>
         {error && (
           <div className="px-4 pb-3">
