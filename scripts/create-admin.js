@@ -18,7 +18,7 @@
  *   --role     Optional role string (default: "admin")
  *
  * PREREQUISITES:
- *   DATABASE_URL must be set in .env (uses dotenv to load it automatically)
+ *   TURBOWARE_DB must be set in .env (uses dotenv to load it automatically)
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -27,7 +27,7 @@
 const path    = require('path')
 const bcrypt  = require('bcryptjs')
 
-// Load .env so DATABASE_URL is available without the user having to export it
+// Load .env so TURBOWARE_DB is available without the user having to export it
 // (inline loader — avoids dotenv dependency)
 const fs = require('fs')
 const envPath = path.resolve(__dirname, '..', '.env')

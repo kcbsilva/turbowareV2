@@ -164,7 +164,7 @@ Protected by JWT middleware (`/admin/*`).
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
+| `TURBOWARE_DB` | PostgreSQL connection string (Render, schema `turboware`) |
 | `ADMIN_PASSWORD` | Password for admin login |
 | `JWT_SECRET` | Secret used to sign admin JWT cookies |
 | `CRON_SECRET` | Bearer token for `/api/cron/billing` (required in production; Vercel injects it) |

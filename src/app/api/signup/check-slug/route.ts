@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
       NextResponse.json(
         {
           error:
-            'Billing database unavailable. Ensure DATABASE_URL points at the TurboISP Supabase project and run: npx prisma db push',
+            'Billing database unavailable. Ensure TURBOWARE_DB is set and run: npx prisma db push',
         },
         { status: 503 },
       ),
