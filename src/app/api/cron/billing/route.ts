@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 import { getMonthlyPrice, getPriceByLabel, getTierByLabel, nextBillingDate, type Region } from '@/lib/pricing'
 import { isInvoiceUnpaid, suspendSubscriptionForNonPayment } from '@/lib/billing'
+import { OVERDUE_GRACE_DAYS } from '@/lib/access-gate'
 
 /**
  * GET /api/cron/billing
@@ -13,8 +14,8 @@ import { isInvoiceUnpaid, suspendSubscriptionForNonPayment } from '@/lib/billing
  *
  * Responsibilities:
  *  1. TRIAL subscriptions past trialEndsAt → PENDING_PAYMENT + first MONTHLY invoice
- *  2. ACTIVE subscriptions past gracePeriodEndsAt, or unpaid invoices 7+ days past due → SUSPENDED
- *  3. PENDING_PAYMENT subscriptions with an unpaid invoice older than 7 days → SUSPENDED
+ *  2. ACTIVE subscriptions past gracePeriodEndsAt, or unpaid invoices 3+ days past due → SUSPENDED
+ *  3. PENDING_PAYMENT subscriptions with an unpaid invoice older than 3 days → SUSPENDED
  *  4. ACTIVE subscriptions whose billingDate matches today → new MONTHLY invoice
  */
 export async function GET(req: NextRequest) {
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
 
   const now        = new Date()
   const todayDay   = now.getDate()
-  const sevenDaysAgo  = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const graceCutoff   = new Date(now.getTime() - OVERDUE_GRACE_DAYS * 24 * 60 * 60 * 1000)
   const startOfMonth  = new Date(now.getFullYear(), now.getMonth(), 1)
 
   const results = {
@@ -103,12 +104,12 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      // ── 2. ACTIVE unpaid past grace (or 7 days after due) → SUSPENDED ────────
+      // ── 2. ACTIVE unpaid past extra grace (or 3 days after due) → SUSPENDED ─
       if (sub.status === 'ACTIVE') {
         const unpaid = sub.invoices.filter(isInvoiceUnpaid)
         const graceExpired = Boolean(sub.gracePeriodEndsAt && sub.gracePeriodEndsAt < now && unpaid.length)
         const overduePastWindow = unpaid.some(
-          (inv) => inv.dueDate && inv.dueDate <= sevenDaysAgo,
+          (inv) => inv.dueDate && inv.dueDate <= graceCutoff,
         )
 
         if (graceExpired || overduePastWindow) {
@@ -131,10 +132,10 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // ── 3. PENDING_PAYMENT with stale unpaid invoice (>7 days) → SUSPENDED ─────
+      // ── 3. PENDING_PAYMENT with stale unpaid invoice (>3 days) → SUSPENDED ─────
       if (sub.status === 'PENDING_PAYMENT') {
         const hasStaleInvoice = sub.invoices.some(
-          (inv) => isInvoiceUnpaid(inv) && inv.createdAt <= sevenDaysAgo,
+          (inv) => isInvoiceUnpaid(inv) && (inv.dueDate ?? inv.createdAt) <= graceCutoff,
         )
 
         if (hasStaleInvoice) {

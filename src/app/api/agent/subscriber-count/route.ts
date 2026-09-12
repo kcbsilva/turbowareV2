@@ -9,6 +9,8 @@ import {
   type Region,
   type PricingTier,
 } from '@/lib/pricing'
+import { resolveAccessGate } from '@/lib/access-gate'
+import { turbowarePortalLoginUrl } from '@/lib/portal-url'
 
 /**
  * POST /api/agent/subscriber-count
@@ -95,7 +97,14 @@ export async function POST(req: NextRequest) {
 
   const client = await prisma.client.findUnique({
     where: { id: clientId },
-    select: { id: true, name: true, subscription: true },
+    include: {
+      subscription: {
+        include: {
+          invoices: { select: { status: true, type: true, dueDate: true, createdAt: true } },
+          license: { select: { status: true } },
+        },
+      },
+    },
   })
 
   if (!client?.subscription) {
@@ -109,6 +118,7 @@ export async function POST(req: NextRequest) {
       {
         error: `Subscription is not active (status: ${sub.status})`,
         currentPlan: buildPlanSummary(sub, activeSubscribers, mapItemCount),
+        access: accessFor(req, sub),
       },
       { status: 422 },
     )
@@ -139,6 +149,7 @@ export async function POST(req: NextRequest) {
         activeSubscribers,
         mapItemCount,
         currentPlan: buildPlanSummary(sub, activeSubscribers, mapItemCount),
+        access: accessFor(req, sub),
       },
       { status: 422 },
     )
@@ -197,6 +208,7 @@ export async function POST(req: NextRequest) {
       approachingLimit: approaching,
       pendingDowngradeTier: refreshed.pendingDowngradeTier,
       currentPlan: buildPlanSummary(refreshed, activeSubscribers, mapItemCount),
+      access: accessFor(req, sub),
     })
   }
 
@@ -279,6 +291,7 @@ export async function POST(req: NextRequest) {
         activeSubscribers,
         mapItemCount,
       ),
+      access: accessFor(req, sub),
     })
   }
 
@@ -331,6 +344,7 @@ export async function POST(req: NextRequest) {
       activeSubscribers,
       mapItemCount,
     ),
+    access: accessFor(req, sub),
   })
 }
 
@@ -475,5 +489,25 @@ function buildPlanSummary(
         ? Math.max(0, maxMapItems - mapItemCount)
         : null,
     pendingDowngradeTier: sub.pendingDowngradeTier ?? null,
+  }
+}
+
+function accessFor(
+  req: NextRequest,
+  sub: {
+    status: string
+    invoices?: { status: string; type: string; dueDate: Date; createdAt: Date }[]
+    license?: { status: string } | null
+    gracePeriodEndsAt?: Date | null
+  },
+) {
+  return {
+    ...resolveAccessGate({
+      subscriptionStatus: sub.status,
+      licenseStatus: sub.license?.status ?? null,
+      invoices: sub.invoices,
+      gracePeriodEndsAt: sub.gracePeriodEndsAt ?? null,
+    }),
+    portalUrl: turbowarePortalLoginUrl(req.nextUrl.origin),
   }
 }
