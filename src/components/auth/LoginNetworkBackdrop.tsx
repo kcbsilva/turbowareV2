@@ -25,10 +25,11 @@ export function LoginNetworkBackdrop() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d', { alpha: true })
-    if (!ctx) return
+    const surface = canvasRef.current
+    const context = surface?.getContext('2d', { alpha: true })
+    if (!surface || !context) return
+    const canvas: HTMLCanvasElement = surface
+    const ctx: CanvasRenderingContext2D = context
 
     const reduced = prefersReducedMotion()
     let nodes: Node[] = []
