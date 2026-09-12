@@ -1,6 +1,6 @@
 'use client'
 
-import { History, Key, User, FileText } from 'lucide-react'
+import { History, Key, User, FileText, Ticket } from 'lucide-react'
 
 type LicenseStatus = 'ACTIVE' | 'SUSPENDED' | 'REVOKED' | 'EXPIRED'
 
@@ -20,6 +20,13 @@ interface Note {
   createdAt: string
 }
 
+interface TicketEvent {
+  id: string
+  title: string
+  status: string
+  createdAt: string
+}
+
 interface Props {
   client: {
     id: string
@@ -29,6 +36,7 @@ interface Props {
   }
   licenses: License[]
   notes: Note[]
+  tickets?: TicketEvent[]
 }
 
 interface TimelineEvent {
@@ -47,7 +55,7 @@ const statusColors: Record<LicenseStatus, string> = {
   EXPIRED:   'text-[#5C6570]',
 }
 
-export function HistoryTab({ client, licenses, notes }: Props) {
+export function HistoryTab({ client, licenses, notes, tickets = [] }: Props) {
   const events: TimelineEvent[] = []
 
   // Client created
@@ -81,6 +89,17 @@ export function HistoryTab({ client, licenses, notes }: Props) {
       iconColor: 'text-muted-foreground',
       title: `Note added by ${n.author}`,
       detail: n.body.length > 80 ? n.body.slice(0, 80) + '…' : n.body,
+    })
+  }
+
+  for (const t of tickets) {
+    events.push({
+      id: `ticket-${t.id}`,
+      time: t.createdAt,
+      icon: Ticket,
+      iconColor: 'text-[#2B6CB0]',
+      title: `Ticket opened`,
+      detail: `${t.title} (${t.status.replaceAll('_', ' ')})`,
     })
   }
 

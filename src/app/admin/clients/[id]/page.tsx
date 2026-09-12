@@ -12,6 +12,7 @@ import { LicensesTab } from './tabs/LicensesTab'
 import { BillingTab } from './tabs/BillingTab'
 import { NotesTab } from './tabs/NotesTab'
 import { HistoryTab } from './tabs/HistoryTab'
+import { TicketsTab } from './tabs/TicketsTab'
 
 interface Client {
   id: string
@@ -41,6 +42,12 @@ interface Client {
     id: string
     body: string
     author: string
+    createdAt: string
+  }[]
+  tickets: {
+    id: string
+    title: string
+    status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED'
     createdAt: string
   }[]
 }
@@ -105,11 +112,14 @@ export default function ClientProfilePage() {
         {activeTab === 'billing' && (
           <BillingTab clientId={client.id} />
         )}
+        {activeTab === 'tickets' && (
+          <TicketsTab clientId={client.id} clientName={client.name} />
+        )}
         {activeTab === 'notes' && (
           <NotesTab clientId={client.id} initialNotes={client.clientNotes} />
         )}
         {activeTab === 'history' && (
-          <HistoryTab client={client} licenses={client.licenses} notes={client.clientNotes} />
+          <HistoryTab client={client} licenses={client.licenses} notes={client.clientNotes} tickets={client.tickets ?? []} />
         )}
       </main>
     </div>

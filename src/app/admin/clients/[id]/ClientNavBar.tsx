@@ -1,14 +1,15 @@
 'use client'
 
-import { User, Key, ClipboardList, History, CreditCard } from 'lucide-react'
+import { User, Key, ClipboardList, History, CreditCard, Ticket } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
-export type ClientTab = 'overview' | 'licenses' | 'billing' | 'notes' | 'history'
+export type ClientTab = 'overview' | 'licenses' | 'billing' | 'tickets' | 'notes' | 'history'
 
 const PRIMARY: { id: ClientTab; icon: LucideIcon; label: string }[] = [
   { id: 'overview', icon: User, label: 'Overview' },
   { id: 'licenses', icon: Key, label: 'Licenses' },
   { id: 'billing', icon: CreditCard, label: 'Billing' },
+  { id: 'tickets', icon: Ticket, label: 'Tickets' },
 ]
 
 const SECONDARY: { id: ClientTab; icon: LucideIcon; label: string }[] = [

@@ -126,7 +126,8 @@ Public metadata for a license key.
 | `DELETE` | `/api/admin/licenses/[id]` | Delete a license (owner/admin) |
 | `GET`/`POST` | `/api/admin/team` | List/create helper operators (create is owner/admin) |
 | `PATCH` | `/api/admin/team/[id]` | Update role or deactivate (owner/admin) |
-| `GET` | `/api/admin/tickets` | Support inbox (filter by status/priority) |
+| `GET` | `/api/admin/tickets` | Support inbox (filter by status/priority/clientId) |
+| `POST` | `/api/admin/tickets` | Open a ticket for a client |
 | `GET`/`PATCH` | `/api/admin/tickets/[id]` | Ticket thread + status |
 | `POST` | `/api/admin/tickets/[id]/messages` | Reply as ADMIN |
 | `GET` | `/api/admin/invoices` | All invoices |
@@ -264,6 +265,7 @@ npm run dev
 │       │               ├── OverviewTab.tsx
 │       │               ├── LicensesTab.tsx
 │       │               ├── BillingTab.tsx
+│       │               ├── TicketsTab.tsx
 │       │               ├── NotesTab.tsx
 │       │               └── HistoryTab.tsx
 │       ├── client/                            # Client portal

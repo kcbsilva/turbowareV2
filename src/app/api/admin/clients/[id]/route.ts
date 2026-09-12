@@ -27,6 +27,10 @@ const baseClientSelect = {
     orderBy: { createdAt: 'desc' as const },
   },
   clientNotes: { orderBy: { createdAt: 'desc' as const } },
+  tickets: {
+    select: { id: true, title: true, status: true, priority: true, createdAt: true, updatedAt: true },
+    orderBy: { createdAt: 'desc' as const },
+  },
 }
 
 async function getClientForAdmin(id: string) {
