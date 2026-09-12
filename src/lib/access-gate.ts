@@ -98,7 +98,7 @@ export function resolveAccessGate(opts: {
     }
   }
 
-  if (status === 'SUSPENDED') {
+  if (status === 'SUSPENDED' || license === 'SUSPENDED') {
     return {
       mode: 'blocked',
       daysRemaining: 0,

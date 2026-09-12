@@ -122,7 +122,7 @@ export async function suspendSubscriptionForNonPayment(opts: {
 }): Promise<void> {
   await prisma.subscription.update({
     where: { id: opts.subscriptionId },
-    data: { status: SubscriptionStatus.SUSPENDED },
+    data: { status: SubscriptionStatus.SUSPENDED, gracePeriodEndsAt: null },
   })
   await syncLicensesForSubscription({
     clientId: opts.clientId,

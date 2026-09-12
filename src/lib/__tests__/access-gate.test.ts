@@ -73,6 +73,16 @@ describe('resolveAccessGate', () => {
     ).toBe('blocked')
   })
 
+  it('blocks a suspended license even if the subscription is still active', () => {
+    expect(
+      resolveAccessGate({
+        subscriptionStatus: 'ACTIVE',
+        licenseStatus: 'SUSPENDED',
+        now,
+      }).mode,
+    ).toBe('blocked')
+  })
+
   it('blocks cancelled accounts', () => {
     expect(resolveAccessGate({ subscriptionStatus: 'CANCELLED', now }).reason).toBe('cancelled')
   })

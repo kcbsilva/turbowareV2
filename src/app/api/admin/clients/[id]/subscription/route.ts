@@ -47,7 +47,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const updated = await prisma.subscription.update({
     where: { id: sub.id },
-    data:  { status: status as SubscriptionStatus },
+    data: {
+      status: status as SubscriptionStatus,
+      ...(status === 'SUSPENDED' || status === 'CANCELLED'
+        ? { gracePeriodEndsAt: null }
+        : {}),
+    },
     include: {
       invoices: { orderBy: { createdAt: 'desc' } },
       license:  { select: { key: true, status: true, maxSeats: true } },
