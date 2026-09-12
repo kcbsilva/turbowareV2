@@ -1,51 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { markInvoicePaid } from '@/lib/billing'
 
 type Params = { params: Promise<{ id: string; invoiceId: string }> }
 
 // POST /api/admin/clients/[id]/subscription/invoices/[invoiceId]/pay
-// Admin marks an invoice as paid. If all setup invoices paid → activate subscription + license.
+// Admin marks an invoice as paid. If remaining invoices are settled → activate subscription + license.
 export async function POST(_req: NextRequest, { params }: Params) {
   const { invoiceId } = await params
-  const invoice = await prisma.invoice.findUnique({
-    where: { id: invoiceId },
-    include: { subscription: { include: { invoices: true } } },
-  })
 
-  if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
-  if (invoice.status === 'PAID')
-    return NextResponse.json({ error: 'Invoice already paid' }, { status: 400 })
-
-  // Mark invoice paid
-  await prisma.invoice.update({
-    where: { id: invoiceId },
-    data:  { status: 'PAID', paidAt: new Date() },
-  })
-
-  // Check if all non-GRACE_FEE invoices are now paid
-  const sub      = invoice.subscription
-  const allPaid  = sub.invoices
-    .filter((i) => i.id !== invoiceId) // exclude current (before DB update)
-    .every((i) => i.status === 'PAID' || i.type === 'GRACE_FEE')
-
-  if (allPaid && (sub.status === 'TRIAL' || sub.status === 'PENDING_PAYMENT')) {
-    // Activate subscription and license
-    await prisma.$transaction([
-      prisma.subscription.update({
-        where: { id: sub.id },
-        data:  { status: 'ACTIVE' },
-      }),
-      ...(sub.licenseId
-        ? [prisma.license.update({ where: { id: sub.licenseId }, data: { status: 'ACTIVE' } })]
-        : []),
-    ])
+  try {
+    const result = await markInvoicePaid(invoiceId)
+    if (result.alreadyPaid) {
+      return NextResponse.json({ error: 'Invoice already paid' }, { status: 400 })
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Pay failed'
+    if (message.includes('not found')) {
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+    }
+    return NextResponse.json({ error: 'Pay failed' }, { status: 500 })
   }
 
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: invoiceId },
+    select: { subscriptionId: true },
+  })
+  if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+
   const updated = await prisma.subscription.findUnique({
-    where: { id: sub.id },
+    where: { id: invoice.subscriptionId },
     include: {
       invoices: { orderBy: { createdAt: 'desc' } },
-      license:  { select: { key: true, status: true, maxSeats: true } },
+      license: { select: { key: true, status: true, maxSeats: true } },
     },
   })
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Edit, Trash2, Check, KeyRound, Mail, Loader2 } from 'lucide-react'
 
@@ -45,6 +45,14 @@ export function OverviewTab({ client }: Props) {
   const [passwordMsg, setPasswordMsg] = useState('')
   const [resendingVerification, setResendingVerification] = useState(false)
   const [verificationMsg, setVerificationMsg] = useState('')
+  const [canDelete, setCanDelete] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setCanDelete(Boolean(d?.canManage)))
+      .catch(() => undefined)
+  }, [])
 
   function handle(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
@@ -308,7 +316,8 @@ export function OverviewTab({ client }: Props) {
         </div>
       </div>
 
-      {/* Danger zone */}
+      {/* Danger zone — owner/admin only */}
+      {canDelete && (
       <div className="bg-card border border-destructive/20 rounded-lg">
         <div className="px-4 py-2.5 border-b border-destructive/20">
           <h2 className="text-[10px] font-semibold text-destructive uppercase tracking-wider">Danger Zone</h2>
@@ -347,6 +356,7 @@ export function OverviewTab({ client }: Props) {
           <p className="px-4 pb-3 text-xs text-destructive">{deleteError}</p>
         )}
       </div>
+      )}
     </div>
   )
 }

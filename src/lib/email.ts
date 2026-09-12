@@ -65,6 +65,39 @@ export async function sendAdminPasswordResetEmail(to: string, token: string): Pr
   })
 }
 
+export async function sendAdminInviteEmail(
+  to: string,
+  temporaryPassword: string,
+  role: string,
+): Promise<void> {
+  const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const loginUrl = `${appUrl}/admin/login`
+  const from = process.env.SMTP_FROM ?? 'TurbowareV2 <noreply@turboware.com>'
+  const transporter = createTransporter()
+
+  await transporter.sendMail({
+    from,
+    to,
+    subject: 'You have been added to the Turboware admin portal',
+    text: [
+      'An operator account was created for you on the Turboware admin portal.',
+      '',
+      `Role: ${role}`,
+      `Sign in: ${loginUrl}`,
+      `Temporary password: ${temporaryPassword}`,
+      '',
+      'You will be asked to set a new password after signing in.',
+    ].join('\n'),
+    html: [
+      '<p>An operator account was created for you on the Turboware admin portal.</p>',
+      `<p><strong>Role:</strong> ${role}</p>`,
+      `<p><a href="${loginUrl}">Sign in to the admin portal</a></p>`,
+      `<p><strong>Temporary password:</strong> ${temporaryPassword}</p>`,
+      '<p>You will be asked to set a new password after signing in.</p>',
+    ].join(''),
+  })
+}
+
 export async function sendTemporaryPasswordEmail(to: string, temporaryPassword: string): Promise<void> {
   const from = process.env.SMTP_FROM ?? 'TurbowareV2 <noreply@turboware.com>'
   const transporter = createTransporter()

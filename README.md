@@ -123,7 +123,13 @@ Public metadata for a license key.
 | `POST` | `/api/admin/licenses` | Create a new license |
 | `GET` | `/api/admin/licenses/[id]` | Get license details |
 | `PATCH` | `/api/admin/licenses/[id]` | Update status, seats, expiry, etc. |
-| `DELETE` | `/api/admin/licenses/[id]` | Delete a license |
+| `DELETE` | `/api/admin/licenses/[id]` | Delete a license (owner/admin) |
+| `GET`/`POST` | `/api/admin/team` | List/create helper operators (create is owner/admin) |
+| `PATCH` | `/api/admin/team/[id]` | Update role or deactivate (owner/admin) |
+| `GET` | `/api/admin/tickets` | Support inbox (filter by status/priority) |
+| `GET`/`PATCH` | `/api/admin/tickets/[id]` | Ticket thread + status |
+| `POST` | `/api/admin/tickets/[id]/messages` | Reply as ADMIN |
+| `GET` | `/api/admin/invoices` | All invoices |
 
 ---
 
@@ -135,9 +141,13 @@ Protected by JWT middleware (`/admin/*`).
 |---|---|
 | `/login` | Admin login page |
 | `/admin` | Dashboard with stats |
+| `/admin/clients/new` | Guided tenant setup (client + plan + license) |
 | `/admin/licenses` | Filterable license list |
 | `/admin/licenses/new` | Generate a new license key |
 | `/admin/licenses/[id]` | Detail page: revoke, suspend, activate, delete |
+| `/admin/tickets` | Customer support inbox |
+| `/admin/invoices` | Billing invoice list |
+| `/admin/team` | Helper admin users |
 
 ---
 
@@ -157,6 +167,9 @@ Protected by JWT middleware (`/admin/*`).
 | `DATABASE_URL` | PostgreSQL connection string |
 | `ADMIN_PASSWORD` | Password for admin login |
 | `JWT_SECRET` | Secret used to sign admin JWT cookies |
+| `CRON_SECRET` | Bearer token for `/api/cron/billing` (required in production; Vercel injects it) |
+| `ASAAS_API_KEY` | Asaas payments + webhook `asaas-access-token` |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe Checkout + webhook signature |
 
 ---
 

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { resolveStatus } from '@/lib/license'
 import { LicenseStatus } from '@prisma/client'
 import { parseBody, badRequest } from '@/lib/api'
+import { canRevokeLicenses, getAdminSession, requireOwnerSession } from '@/lib/auth'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -36,6 +37,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
   }
 
+  if (status === LicenseStatus.REVOKED) {
+    const session = await getAdminSession(req)
+    if (!canRevokeLicenses(session?.role)) {
+      return NextResponse.json({ error: 'Owner or admin role required to revoke licenses' }, { status: 403 })
+    }
+  }
+
   let parsedMaxSeats: number | undefined
   if (maxSeats !== undefined) {
     const parsed = parseInt(String(maxSeats), 10)
@@ -62,7 +70,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 // DELETE /api/admin/licenses/[id]
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
+  const { error } = await requireOwnerSession(req)
+  if (error) return error
+
   const { id } = await params
   await prisma.license.delete({ where: { id } })
   return NextResponse.json({ ok: true })

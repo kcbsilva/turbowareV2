@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
+import { onboardTenant } from '@/lib/onboard-tenant'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,26 +37,54 @@ export async function GET(req: NextRequest) {
   })
 }
 
-// POST /api/admin/clients — create a client
+// POST /api/admin/clients — create a client, optionally with plan + license + tenant
 export async function POST(req: NextRequest) {
-  const { body: parsed, error } = await parseBody<{ name?: string; email?: string; phone?: string; company?: string; internalNotes?: string }>(req)
+  const { body: parsed, error } = await parseBody<{
+    name?: string
+    email?: string
+    phone?: string
+    company?: string
+    internalNotes?: string
+    notes?: string
+    subdomain?: string
+    region?: string
+    subscriberTier?: string
+    product?: string
+    createLicense?: boolean
+    createSubscription?: boolean
+    provisionTurboISP?: boolean
+    createPortalAccess?: boolean
+    trialDays?: number
+  }>(req)
   if (error) return badRequest()
-  const { name, email, phone, company, internalNotes } = parsed
 
-  if (!name?.trim()) {
+  if (!parsed.name?.trim()) {
     return NextResponse.json({ error: 'name is required' }, { status: 400 })
   }
 
-  const client = await prisma.client.create({
-    data: {
-      name: name.trim(),
-      email: email?.trim() || null,
-      phone: phone?.trim() || null,
-      company: company?.trim() || null,
-      internalNotes: internalNotes?.trim() || null,
-    },
-    select: { id: true },
-  })
-
-  return NextResponse.json(client, { status: 201 })
+  try {
+    const result = await onboardTenant({
+      name: parsed.name,
+      email: parsed.email,
+      phone: parsed.phone,
+      company: parsed.company,
+      internalNotes: parsed.internalNotes,
+      notes: parsed.notes,
+      subdomain: parsed.subdomain,
+      region: parsed.region,
+      subscriberTier: parsed.subscriberTier,
+      product: parsed.product,
+      createLicense: parsed.createLicense,
+      createSubscription: parsed.createSubscription,
+      provisionTurboISP: parsed.provisionTurboISP,
+      createPortalAccess: parsed.createPortalAccess,
+      trialDays: parsed.trialDays,
+    })
+    return NextResponse.json(result, { status: 201 })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to create client'
+    const status =
+      message.includes('already') || message.includes('in use') ? 409 : 400
+    return NextResponse.json({ error: message }, { status })
+  }
 }

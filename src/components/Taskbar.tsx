@@ -13,6 +13,9 @@ import {
   Moon,
   Shield,
   Package,
+  Ticket,
+  Receipt,
+  UserCog,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import turbowareLogo from "@/app/assets/turboware-logo.png";
@@ -28,6 +31,30 @@ const menuItems = [
     href: "/admin/clients",
     label: "Clients",
     icon: <Users className="w-3.5 h-3.5" />,
+    exact: false,
+  },
+  {
+    href: "/admin/licenses",
+    label: "Licenses",
+    icon: <Key className="w-3.5 h-3.5" />,
+    exact: false,
+  },
+  {
+    href: "/admin/tickets",
+    label: "Tickets",
+    icon: <Ticket className="w-3.5 h-3.5" />,
+    exact: false,
+  },
+  {
+    href: "/admin/invoices",
+    label: "Invoices",
+    icon: <Receipt className="w-3.5 h-3.5" />,
+    exact: false,
+  },
+  {
+    href: "/admin/team",
+    label: "Team",
+    icon: <UserCog className="w-3.5 h-3.5" />,
     exact: false,
   },
   {
@@ -58,7 +85,17 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [openTickets, setOpenTickets] = useState(0);
   const startRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.openTickets != null) setOpenTickets(d.openTickets);
+      })
+      .catch(() => undefined);
+  }, [pathname]);
 
   useEffect(() => {
     setMounted(true);
@@ -163,6 +200,11 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
                   >
                     <span className="text-muted-foreground">{item.icon}</span>
                     <span className="text-xs font-medium">{item.label}</span>
+                    {item.href === "/admin/tickets" && openTickets > 0 && (
+                      <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#fca311] text-[#081124]">
+                        {openTickets}
+                      </span>
+                    )}
                   </button>
                 );
               })}

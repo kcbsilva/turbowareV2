@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 import { getMonthlyPrice, getPriceByLabel, getTierByLabel, nextBillingDate, type Region } from '@/lib/pricing'
+import { isInvoiceUnpaid, suspendSubscriptionForNonPayment } from '@/lib/billing'
 
 /**
  * GET /api/cron/billing
@@ -12,8 +13,8 @@ import { getMonthlyPrice, getPriceByLabel, getTierByLabel, nextBillingDate, type
  *
  * Responsibilities:
  *  1. TRIAL subscriptions past trialEndsAt → PENDING_PAYMENT + first MONTHLY invoice
- *  2. ACTIVE subscriptions past gracePeriodEndsAt (with outstanding invoices) → SUSPENDED
- *  3. PENDING_PAYMENT subscriptions with a PENDING invoice older than 7 days → SUSPENDED
+ *  2. ACTIVE subscriptions past gracePeriodEndsAt, or unpaid invoices 7+ days past due → SUSPENDED
+ *  3. PENDING_PAYMENT subscriptions with an unpaid invoice older than 7 days → SUSPENDED
  *  4. ACTIVE subscriptions whose billingDate matches today → new MONTHLY invoice
  */
 export async function GET(req: NextRequest) {
@@ -102,59 +103,46 @@ export async function GET(req: NextRequest) {
         continue
       }
 
-      // ── 2. ACTIVE past grace period (pending invoices outstanding) → SUSPENDED ──
-      if (
-        sub.status === 'ACTIVE' &&
-        sub.gracePeriodEndsAt &&
-        sub.gracePeriodEndsAt < now
-      ) {
-        const hasPending = sub.invoices.some((inv) => inv.status === 'PENDING')
-        if (hasPending) {
-          await prisma.$transaction([
-            prisma.subscription.update({
-              where: { id: sub.id },
-              data:  { status: 'SUSPENDED' },
-            }),
-            // Mirror the license status so validate/activate routes also reject
-            ...(sub.licenseId
-              ? [
-                  prisma.license.update({
-                    where: { id: sub.licenseId },
-                    data:  { status: 'SUSPENDED' },
-                  }),
-                ]
-              : []),
-          ])
+      // ── 2. ACTIVE unpaid past grace (or 7 days after due) → SUSPENDED ────────
+      if (sub.status === 'ACTIVE') {
+        const unpaid = sub.invoices.filter(isInvoiceUnpaid)
+        const graceExpired = Boolean(sub.gracePeriodEndsAt && sub.gracePeriodEndsAt < now && unpaid.length)
+        const overduePastWindow = unpaid.some(
+          (inv) => inv.dueDate && inv.dueDate <= sevenDaysAgo,
+        )
 
-          results.gracePeriodExpired++
+        if (graceExpired || overduePastWindow) {
+          await prisma.invoice.updateMany({
+            where: {
+              subscriptionId: sub.id,
+              status: 'PENDING',
+              dueDate: { lte: now },
+            },
+            data: { status: 'OVERDUE' },
+          })
+          await suspendSubscriptionForNonPayment({
+            subscriptionId: sub.id,
+            clientId: sub.clientId,
+            licenseId: sub.licenseId,
+          })
+          if (graceExpired) results.gracePeriodExpired++
           results.suspended++
+          continue
         }
-
-        continue
       }
 
-      // ── 3. PENDING_PAYMENT with stale PENDING invoice (>7 days) → SUSPENDED ─────
+      // ── 3. PENDING_PAYMENT with stale unpaid invoice (>7 days) → SUSPENDED ─────
       if (sub.status === 'PENDING_PAYMENT') {
         const hasStaleInvoice = sub.invoices.some(
-          (inv) => inv.status === 'PENDING' && inv.createdAt <= sevenDaysAgo,
+          (inv) => isInvoiceUnpaid(inv) && inv.createdAt <= sevenDaysAgo,
         )
 
         if (hasStaleInvoice) {
-          await prisma.$transaction([
-            prisma.subscription.update({
-              where: { id: sub.id },
-              data:  { status: 'SUSPENDED' },
-            }),
-            ...(sub.licenseId
-              ? [
-                  prisma.license.update({
-                    where: { id: sub.licenseId },
-                    data:  { status: 'SUSPENDED' },
-                  }),
-                ]
-              : []),
-          ])
-
+          await suspendSubscriptionForNonPayment({
+            subscriptionId: sub.id,
+            clientId: sub.clientId,
+            licenseId: sub.licenseId,
+          })
           results.suspended++
         }
 

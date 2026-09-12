@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
-import { COOKIE_NAME, CLIENT_COOKIE_NAME, getJwtSecret } from '@/lib/auth'
+import { COOKIE_NAME, CLIENT_COOKIE_NAME, getJwtSecret, isAdminPortalRole } from '@/lib/auth'
 import { isSameSiteRequest } from '@/lib/csrf'
 
 export async function middleware(req: NextRequest) {
@@ -18,7 +18,7 @@ export async function middleware(req: NextRequest) {
     }
     try {
       const { payload } = await jwtVerify(token, getJwtSecret())
-      if (payload.role !== 'admin') throw new Error()
+      if (!isAdminPortalRole(payload.role)) throw new Error()
 
       // Block cross-origin mutations on admin API
       if (isAdminApi && ['POST', 'PATCH', 'PUT', 'DELETE'].includes(req.method)) {
