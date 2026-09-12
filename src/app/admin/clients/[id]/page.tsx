@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { RefreshCw } from 'lucide-react'
 
 import { ClientHeader } from './ClientHeader'
-import { ClientSidebar, type ClientTab } from './ClientSidebar'
+import { ClientNavBar, type ClientTab } from './ClientNavBar'
 import { OverviewTab } from './tabs/OverviewTab'
 import { LicensesTab } from './tabs/LicensesTab'
 import { BillingTab } from './tabs/BillingTab'
@@ -87,20 +87,15 @@ export default function ClientProfilePage() {
   }
 
   return (
-    <div className="relative h-full flex overflow-hidden">
-      {/* Header bar */}
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <ClientHeader
         clientId={client.id}
         name={client.name}
         company={client.company}
         createdAt={client.createdAt}
       />
-
-      {/* Sidebar */}
-      <ClientSidebar active={activeTab} onSelect={setActiveTab} />
-
-      {/* Tab content */}
-      <main className="flex-1 overflow-y-auto window-scroll pt-10 p-6">
+      <ClientNavBar active={activeTab} onSelect={setActiveTab} />
+      <main className="min-h-0 flex-1 overflow-y-auto window-scroll bg-[#FBFEFC] p-6">
         {activeTab === 'overview' && (
           <OverviewTab client={client} />
         )}

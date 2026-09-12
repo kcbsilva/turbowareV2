@@ -287,6 +287,49 @@ body {
   }
 }
 
+.profile-nav {
+  background: #0f766e;
+}
+
+.profile-folder-tab {
+  z-index: 2;
+  background: #fbfefc;
+  border-radius: 10px 10px 0 0;
+}
+
+.profile-folder-tab::before,
+.profile-folder-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+}
+
+.profile-folder-tab::before {
+  left: -10px;
+  background: transparent;
+  border-bottom-right-radius: 10px;
+  box-shadow: 4px 4px 0 4px #fbfefc;
+}
+
+.profile-folder-tab::after {
+  right: -10px;
+  background: transparent;
+  border-bottom-left-radius: 10px;
+  box-shadow: -4px 4px 0 4px #fbfefc;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 @layer components {
   .tw-badge {
     @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold;

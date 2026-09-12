@@ -259,7 +259,7 @@ npm run dev
 │       │           ├── layout.tsx
 │       │           ├── page.tsx
 │       │           ├── ClientHeader.tsx
-│       │           ├── ClientSidebar.tsx
+│       │           ├── ClientNavBar.tsx
 │       │           └── tabs/
 │       │               ├── OverviewTab.tsx
 │       │               ├── LicensesTab.tsx
