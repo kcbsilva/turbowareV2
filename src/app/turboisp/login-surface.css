@@ -18,8 +18,8 @@
 
 .turbo-login .turbo-mesh {
   background:
-    radial-gradient(ellipse 55% 45% at 12% 8%, rgba(252, 163, 17, 0.14), transparent 58%),
-    radial-gradient(ellipse 50% 40% at 88% 14%, rgba(26, 171, 240, 0.12), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 12% 8%, rgba(252, 163, 17, 0.22), transparent 58%),
+    radial-gradient(ellipse 55% 45% at 88% 14%, rgba(26, 171, 240, 0.2), transparent 55%),
     radial-gradient(ellipse 70% 55% at 50% 100%, rgba(10, 20, 40, 0.95), transparent 62%),
     linear-gradient(180deg, #040810 0%, #060c18 45%, #040810 100%);
 }
@@ -57,7 +57,7 @@
 
 .turbo-login .turbo-orb {
   filter: blur(64px);
-  opacity: 0.45;
+  opacity: 0.7;
 }
 
 .turbo-login .turbo-orb--orange {
