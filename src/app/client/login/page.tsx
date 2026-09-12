@@ -92,6 +92,7 @@ export default function ClientLoginPage() {
     <TurboAuthShell
       title={t.title}
       subtitle={t.subtitle}
+      ipLabel={lang === 'pt' ? 'Seu IP' : 'Your IP'}
       headerExtra={
         <div className="mb-4 flex justify-end">
           <div className="flex overflow-hidden rounded-md border border-[#1a2333]/15" role="group" aria-label="Language">

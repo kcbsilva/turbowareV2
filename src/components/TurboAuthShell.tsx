@@ -1,10 +1,8 @@
 'use client'
 
-import { type ReactNode } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
 import { LoginNetworkBackdrop } from '@/components/LoginNetworkBackdrop'
-import logo from '@/app/turboisp/assets/TurboISP-logo.png'
 import '@/app/turboisp/login-surface.css'
 
 export const loginLabelClass = 'block text-sm font-medium text-[#1a2333] mb-1.5'
@@ -23,10 +21,32 @@ type Props = {
   subtitle?: string
   headerExtra?: ReactNode
   footer?: ReactNode
+  ipLabel?: string
 }
 
-export function TurboAuthShell({ children, title, subtitle, headerExtra, footer }: Props) {
+export function TurboAuthShell({
+  children,
+  title,
+  subtitle,
+  headerExtra,
+  footer,
+  ipLabel = 'Your IP',
+}: Props) {
   const year = new Date().getFullYear()
+  const [visitorIP, setVisitorIP] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/auth/ip')
+      .then((res) => res.json())
+      .then((data: { ip?: string }) => {
+        if (!cancelled && data.ip) setVisitorIP(data.ip)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <section className="login-shell relative isolate flex min-h-dvh w-full items-center justify-center overflow-x-hidden overflow-y-auto bg-[#e8ecf3] px-4 py-10 text-[#1a2333] antialiased">
@@ -42,12 +62,11 @@ export function TurboAuthShell({ children, title, subtitle, headerExtra, footer 
           {headerExtra}
 
           <div className="mb-8">
-            <div className={`flex justify-center ${title || subtitle ? 'mb-6' : ''}`}>
-              <Image
-                src={logo}
-                alt="TurboISP"
-                className="h-24 w-auto object-contain sm:h-28"
-                priority
+            <div className="mb-6 flex justify-center">
+              <img
+                src="/favicon.svg"
+                alt="Turboware"
+                className="h-16 w-16 object-contain"
               />
             </div>
             {title && (
@@ -67,7 +86,12 @@ export function TurboAuthShell({ children, title, subtitle, headerExtra, footer 
           {footer && <div className="mt-5 text-center text-sm">{footer}</div>}
 
           <footer className="mt-8 text-center text-xs text-black space-y-2">
-            <p>© {year} TurboISP</p>
+            {visitorIP && (
+              <p className="text-xs font-medium text-emerald-600">
+                {ipLabel}: {visitorIP}
+              </p>
+            )}
+            <p>© {year} Turboware</p>
           </footer>
         </div>
       </motion.div>

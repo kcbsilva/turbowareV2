@@ -120,8 +120,8 @@ export default function LoginForm() {
     }
   }
 
-  const titles: Record<Step, { title: string; subtitle: string }> = {
-    login: { title: 'Turboware Admin', subtitle: 'License, billing, and tenant operations' },
+  const titles: Record<Step, { title?: string; subtitle?: string }> = {
+    login: {},
     forgot: { title: 'Reset password', subtitle: 'We will email a single-use reset link' },
     mfa: { title: 'Two-factor verification', subtitle: 'Enter the 6-digit code from your authenticator app' },
     newPassword: { title: 'Set new password', subtitle: 'Choose a new password before continuing' },
@@ -134,6 +134,7 @@ export default function LoginForm() {
     <TurboAuthShell
       title={title}
       subtitle={subtitle}
+      ipLabel="Your IP"
       footer={
         step === 'login' ? (
           <Link href="/client/login" className={loginLinkClass}>

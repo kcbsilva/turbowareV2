@@ -47,6 +47,21 @@ export class RateLimiter {
   }
 }
 
+/** Best-effort public IP for display on login. Not used for rate limiting. */
+export function requestVisitorIP(headers: Headers): string {
+  const candidates = [
+    headers.get('cf-connecting-ip'),
+    headers.get('x-vercel-forwarded-for'),
+    headers.get('x-real-ip'),
+    headers.get('x-forwarded-for')?.split(',')[0],
+  ]
+  for (const raw of candidates) {
+    const ip = raw?.trim()
+    if (ip) return ip
+  }
+  return ''
+}
+
 export function clientIP(req: Pick<NextRequest, 'headers'>): string {
   const trustProxy = process.env.VERCEL === '1' || process.env.TRUST_PROXY === 'true'
   if (trustProxy) {

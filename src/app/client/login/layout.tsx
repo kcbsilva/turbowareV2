@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { Metadata, ReactNode } from 'react'
 import { Outfit, Source_Sans_3 } from 'next/font/google'
 
 const sourceSans = Source_Sans_3({
@@ -14,6 +14,10 @@ const outfit = Outfit({
   variable: '--font-login-heading',
   display: 'swap',
 })
+
+export const metadata: Metadata = {
+  title: { absolute: 'Turboware - Login' },
+}
 
 export default function ClientLoginLayout({ children }: { children: ReactNode }) {
   return (
