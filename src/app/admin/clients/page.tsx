@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Users, Key, ShieldOff, UserPlus, X, RefreshCw } from 'lucide-react'
+import { badge } from '@/lib/badges'
 
 type StatusFilter = 'all' | 'with-licenses' | 'no-licenses'
 
@@ -97,9 +98,9 @@ export default function ClientsPage() {
   const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const statusConfig = [
-    { value: 'all' as const, label: 'All', color: 'bg-primary' },
-    { value: 'with-licenses' as const, label: 'Has Licenses', color: 'bg-emerald-500' },
-    { value: 'no-licenses' as const, label: 'No Licenses', color: 'bg-muted-foreground' },
+    { value: 'all' as const, label: 'All', color: 'bg-[#1B2430]' },
+    { value: 'with-licenses' as const, label: 'Has Licenses', color: 'bg-[#0F7A6C]' },
+    { value: 'no-licenses' as const, label: 'No Licenses', color: 'bg-[#5C6570]' },
   ]
 
   const statCards = [
@@ -242,7 +243,7 @@ export default function ClientsPage() {
                     <td className="px-4 py-3 text-foreground">{c.email || <span className="text-muted-foreground">—</span>}</td>
                     <td className="px-4 py-3 text-foreground">{c.phone || <span className="text-muted-foreground">—</span>}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${c._count.licenses > 0 ? 'text-primary border-primary/30 bg-primary/10' : 'text-muted-foreground border-border bg-muted/50'}`}>
+                      <span className={c._count.licenses > 0 ? badge.teal : badge.mute}>
                         {c._count.licenses}
                       </span>
                     </td>

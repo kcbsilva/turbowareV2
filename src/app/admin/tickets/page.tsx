@@ -43,10 +43,10 @@ interface TicketFull extends Omit<TicketRow, '_count'> {
 }
 
 const STATUS_STYLES: Record<Status, { label: string; cls: string; icon: React.ElementType }> = {
-  OPEN:        { label: 'Open',        cls: 'bg-blue-500/10 text-blue-400 border-blue-500/20', icon: Clock },
-  IN_PROGRESS: { label: 'In Progress', cls: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20', icon: AlertCircle },
-  RESOLVED:    { label: 'Resolved',    cls: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', icon: CheckCircle },
-  CLOSED:      { label: 'Closed',      cls: 'bg-muted/50 text-muted-foreground border-border', icon: XCircle },
+  OPEN:        { label: 'Open',        cls: 'tw-badge-sky', icon: Clock },
+  IN_PROGRESS: { label: 'In Progress', cls: 'tw-badge-saffron', icon: AlertCircle },
+  RESOLVED:    { label: 'Resolved',    cls: 'tw-badge-teal', icon: CheckCircle },
+  CLOSED:      { label: 'Closed',      cls: 'tw-badge-mute', icon: XCircle },
 }
 
 export default function AdminTicketsPage() {
@@ -139,7 +139,7 @@ export default function AdminTicketsPage() {
                 </Link>
               </p>
             </div>
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold ${meta.cls}`}>
+            <span className={`tw-badge gap-1 ${meta.cls}`}>
               <Icon className="w-3 h-3" />{meta.label}
             </span>
           </div>
@@ -163,7 +163,7 @@ export default function AdminTicketsPage() {
             const isAdmin = msg.authorType === 'ADMIN'
             return (
               <div key={msg.id} className={`flex gap-3 ${isAdmin ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${isAdmin ? 'bg-[#fca311] text-[#081124]' : 'bg-muted text-muted-foreground'}`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${isAdmin ? 'bg-[#E39B12] text-[#1B2430]' : 'bg-[#F1EEE8] text-[#5C6570]'}`}>
                   {isAdmin ? 'A' : 'C'}
                 </div>
                 <div className={`max-w-[80%] ${isAdmin ? 'items-end flex flex-col' : ''}`}>
@@ -266,7 +266,7 @@ export default function AdminTicketsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs font-medium text-foreground truncate">{t.title}</p>
-                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-semibold ${meta.cls}`}>
+                      <span className={`tw-badge gap-1 ${meta.cls}`}>
                         <Icon className="w-2.5 h-2.5" />{meta.label}
                       </span>
                     </div>

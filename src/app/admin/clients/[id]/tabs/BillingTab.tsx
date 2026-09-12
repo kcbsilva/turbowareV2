@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { CheckCircle, AlertTriangle, Clock, RefreshCw, Loader2, CreditCard, ExternalLink, Send } from 'lucide-react'
 import { formatBRL, getMonthlyPrice } from '@/lib/pricing'
+import { badge } from '@/lib/badges'
 
 interface Invoice {
   id: string
@@ -32,11 +33,11 @@ interface Subscription {
 }
 
 const STATUS_STYLES = {
-  TRIAL:           'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  PENDING_PAYMENT: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-  ACTIVE:          'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  SUSPENDED:       'bg-red-500/10 text-red-400 border-red-500/20',
-  CANCELLED:       'bg-muted/50 text-muted-foreground border-border',
+  TRIAL:           badge.sky,
+  PENDING_PAYMENT: badge.saffron,
+  ACTIVE:          badge.teal,
+  SUSPENDED:       badge.coral,
+  CANCELLED:       badge.mute,
 }
 
 const INVOICE_TYPE_LABEL = {
@@ -129,7 +130,7 @@ export function BillingTab({ clientId }: Props) {
           <div>
             <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Status</dt>
             <dd>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-semibold ${STATUS_STYLES[sub.status]}`}>
+              <span className={STATUS_STYLES[sub.status]}>
                 {sub.status.replace('_', ' ')}
               </span>
             </dd>
@@ -169,7 +170,7 @@ export function BillingTab({ clientId }: Props) {
       {pendingInvs.length > 0 && (
         <div className={`${card} border-yellow-500/20`}>
           <div className="px-4 py-2.5 border-b border-yellow-500/20 flex items-center gap-2">
-            <AlertTriangle className="w-3.5 h-3.5 text-yellow-400" />
+            <AlertTriangle className="w-3.5 h-3.5 text-[#E39B12]" />
             <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Pending Invoices</h2>
           </div>
           <div className="divide-y divide-border">
@@ -188,7 +189,7 @@ export function BillingTab({ clientId }: Props) {
                       </p>
                     )}
                   </div>
-                  <p className="text-sm font-bold font-mono text-yellow-400 shrink-0">{formatBRL(inv.amount)}</p>
+                  <p className="text-sm font-bold font-mono text-[#8A5A00] shrink-0">{formatBRL(inv.amount)}</p>
                 </div>
 
                 {/* Existing payment link */}
@@ -197,7 +198,7 @@ export function BillingTab({ clientId }: Props) {
                     href={inv.paymentUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-[10px] text-blue-400 hover:text-blue-300 transition truncate"
+                    className="flex items-center gap-1.5 text-[10px] text-[#2B6CB0] hover:text-[#1B2430] transition truncate"
                   >
                     <ExternalLink className="w-3 h-3 shrink-0" />
                     <span className="truncate">{inv.paymentUrl}</span>
@@ -221,7 +222,7 @@ export function BillingTab({ clientId }: Props) {
                   <button
                     onClick={() => sendPaymentLink(inv.id, 'asaas')}
                     disabled={!!sending}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md border border-[#B7E0D8] text-[#0F7A6C] hover:bg-[#E6F5F2] transition disabled:opacity-50"
                   >
                     {sending === `${inv.id}-asaas` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                     {sending === `${inv.id}-asaas` ? 'Gerando…' : inv.paymentGateway === 'ASAAS' ? 'Regenerar Asaas' : 'Asaas (Pix/Boleto)'}
@@ -258,7 +259,7 @@ export function BillingTab({ clientId }: Props) {
             {sub.gracePeriodEndsAt && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Expires</span>
-                <span className={new Date(sub.gracePeriodEndsAt) > new Date() ? 'text-yellow-400' : 'text-muted-foreground'}>
+                <span className={new Date(sub.gracePeriodEndsAt) > new Date() ? 'text-[#8A5A00]' : 'text-muted-foreground'}>
                   {new Date(sub.gracePeriodEndsAt).toLocaleDateString('pt-BR')}
                   {new Date(sub.gracePeriodEndsAt) > new Date() ? ' (active)' : ' (expired)'}
                 </span>
@@ -283,7 +284,7 @@ export function BillingTab({ clientId }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-mono text-foreground">{formatBRL(inv.amount)}</span>
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  <CheckCircle className="w-3.5 h-3.5 text-[#0F7A6C]" />
                 </div>
               </div>
             ))}

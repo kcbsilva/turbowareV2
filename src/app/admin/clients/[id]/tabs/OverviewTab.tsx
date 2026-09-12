@@ -166,7 +166,7 @@ export function OverviewTab({ client }: Props) {
           <div className="flex items-center gap-2">
             {editing ? (
               <>
-                <button onClick={save} disabled={saving} className="flex items-center gap-1 text-[10px] text-emerald-400 hover:opacity-80 transition">
+                <button onClick={save} disabled={saving} className="flex items-center gap-1 text-[10px] text-[#0F7A6C] hover:opacity-80 transition">
                   <Check size={11} /> {saving ? 'Saving…' : 'Save'}
                 </button>
                 <button onClick={() => { setEditing(false); setError('') }} className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground">
@@ -236,7 +236,7 @@ export function OverviewTab({ client }: Props) {
           <KeyRound size={11} className="text-muted-foreground" />
           <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Portal Access</h2>
           {client.hasPassword ? (
-            <span className="ml-auto text-[10px] text-emerald-400 font-medium">Password set</span>
+            <span className="ml-auto text-[10px] text-[#0F7A6C] font-medium">Password set</span>
           ) : (
             <span className="ml-auto text-[10px] text-muted-foreground/50">No password</span>
           )}
@@ -248,7 +248,7 @@ export function OverviewTab({ client }: Props) {
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">
                   Email Verification
                 </p>
-                <p className={`text-xs font-medium ${client.emailVerified ? 'text-emerald-400' : 'text-amber-400'}`}>
+                <p className={`text-xs font-medium ${client.emailVerified ? 'text-[#0F7A6C]' : 'text-[#8A5A00]'}`}>
                   {client.emailVerified ? 'Verified' : 'Pending verification'}
                 </p>
               </div>
@@ -272,12 +272,12 @@ export function OverviewTab({ client }: Props) {
               </p>
             </div>
             {passwordMsg && (
-              <p className={`text-[10px] mt-1 ${passwordMsg.includes('Failed') ? 'text-destructive' : 'text-emerald-400'}`}>
+              <p className={`text-[10px] mt-1 ${passwordMsg.includes('Failed') ? 'text-destructive' : 'text-[#0F7A6C]'}`}>
                 {passwordMsg}
               </p>
             )}
             {verificationMsg && (
-              <p className={`text-[10px] mt-1 ${verificationMsg.includes('Failed') || verificationMsg.includes('already') || verificationMsg.includes('does not') ? 'text-destructive' : 'text-emerald-400'}`}>
+              <p className={`text-[10px] mt-1 ${verificationMsg.includes('Failed') || verificationMsg.includes('already') || verificationMsg.includes('does not') ? 'text-destructive' : 'text-[#0F7A6C]'}`}>
                 {verificationMsg}
               </p>
             )}

@@ -4,14 +4,15 @@ import { LicenseStatus } from '@prisma/client'
 import { resolveStatus } from '@/lib/license'
 import Link from 'next/link'
 import { LicenseActions } from './LicenseActions'
+import { badge } from '@/lib/badges'
 
 export const dynamic = 'force-dynamic'
 
 const statusStyles: Record<LicenseStatus, string> = {
-  ACTIVE: 'text-emerald-400 border-emerald-800 bg-emerald-950/40',
-  SUSPENDED: 'text-yellow-400 border-yellow-800 bg-yellow-950/40',
-  REVOKED: 'text-red-400 border-red-900 bg-red-950/40',
-  EXPIRED: 'text-muted-foreground border-border bg-muted/50',
+  ACTIVE: badge.teal,
+  SUSPENDED: badge.saffron,
+  REVOKED: badge.coral,
+  EXPIRED: badge.mute,
 }
 
 export default async function LicenseDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -45,7 +46,7 @@ export default async function LicenseDetailPage({ params }: { params: Promise<{ 
             <h1 className="text-base font-bold text-foreground font-mono">{license.key}</h1>
             <p className="text-muted-foreground text-xs mt-0.5">{license.product}</p>
           </div>
-          <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-semibold ${statusStyles[effective]}`}>
+          <span className={statusStyles[effective]}>
             {effective}
           </span>
         </div>

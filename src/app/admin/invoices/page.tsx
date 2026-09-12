@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Receipt, Loader2 } from 'lucide-react'
+import { badge } from '@/lib/badges'
 
 interface InvoiceRow {
   id: string
@@ -20,10 +21,10 @@ interface InvoiceRow {
 }
 
 const STATUS_CLS: Record<InvoiceRow['status'], string> = {
-  PENDING: 'text-yellow-400 border-yellow-800 bg-yellow-950/40',
-  PAID: 'text-emerald-400 border-emerald-800 bg-emerald-950/40',
-  OVERDUE: 'text-red-400 border-red-900 bg-red-950/40',
-  WAIVED: 'text-muted-foreground border-border bg-muted/50',
+  PENDING: badge.saffron,
+  PAID: badge.teal,
+  OVERDUE: badge.coral,
+  WAIVED: badge.mute,
 }
 
 export default function InvoicesPage() {
@@ -96,7 +97,7 @@ export default function InvoicesPage() {
                   <td className="px-4 py-3 text-foreground">{inv.type.replace('_', ' ')}</td>
                   <td className="px-4 py-3 font-mono text-foreground">{inv.amount.toLocaleString()}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${STATUS_CLS[inv.status]}`}>
+                    <span className={STATUS_CLS[inv.status]}>
                       {inv.status}
                     </span>
                   </td>

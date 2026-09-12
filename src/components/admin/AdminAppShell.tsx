@@ -106,25 +106,25 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
   const initials = (me?.name || me?.email || 'A').charAt(0).toUpperCase()
 
   return (
-    <div className="flex h-[100svh] w-full bg-[#f7f5f1] text-gray-900">
+    <div className="flex h-[100svh] w-full bg-[#F7F4EE] text-[#1B2430]">
       {mobileOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-[#081124]/40 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-0 z-30 bg-[#1B2430]/40 backdrop-blur-[2px] lg:hidden"
           aria-label="Close navigation"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       <nav
-        className={`fixed inset-y-0 left-0 z-40 flex h-full shrink-0 flex-col border-r border-orange-100/80 bg-white/90 p-2 shadow-[4px_0_24px_rgba(252,163,17,0.06)] backdrop-blur-md transition-all duration-300 ease-in-out lg:static ${
+        className={`fixed inset-y-0 left-0 z-40 flex h-full shrink-0 flex-col border-r border-[#E6E0D6] bg-[#FFFDF8]/95 p-2 shadow-[4px_0_24px_rgba(227,155,18,0.06)] backdrop-blur-md transition-all duration-300 ease-in-out lg:static ${
           open ? 'w-64' : 'w-16'
         } ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
-        <div className="mb-4 border-b border-orange-100 pb-4">
-          <Link href="/admin" className="flex items-center gap-3 rounded-xl p-2 hover:bg-orange-50/70">
+        <div className="mb-4 border-b border-[#E6E0D6] pb-4">
+          <Link href="/admin" className="flex items-center gap-3 rounded-xl p-2 hover:bg-[#FFF4D6]">
             <span className="relative grid size-10 shrink-0 place-content-center">
-              <span className="absolute inset-0 rounded-xl bg-[#fca311]/20 blur-sm" />
+              <span className="absolute inset-0 rounded-xl bg-[#E39B12]/20 blur-sm" />
               <Image
                 src={turbowareLogo}
                 alt=""
@@ -136,7 +136,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
             {open && (
               <div className="min-w-0">
                 <span className="block truncate text-sm font-semibold text-gray-900">Turboware</span>
-                <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#c47a00]">
+                <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#8A5A00]">
                   Admin
                 </span>
               </div>
@@ -159,7 +159,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
             ))}
 
             {open && (
-              <div className="border-t border-orange-100 pt-4">
+              <div className="border-t border-[#E6E0D6] pt-4">
                 <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400">
                   Account
                 </div>
@@ -190,8 +190,8 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
         </LayoutGroup>
 
         {open && me && (
-          <div className="mb-12 flex items-center gap-3 rounded-xl bg-orange-50/60 px-2 py-2">
-            <div className="grid size-8 shrink-0 place-content-center rounded-full bg-gradient-to-br from-[#fca311] to-[#e08a00] text-xs font-bold text-[#081124]">
+          <div className="mb-12 flex items-center gap-3 rounded-xl bg-[#FFF4D6]/80 px-2 py-2">
+            <div className="grid size-8 shrink-0 place-content-center rounded-full bg-gradient-to-br from-[#E39B12] to-[#C9840E] text-xs font-bold text-[#1B2430]">
               {initials}
             </div>
             <div className="min-w-0">
@@ -204,7 +204,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="absolute bottom-0 left-0 right-0 hidden border-t border-orange-100 hover:bg-orange-50/60 lg:block"
+          className="absolute bottom-0 left-0 right-0 hidden border-t border-[#E6E0D6] hover:bg-[#FFF4D6]/80 lg:block"
         >
           <div className="flex items-center p-3">
             <div className="grid size-10 place-content-center">
@@ -218,11 +218,11 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
       </nav>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-orange-100/80 bg-white/75 px-4 backdrop-blur-md">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-[#E6E0D6] bg-white/75 px-4 backdrop-blur-md">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="rounded-lg p-2 text-gray-600 hover:bg-orange-50 lg:hidden"
+              className="rounded-lg p-2 text-gray-600 hover:bg-[#FFF4D6] lg:hidden"
               aria-label="Open navigation"
               onClick={() => setMobileOpen(true)}
             >
@@ -236,18 +236,18 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <Link
               href="/admin/tickets"
-              className="relative rounded-xl border border-orange-100 bg-white p-2 text-gray-600 shadow-sm transition hover:text-[#c47a00]"
+              className="relative rounded-xl border border-[#E6E0D6] bg-white p-2 text-gray-600 shadow-sm transition hover:text-[#8A5A00]"
               aria-label="Tickets"
             >
               <Bell className="h-5 w-5" />
               {(me?.openTickets ?? 0) > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-[#fca311] ring-2 ring-white" />
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-[#E39B12] ring-2 ring-white" />
               )}
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="flex items-center gap-1.5 rounded-xl border border-orange-100 bg-white px-2.5 py-2 text-xs font-medium text-gray-600 shadow-sm hover:bg-orange-50"
+              className="flex items-center gap-1.5 rounded-xl border border-[#E6E0D6] bg-white px-2.5 py-2 text-xs font-medium text-gray-600 shadow-sm hover:bg-[#FFF4D6]"
             >
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">Sign out</span>
@@ -280,13 +280,13 @@ function NavOption({
       href={href}
       title={title}
       className={`relative flex h-11 w-full items-center rounded-xl transition-colors ${
-        active ? 'text-[#9a5c00]' : 'text-gray-600 hover:text-gray-900'
+        active ? 'text-[#8A5A00]' : 'text-gray-600 hover:text-gray-900'
       }`}
     >
       {active && (
         <motion.span
           layoutId="admin-nav-pill"
-          className="absolute inset-0 rounded-xl bg-[#fca311]/15 shadow-[inset_3px_0_0_#fca311]"
+          className="absolute inset-0 rounded-xl bg-[#E39B12]/15 shadow-[inset_3px_0_0_#E39B12]"
           transition={{ type: 'spring', stiffness: 380, damping: 32 }}
         />
       )}
@@ -295,7 +295,7 @@ function NavOption({
       </div>
       {open && <span className="relative z-10 text-sm font-medium">{title}</span>}
       {!!notifs && open && (
-        <span className="relative z-10 ml-auto mr-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#fca311] px-1 text-[10px] font-bold text-[#081124]">
+        <span className="relative z-10 ml-auto mr-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E39B12] px-1 text-[10px] font-bold text-[#1B2430]">
           {notifs}
         </span>
       )}

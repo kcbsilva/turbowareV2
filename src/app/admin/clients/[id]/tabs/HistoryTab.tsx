@@ -41,10 +41,10 @@ interface TimelineEvent {
 }
 
 const statusColors: Record<LicenseStatus, string> = {
-  ACTIVE:    'text-emerald-400',
-  SUSPENDED: 'text-yellow-400',
-  REVOKED:   'text-red-400',
-  EXPIRED:   'text-muted-foreground',
+  ACTIVE:    'text-[#0F7A6C]',
+  SUSPENDED: 'text-[#8A5A00]',
+  REVOKED:   'text-[#C23B2E]',
+  EXPIRED:   'text-[#5C6570]',
 }
 
 export function HistoryTab({ client, licenses, notes }: Props) {

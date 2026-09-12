@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Key, Plus, RefreshCw } from 'lucide-react'
+import { badge } from '@/lib/badges'
 
 type LicenseStatus = 'ACTIVE' | 'SUSPENDED' | 'REVOKED' | 'EXPIRED'
 
@@ -23,10 +24,10 @@ interface Props {
 }
 
 const statusStyles: Record<LicenseStatus, { badge: string; label: string }> = {
-  ACTIVE:    { badge: 'text-emerald-400 border-emerald-800 bg-emerald-950/40', label: 'Active'    },
-  SUSPENDED: { badge: 'text-yellow-400 border-yellow-800 bg-yellow-950/40',   label: 'Suspended' },
-  REVOKED:   { badge: 'text-red-400 border-red-900 bg-red-950/40',             label: 'Revoked'   },
-  EXPIRED:   { badge: 'text-muted-foreground border-border bg-muted/50',       label: 'Expired'   },
+  ACTIVE:    { badge: badge.teal, label: 'Active'    },
+  SUSPENDED: { badge: badge.saffron, label: 'Suspended' },
+  REVOKED:   { badge: badge.coral, label: 'Revoked'   },
+  EXPIRED:   { badge: badge.mute, label: 'Expired'   },
 }
 
 type Filter = 'All' | LicenseStatus
@@ -115,7 +116,7 @@ export function LicensesTab({ clientId, licenses }: Props) {
                 <div className="flex items-center gap-3 text-[10px] text-muted-foreground shrink-0">
                   <span>{l._count.activations}/{l.maxSeats} seats</span>
                   <span>{l.expiresAt ? `Exp. ${new Date(l.expiresAt).toLocaleDateString()}` : 'No expiry'}</span>
-                  <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${st.badge}`}>
+                  <span className={st.badge}>
                     {st.label}
                   </span>
                 </div>

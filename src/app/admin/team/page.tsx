@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Loader2, UserPlus, Users, Shield } from 'lucide-react'
+import { badge } from '@/lib/badges'
 
 type Role = 'owner' | 'admin' | 'support' | 'helper'
 
@@ -20,6 +21,13 @@ interface CurrentUser {
   id: string | null
   role: string
   canManage: boolean
+}
+
+const ROLE_BADGE: Record<string, string> = {
+  owner: badge.saffron,
+  admin: badge.saffron,
+  support: badge.sky,
+  helper: badge.sky,
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -141,7 +149,7 @@ export default function TeamPage() {
       )}
 
       {createdPassword && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-3 text-xs">
+        <div className="rounded-lg border border-[#B7E0D8] bg-[#E6F5F2] px-4 py-3 text-xs">
           <p className="font-medium text-foreground">
             Temporary password for {createdPassword.email}
           </p>
@@ -198,14 +206,14 @@ export default function TeamPage() {
                         <option value="helper">Helper</option>
                       </select>
                     ) : (
-                      <span className="inline-flex items-center gap-1">
-                        <Shield className="w-3 h-3 text-muted-foreground" />
+                      <span className={`${ROLE_BADGE[user.role] ?? badge.mute} gap-1`}>
+                        <Shield className="w-3 h-3" />
                         {ROLE_LABEL[user.role] ?? user.role}
                       </span>
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${user.active ? 'text-emerald-400 border-emerald-800 bg-emerald-950/40' : 'text-muted-foreground border-border'}`}>
+                    <span className={user.active ? badge.teal : badge.mute}>
                       {user.active ? 'Active' : 'Deactivated'}
                     </span>
                   </td>
