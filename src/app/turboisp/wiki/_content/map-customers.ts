@@ -183,7 +183,7 @@ export const mapPlansCustomers: Article[] = [
         'Combos ficam ao lado de internet/TV/móvel/fixo no mesmo menu Planos. Fidelidade vai no plano que você realmente vende.',
         'Les combos sont à côté d’internet/TV/mobile/fixe dans le même menu Forfaits. La fidélité va sur le forfait réellement vendu.',
       ) },
-      { type: 'related', slugs: ['internet-plans', 'add-contract'] },
+      { type: 'related', slugs: ['internet-plans', 'add-contract', 'contract-loyalty'] },
     ],
   },
   {
@@ -249,8 +249,59 @@ export const mapPlansCustomers: Article[] = [
           'Login, pool ou IP pinado, e o POP. É o que RADIUS e provisionamento vão usar.',
           'Login, pool ou IP épinglé, et le POP. C’est ce que RADIUS et le provisionnement utiliseront.',
         ) },
+        { title: t('Set loyalty months', 'Defina os meses de fidelidade', 'Définissez les mois de fidélité'), body: t(
+          'Loyalty is 0–24 months. 0 is month-to-month. The end date is calculated when you set the contract to Active.',
+          'Fidelidade é 0–24 meses. 0 é mensal. A data final é calculada quando o contrato fica Ativo.',
+          'La fidélité est 0–24 mois. 0 = mois par mois. La date de fin est calculée quand le contrat passe Actif.',
+        ) },
       ] },
-      { type: 'related', slugs: ['create-subscriber', 'generate-invoices', 'provision-onu'] },
+      { type: 'related', slugs: ['create-subscriber', 'generate-invoices', 'provision-onu', 'contract-loyalty'] },
+    ],
+  },
+  {
+    slug: 'contract-loyalty',
+    category: 'subscribers',
+    minutes: 4,
+    title: t('Contract loyalty term', 'Fidelidade do contrato', 'Fidélité du contrat'),
+    summary: t(
+      '0–24 months on the contract. Zero is month-to-month. The end date starts when the contract goes Active.',
+      '0–24 meses no contrato. Zero é mensal. A data final começa quando o contrato fica Ativo.',
+      '0–24 mois sur le contrat. Zéro = mois par mois. La date de fin démarre quand le contrat passe Actif.',
+    ),
+    body: [
+      { type: 'path', trail: trail(
+        [...turbo, 'Subscribers', 'Profile', 'Contracts', 'New contract', 'Loyalty'],
+        [...turbo, 'Assinantes', 'Perfil', 'Contratos', 'Novo contrato', 'Fidelidade'],
+        [...turbo, 'Abonnés', 'Profil', 'Contrats', 'Nouveau contrat', 'Fidélité'],
+      ) },
+      { type: 'p', text: t(
+        'Loyalty is a term on the service contract, not a date you type. Pick 0 through 24 months on New Contract.',
+        'Fidelidade é um prazo no contrato de serviço, não uma data digitada. Escolha de 0 a 24 meses no Novo contrato.',
+        'La fidélité est une durée sur le contrat de service, pas une date saisie. Choisissez 0 à 24 mois dans Nouveau contrat.',
+      ) },
+      { type: 'ul', items: [
+        t(
+          '0 months = month to month. No loyalty end date is stored.',
+          '0 meses = mensal. Nenhuma data final de fidelidade é gravada.',
+          '0 mois = mois par mois. Aucune date de fin de fidélité n’est enregistrée.',
+        ),
+        t(
+          '1–24 months = locked term. The clock does not start while the contract is still pending signature.',
+          '1–24 meses = prazo fechado. O relógio não começa enquanto o contrato ainda aguarda assinatura.',
+          '1–24 mois = durée fermée. L’horloge ne démarre pas tant que le contrat attend une signature.',
+        ),
+        t(
+          'When status becomes Active, TurboISP sets loyalty end date = activation date plus the months you picked.',
+          'Quando o status vira Ativo, o TurboISP grava o fim da fidelidade = data de ativação mais os meses escolhidos.',
+          'Quand le statut devient Actif, TurboISP fixe la fin de fidélité = date d’activation plus les mois choisis.',
+        ),
+      ] },
+      { type: 'callout', kind: 'tip', text: t(
+        'The contracts table shows Month to month, Starts on activation, or the end date after the contract is live.',
+        'A tabela de contratos mostra Mensal, Inicia na ativação, ou a data final depois que o contrato está ativo.',
+        'Le tableau des contrats affiche Mois par mois, Démarre à l’activation, ou la date de fin une fois le contrat actif.',
+      ) },
+      { type: 'related', slugs: ['add-contract', 'plan-contracts'] },
     ],
   },
   {
