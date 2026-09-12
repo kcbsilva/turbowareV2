@@ -3,8 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { LayoutDashboard, User, Ticket, CreditCard, LogOut, Sun, Moon, Zap } from 'lucide-react'
-import { useTheme } from '@/components/ThemeProvider'
+import { LayoutDashboard, User, Ticket, CreditCard, LogOut, Zap } from 'lucide-react'
 import turbowareLogo from '@/app/assets/turboware-logo.png'
 
 const NAV = [
@@ -18,7 +17,6 @@ const NAV = [
 export default function ClientHeader() {
   const router   = useRouter()
   const pathname = usePathname()
-  const { theme, toggle } = useTheme()
 
   async function logout() {
     await fetch('/api/client/auth/logout', { method: 'POST' })
@@ -58,13 +56,6 @@ export default function ClientHeader() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={toggle}
-            className="p-1.5 rounded-md text-white/40 hover:text-white/80 hover:bg-white/5 transition"
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
           <button
             onClick={logout}
             className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/80 transition p-1.5 rounded-md hover:bg-white/5"

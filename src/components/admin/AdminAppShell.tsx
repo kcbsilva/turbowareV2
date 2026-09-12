@@ -4,6 +4,7 @@ import { useEffect, useState, type ComponentType, type SVGProps } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { LayoutGroup, motion } from 'framer-motion'
 import {
   Bell,
   ChevronsRight,
@@ -11,17 +12,14 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Moon,
   Package,
   Receipt,
   Shield,
-  Sun,
   Ticket,
   UserCog,
   Users,
   X,
 } from 'lucide-react'
-import { useTheme } from '@/components/ThemeProvider'
 import turbowareLogo from '@/app/assets/turboware-logo.png'
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>
@@ -75,7 +73,6 @@ interface Me {
 export function AdminAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { theme, toggle } = useTheme()
   const [open, setOpen] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [me, setMe] = useState<Me | null>(null)
@@ -109,63 +106,77 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
   const initials = (me?.name || me?.email || 'A').charAt(0).toUpperCase()
 
   return (
-    <div className="flex h-[100svh] w-full bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+    <div className="flex h-[100svh] w-full bg-[#f7f5f1] text-gray-900">
       {mobileOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-30 bg-[#081124]/40 backdrop-blur-[2px] lg:hidden"
           aria-label="Close navigation"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       <nav
-        className={`fixed inset-y-0 left-0 z-40 flex h-full shrink-0 flex-col border-r border-gray-200 bg-white p-2 shadow-sm transition-all duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-900 lg:static ${
+        className={`fixed inset-y-0 left-0 z-40 flex h-full shrink-0 flex-col border-r border-orange-100/80 bg-white/90 p-2 shadow-[4px_0_24px_rgba(252,163,17,0.06)] backdrop-blur-md transition-all duration-300 ease-in-out lg:static ${
           open ? 'w-64' : 'w-16'
         } ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
-        <div className="mb-6 border-b border-gray-200 pb-4 dark:border-gray-800">
-          <Link
-            href="/admin"
-            className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
-          >
-            <Image
-              src={turbowareLogo}
-              alt=""
-              className="h-10 w-10 shrink-0 rounded-lg"
-              height={40}
-              width={40}
-            />
+        <div className="mb-4 border-b border-orange-100 pb-4">
+          <Link href="/admin" className="flex items-center gap-3 rounded-xl p-2 hover:bg-orange-50/70">
+            <span className="relative grid size-10 shrink-0 place-content-center">
+              <span className="absolute inset-0 rounded-xl bg-[#fca311]/20 blur-sm" />
+              <Image
+                src={turbowareLogo}
+                alt=""
+                className="relative h-10 w-10 rounded-xl"
+                height={40}
+                width={40}
+              />
+            </span>
             {open && (
               <div className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  Turboware
+                <span className="block truncate text-sm font-semibold text-gray-900">Turboware</span>
+                <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-[#c47a00]">
+                  Admin
                 </span>
-                <span className="block text-xs text-gray-500 dark:text-gray-400">Admin</span>
               </div>
             )}
           </Link>
         </div>
 
-        <div className="mb-4 min-h-0 flex-1 space-y-1 overflow-y-auto">
-          {NAV.map((item) => (
-            <NavOption
-              key={item.href}
-              href={item.href}
-              Icon={item.icon}
-              title={item.label}
-              open={open}
-              active={isActive(pathname, item.href, item.exact)}
-              notifs={item.href === '/admin/tickets' ? me?.openTickets : undefined}
-            />
-          ))}
+        <LayoutGroup>
+          <div className="mb-4 min-h-0 flex-1 space-y-1 overflow-y-auto">
+            {NAV.map((item) => (
+              <NavOption
+                key={item.href}
+                href={item.href}
+                Icon={item.icon}
+                title={item.label}
+                open={open}
+                active={isActive(pathname, item.href, item.exact)}
+                notifs={item.href === '/admin/tickets' ? me?.openTickets : undefined}
+              />
+            ))}
 
-          {open && (
-            <div className="border-t border-gray-200 pt-4 dark:border-gray-800">
-              <div className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Account
+            {open && (
+              <div className="border-t border-orange-100 pt-4">
+                <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+                  Account
+                </div>
+                {ACCOUNT_NAV.map((item) => (
+                  <NavOption
+                    key={item.href}
+                    href={item.href}
+                    Icon={item.icon}
+                    title={item.label}
+                    open={open}
+                    active={isActive(pathname, item.href, item.exact)}
+                  />
+                ))}
               </div>
-              {ACCOUNT_NAV.map((item) => (
+            )}
+            {!open &&
+              ACCOUNT_NAV.map((item) => (
                 <NavOption
                   key={item.href}
                   href={item.href}
@@ -175,33 +186,17 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
                   active={isActive(pathname, item.href, item.exact)}
                 />
               ))}
-            </div>
-          )}
-          {!open &&
-            ACCOUNT_NAV.map((item) => (
-              <NavOption
-                key={item.href}
-                href={item.href}
-                Icon={item.icon}
-                title={item.label}
-                open={open}
-                active={isActive(pathname, item.href, item.exact)}
-              />
-            ))}
-        </div>
+          </div>
+        </LayoutGroup>
 
         {open && me && (
-          <div className="mb-12 flex items-center gap-3 rounded-md px-2 py-2">
-            <div className="grid size-8 shrink-0 place-content-center rounded-full bg-[#fca311]/15 text-xs font-bold text-[#c47a00] dark:text-[#fca311]">
+          <div className="mb-12 flex items-center gap-3 rounded-xl bg-orange-50/60 px-2 py-2">
+            <div className="grid size-8 shrink-0 place-content-center rounded-full bg-gradient-to-br from-[#fca311] to-[#e08a00] text-xs font-bold text-[#081124]">
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-xs font-medium text-gray-900 dark:text-gray-100">
-                {me.name || 'Admin'}
-              </p>
-              <p className="truncate text-[10px] text-gray-500 dark:text-gray-400">
-                {me.email || me.role}
-              </p>
+              <p className="truncate text-xs font-medium text-gray-900">{me.name || 'Admin'}</p>
+              <p className="truncate text-[10px] text-gray-500">{me.email || me.role}</p>
             </div>
           </div>
         )}
@@ -209,71 +204,57 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="absolute bottom-0 left-0 right-0 hidden border-t border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800 lg:block"
+          className="absolute bottom-0 left-0 right-0 hidden border-t border-orange-100 hover:bg-orange-50/60 lg:block"
         >
           <div className="flex items-center p-3">
             <div className="grid size-10 place-content-center">
               <ChevronsRight
-                className={`h-4 w-4 text-gray-500 transition-transform duration-300 dark:text-gray-400 ${
-                  open ? 'rotate-180' : ''
-                }`}
+                className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
               />
             </div>
-            {open && (
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Hide</span>
-            )}
+            {open && <span className="text-sm font-medium text-gray-600">Hide</span>}
           </div>
         </button>
       </nav>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-orange-100/80 bg-white/75 px-4 backdrop-blur-md">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="rounded-lg p-2 text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 lg:hidden"
+              className="rounded-lg p-2 text-gray-600 hover:bg-orange-50 lg:hidden"
               aria-label="Open navigation"
               onClick={() => setMobileOpen(true)}
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</p>
-              <p className="hidden truncate text-[11px] text-gray-500 dark:text-gray-400 sm:block">
-                Turboware Admin
-              </p>
+              <p className="truncate text-sm font-semibold text-gray-900">{title}</p>
+              <p className="hidden truncate text-[11px] text-gray-500 sm:block">Turboware Admin</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Link
               href="/admin/tickets"
-              className="relative rounded-lg border border-gray-200 bg-white p-2 text-gray-600 transition-colors hover:text-gray-900 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              className="relative rounded-xl border border-orange-100 bg-white p-2 text-gray-600 shadow-sm transition hover:text-[#c47a00]"
               aria-label="Tickets"
             >
               <Bell className="h-5 w-5" />
               {(me?.openTickets ?? 0) > 0 && (
-                <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500" />
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-[#fca311] ring-2 ring-white" />
               )}
             </Link>
             <button
               type="button"
-              onClick={toggle}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-            <button
-              type="button"
               onClick={handleLogout}
-              className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800"
+              className="flex items-center gap-1.5 rounded-xl border border-orange-100 bg-white px-2.5 py-2 text-xs font-medium text-gray-600 shadow-sm hover:bg-orange-50"
             >
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </header>
-        <div className="min-h-0 flex-1 overflow-auto window-scroll">{children}</div>
+        <div className="min-h-0 flex-1 overflow-auto">{children}</div>
       </div>
     </div>
   )
@@ -298,18 +279,23 @@ function NavOption({
     <Link
       href={href}
       title={title}
-      className={`relative flex h-11 w-full items-center rounded-md transition-all duration-200 ${
-        active
-          ? 'border-l-2 border-[#fca311] bg-[#fca311]/10 text-[#c47a00] shadow-sm dark:text-[#fca311]'
-          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
+      className={`relative flex h-11 w-full items-center rounded-xl transition-colors ${
+        active ? 'text-[#9a5c00]' : 'text-gray-600 hover:text-gray-900'
       }`}
     >
-      <div className="grid h-full w-12 place-content-center">
+      {active && (
+        <motion.span
+          layoutId="admin-nav-pill"
+          className="absolute inset-0 rounded-xl bg-[#fca311]/15 shadow-[inset_3px_0_0_#fca311]"
+          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+        />
+      )}
+      <div className="relative z-10 grid h-full w-12 place-content-center">
         <Icon className="h-4 w-4" />
       </div>
-      {open && <span className="text-sm font-medium">{title}</span>}
+      {open && <span className="relative z-10 text-sm font-medium">{title}</span>}
       {!!notifs && open && (
-        <span className="absolute right-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#fca311] px-1 text-[10px] font-bold text-[#081124]">
+        <span className="relative z-10 ml-auto mr-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#fca311] px-1 text-[10px] font-bold text-[#081124]">
           {notifs}
         </span>
       )}

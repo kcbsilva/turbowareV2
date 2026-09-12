@@ -9,15 +9,12 @@ import {
   LogOut,
   ChevronUp,
   Users,
-  Sun,
-  Moon,
   Shield,
   Package,
   Ticket,
   Receipt,
   UserCog,
 } from "lucide-react";
-import { useTheme } from "./ThemeProvider";
 import turbowareLogo from "@/app/assets/turboware-logo.png";
 
 const menuItems = [
@@ -80,7 +77,6 @@ interface Props {
 export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const { theme, toggle: toggleTheme } = useTheme();
   const [startOpen, setStartOpen] = useState(false);
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
@@ -145,8 +141,7 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
     <div
       className="fixed bottom-0 left-0 right-0 z-[300000] h-12 flex items-center justify-between px-3 overflow-visible"
       style={{
-        backgroundColor:
-          theme === "dark" ? "rgba(5,12,28,0.92)" : "rgba(14,32,72,0.88)",
+        backgroundColor: "rgba(14,32,72,0.88)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
         borderTop: "1px solid rgba(255,255,255,0.08)",
@@ -211,28 +206,6 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
             </div>
 
             <div className="my-1 border-t border-border/40" />
-
-            {/* Theme toggle row */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-2.5 w-full text-left px-3 py-1.5 rounded-md transition-colors text-foreground"
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor =
-                  "hsl(var(--accent) / 0.08)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = "";
-              }}
-            >
-              {theme === "dark" ? (
-                <Sun className="w-3.5 h-3.5 text-muted-foreground" />
-              ) : (
-                <Moon className="w-3.5 h-3.5 text-muted-foreground" />
-              )}
-              <span className="text-xs font-medium">
-                {theme === "dark" ? "Light Mode" : "Dark Mode"}
-              </span>
-            </button>
 
             <button
               onClick={handleLogout}
@@ -317,22 +290,7 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
         </button>
       </div>
 
-      {/* Right — Theme toggle + clock */}
       <div className="flex items-center gap-3">
-        <button
-          onClick={toggleTheme}
-          className="p-1.5 rounded-md transition-colors text-white/60 hover:text-white hover:bg-white/10"
-          aria-label="Toggle theme"
-          title={
-            theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
-          }
-        >
-          {theme === "dark" ? (
-            <Sun className="w-4 h-4" />
-          ) : (
-            <Moon className="w-4 h-4" />
-          )}
-        </button>
         <div className="text-right select-none">
           <p className="text-white text-xs font-medium leading-none">{time}</p>
           <p className="text-white/50 text-[10px] leading-none mt-0.5">

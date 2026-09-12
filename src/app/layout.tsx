@@ -29,12 +29,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={cn("font-sans", inter.variable)}>
-      {/* Prevent flash: apply saved theme before first paint */}
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", inter.variable)} style={{ colorScheme: 'light' }}>
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var t=localStorage.getItem('tw-theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark');}())`,
+            __html: `(function(){document.documentElement.classList.remove('dark');try{localStorage.removeItem('tw-theme')}catch(e){}})()`,
           }}
         />
       </head>

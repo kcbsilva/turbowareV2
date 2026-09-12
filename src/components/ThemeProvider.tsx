@@ -1,37 +1,13 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
-type Theme = 'dark' | 'light'
-
-const ThemeContext = createContext<{
-  theme: Theme
-  toggle: () => void
-}>({ theme: 'dark', toggle: () => {} })
-
+/** Turboware is light-only. Strip leftover dark class / saved preference. */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark')
-
   useEffect(() => {
-    // Read from localStorage set by the inline script
-    const saved = (localStorage.getItem('tw-theme') as Theme) || 'dark'
-    setTheme(saved)
+    document.documentElement.classList.remove('dark')
+    localStorage.removeItem('tw-theme')
   }, [])
 
-  function toggle() {
-    const next: Theme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
-    localStorage.setItem('tw-theme', next)
-    document.documentElement.classList.toggle('dark', next === 'dark')
-  }
-
-  return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
-      {children}
-    </ThemeContext.Provider>
-  )
-}
-
-export function useTheme() {
-  return useContext(ThemeContext)
+  return <>{children}</>
 }
