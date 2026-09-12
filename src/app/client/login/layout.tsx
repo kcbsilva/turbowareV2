@@ -1,12 +1,24 @@
 import type { ReactNode } from 'react'
-import { Inter } from 'next/font/google'
+import { Outfit, Source_Sans_3 } from 'next/font/google'
 
-const inter = Inter({
+const sourceSans = Source_Sans_3({
   subsets: ['latin'],
-  variable: '--font-site',
+  weight: ['400', '500', '600'],
+  variable: '--font-login',
+  display: 'swap',
+})
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-login-heading',
   display: 'swap',
 })
 
 export default function ClientLoginLayout({ children }: { children: ReactNode }) {
-  return <div className={`${inter.variable} contents`}>{children}</div>
+  return (
+    <div className={`${sourceSans.variable} ${outfit.variable} ${sourceSans.className} h-full overflow-y-auto`}>
+      {children}
+    </div>
+  )
 }
