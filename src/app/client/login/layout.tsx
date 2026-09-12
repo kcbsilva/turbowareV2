@@ -1,4 +1,5 @@
-import type { Metadata, ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import type { Metadata } from 'next'
 import { Outfit, Source_Sans_3 } from 'next/font/google'
 
 const sourceSans = Source_Sans_3({
