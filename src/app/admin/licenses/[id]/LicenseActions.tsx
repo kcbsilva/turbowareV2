@@ -118,6 +118,8 @@ export function LicenseActions({ license, effectiveStatus, clients }: Props) {
               onClick={() => updateStatus('SUSPENDED')}
               disabled={!!loading}
               className="px-3 py-1.5 bg-[#C45C3A] hover:brightness-105 disabled:opacity-50 text-white text-xs font-medium rounded-md transition"
+            >
+              {loading === 'SUSPENDED' ? 'Suspending…' : 'Suspend'}
             </button>
           )}
           {canManage && effectiveStatus !== 'REVOKED' && (
