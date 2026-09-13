@@ -5,14 +5,11 @@ import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 import { clientIP, loginRateLimiter } from '@/lib/rate-limit'
 import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
+import { clientLoginWhere, loginIdentifierFromBody } from '@/lib/client-login'
 
-async function findClientForLogin(normalized: string, raw: string) {
-  const where = {
-    OR: [
-      { cnpj: normalized },
-      { cnpj: raw.trim() },
-    ],
-  }
+async function findClientForLogin(identifier: string) {
+  const where = clientLoginWhere(identifier)
+  if (!where) return null
 
   try {
     return await prisma.client.findFirst({
@@ -32,9 +29,15 @@ async function findClientForLogin(normalized: string, raw: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const { body, error } = await parseBody<{ cnpj?: string; password?: string }>(req)
+  const { body, error } = await parseBody<{
+    identifier?: string
+    email?: string
+    cnpj?: string
+    password?: string
+  }>(req)
   if (error) return badRequest()
-  const { cnpj, password } = body
+  const identifier = loginIdentifierFromBody(body)
+  const { password } = body
 
   const ip = clientIP(req)
   if (!(await loginRateLimiter.check(ip))) {
@@ -44,22 +47,28 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  if (!cnpj || !password) {
-    return NextResponse.json({ error: 'CNPJ and password are required' }, { status: 400 })
+  if (!identifier || !password) {
+    return NextResponse.json(
+      { error: 'Email or business number and password are required' },
+      { status: 400 },
+    )
   }
 
-  // Normalize CNPJ — strip formatting so XX.XXX.XXX/XXXX-XX and 00000000000000 both work
-  const normalized = cnpj.replace(/\D/g, '')
-
-  const client = await findClientForLogin(normalized, cnpj)
+  const client = await findClientForLogin(identifier)
 
   if (!client || !client.password) {
-    return NextResponse.json({ error: 'Invalid CNPJ or password' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Invalid email, business number, or password' },
+      { status: 401 },
+    )
   }
 
   const valid = await bcrypt.compare(password, client.password)
   if (!valid) {
-    return NextResponse.json({ error: 'Invalid CNPJ or password' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Invalid email, business number, or password' },
+      { status: 401 },
+    )
   }
 
   if (!client.emailVerified) {

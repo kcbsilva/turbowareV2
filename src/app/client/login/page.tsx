@@ -13,13 +13,14 @@ import {
   loginLinkClass,
 } from '@/components/TurboAuthShell'
 import { cn } from '@/lib/utils'
+import { formatLoginIdentifierInput } from '@/lib/client-login'
 
 type Lang = 'en' | 'pt'
 
 const COPY: Record<Lang, {
   title: string
   subtitle: string
-  cnpj: string
+  identifier: string
   password: string
   submit: string
   submitting: string
@@ -29,7 +30,7 @@ const COPY: Record<Lang, {
   pt: {
     title: 'Entrar no TurboISP',
     subtitle: 'Acesse licenças, faturas e suporte da sua operação.',
-    cnpj: 'CNPJ',
+    identifier: 'E-mail ou CNPJ',
     password: 'Senha',
     submit: 'Entrar',
     submitting: 'Entrando…',
@@ -39,7 +40,7 @@ const COPY: Record<Lang, {
   en: {
     title: 'Sign in to TurboISP',
     subtitle: 'Manage licenses, invoices, and support for your ISP.',
-    cnpj: 'CNPJ',
+    identifier: 'Email or business number',
     password: 'Password',
     submit: 'Sign in',
     submitting: 'Signing in…',
@@ -51,21 +52,12 @@ const COPY: Record<Lang, {
 export default function ClientLoginPage() {
   const router = useRouter()
   const [lang, setLang] = useState<Lang>('pt')
-  const [cnpj, setCnpj] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const t = COPY[lang]
-
-  function formatCnpj(value: string) {
-    const digits = value.replace(/\D/g, '').slice(0, 14)
-    return digits
-      .replace(/^(\d{2})(\d)/, '$1.$2')
-      .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-      .replace(/\.(\d{3})(\d)/, '.$1/$2')
-      .replace(/(\d{4})(\d)/, '$1-$2')
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -75,7 +67,7 @@ export default function ClientLoginPage() {
     const res = await fetch('/api/client/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cnpj, password }),
+      body: JSON.stringify({ identifier, password }),
     })
 
     setLoading(false)
@@ -84,7 +76,7 @@ export default function ClientLoginPage() {
       router.push('/client/dashboard')
     } else {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || 'Invalid CNPJ or password.')
+      setError(data.error || (lang === 'pt' ? 'E-mail, CNPJ ou senha inválidos.' : 'Invalid email, business number, or password.'))
     }
   }
 
@@ -133,16 +125,15 @@ export default function ClientLoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <fieldset disabled={loading} className="space-y-4">
           <div>
-            <label htmlFor="client-cnpj" className={loginLabelClass}>{t.cnpj}</label>
+            <label htmlFor="client-identifier" className={loginLabelClass}>{t.identifier}</label>
             <input
-              id="client-cnpj"
+              id="client-identifier"
               type="text"
-              inputMode="numeric"
               autoComplete="username"
-              value={cnpj}
-              onChange={(e) => setCnpj(formatCnpj(e.target.value))}
+              value={identifier}
+              onChange={(e) => setIdentifier(formatLoginIdentifierInput(e.target.value))}
               className={loginInputClass}
-              placeholder="00.000.000/0000-00"
+              placeholder={lang === 'pt' ? 'email@empresa.com ou 00.000.000/0000-00' : 'you@company.com or business number'}
               required
               autoFocus
             />
