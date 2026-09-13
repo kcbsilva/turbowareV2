@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 import { getClientId } from '@/lib/client-auth'
+import { applySubscriptionLicenseSync } from '@/lib/billing'
 import {
   getMonthlyPrice,
   getProratedAmount,
@@ -35,6 +36,11 @@ export async function GET(req: NextRequest) {
         license: { select: { key: true, status: true, maxSeats: true } },
       },
     })
+    await applySubscriptionLicenseSync({
+      clientId: updated.clientId,
+      licenseId: updated.licenseId,
+      subscriptionStatus: updated.status,
+    })
     return NextResponse.json(updated)
   }
 
@@ -43,6 +49,11 @@ export async function GET(req: NextRequest) {
     const hasPending = sub.invoices.some((i) => i.status === 'PENDING')
     if (sub.status === 'ACTIVE' && hasPending) {
       await prisma.subscription.update({ where: { id: sub.id }, data: { status: 'SUSPENDED' } })
+      await applySubscriptionLicenseSync({
+        clientId: sub.clientId,
+        licenseId: sub.licenseId,
+        subscriptionStatus: 'SUSPENDED',
+      })
     }
   }
 

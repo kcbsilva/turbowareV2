@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback, Fragment } from 'react'
-import { CheckCircle, AlertTriangle, Clock, RefreshCw, Loader2, CreditCard, ExternalLink, Send, Plus } from 'lucide-react'
+import { CheckCircle, AlertTriangle, RefreshCw, Loader2, CreditCard, ExternalLink, Send, Plus } from 'lucide-react'
 import { formatBRL, getMonthlyPrice, getInstallationFee, type Region } from '@/lib/pricing'
 import { badge } from '@/lib/badges'
-import { ExtendGraceDialog } from '@/components/ExtendGraceDialog'
-import { MAX_ADMIN_GRACE_DAYS } from '@/lib/grace-period'
 import { formatInvoiceNumber, resolveInvoiceDisplayStatus } from '@/lib/invoice-display'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
 import { dateLocale } from '@/lib/admin-i18n'
@@ -97,7 +95,6 @@ export function BillingTab({ clientId }: Props) {
   const [loading, setLoading]   = useState(true)
   const [paying, setPaying]     = useState<string | null>(null)
   const [sending, setSending]   = useState<string | null>(null)  // `${invoiceId}-asaas` | `${invoiceId}-stripe`
-  const [graceOpen, setGraceOpen] = useState(false)
   const [chargeOpen, setChargeOpen] = useState(false)
   const [savingCharge, setSavingCharge] = useState(false)
   const [togglingPlan, setTogglingPlan] = useState(false)
@@ -243,15 +240,6 @@ export function BillingTab({ clientId }: Props) {
         <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
           <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('billing.subscription')}</h2>
           <div className="flex items-center gap-2">
-            {sub.status !== 'CANCELLED' && (
-              <button
-                type="button"
-                onClick={() => setGraceOpen(true)}
-                className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                {t('billing.extendGrace')}
-              </button>
-            )}
             <button onClick={load} className="text-muted-foreground hover:text-foreground transition" title={t('billing.refresh')}>
               <RefreshCw className="w-3 h-3" />
             </button>
@@ -535,49 +523,6 @@ export function BillingTab({ clientId }: Props) {
           </form>
         </DialogContent>
       </Dialog>
-
-      <ExtendGraceDialog
-        open={graceOpen}
-        onOpenChange={setGraceOpen}
-        currentEndsAt={sub.gracePeriodEndsAt}
-        maxDays={MAX_ADMIN_GRACE_DAYS}
-        confirmLabel={t('billing.extendGrace')}
-        onConfirm={async (payload) => {
-          const res = await fetch(`/api/admin/clients/${clientId}/subscription/grace`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          })
-          const data = await res.json().catch(() => ({}))
-          if (!res.ok) throw new Error(data.error || 'Failed to extend grace.')
-          await load()
-        }}
-      />
-
-      {/* Grace period info */}
-      {sub.gracePeriodUsedAt && (
-        <div className={card}>
-          <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-            <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('billing.grace')}</h2>
-          </div>
-          <div className="px-4 py-3 text-xs space-y-1">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t('billing.lastActivated')}</span>
-              <span className="text-foreground">{new Date(sub.gracePeriodUsedAt).toLocaleDateString(dateLocale(lang))}</span>
-            </div>
-            {sub.gracePeriodEndsAt && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('billing.expires')}</span>
-                <span className="text-muted-foreground">
-                  {new Date(sub.gracePeriodEndsAt).toLocaleDateString(dateLocale(lang))}
-                  {new Date(sub.gracePeriodEndsAt) > new Date() ? ` ${t('billing.active')}` : ` ${t('billing.expired')}`}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

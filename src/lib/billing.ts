@@ -3,7 +3,7 @@
  * Used by: admin /pay route, Asaas webhook, Stripe webhook, billing cron.
  */
 import { prisma } from '@/lib/prisma'
-import { LicenseStatus, SubscriptionStatus } from '@prisma/client'
+import { ClientProductStatus, LicenseStatus, SubscriptionStatus } from '@prisma/client'
 
 type InvoiceLike = {
   id: string
@@ -41,6 +41,17 @@ export function licenseStatusForSubscription(
   return null
 }
 
+/** TurboISP row on the licenses tab should match billing. */
+export function clientProductStatusForSubscription(
+  status: string,
+): ClientProductStatus | null {
+  if (status === 'ACTIVE' || status === 'TRIAL') return ClientProductStatus.ACTIVE
+  if (status === 'PENDING_PAYMENT') return ClientProductStatus.PENDING
+  if (status === 'SUSPENDED') return ClientProductStatus.SUSPENDED
+  if (status === 'CANCELLED') return ClientProductStatus.CANCELLED
+  return null
+}
+
 export async function syncLicensesForSubscription(opts: {
   clientId: string
   licenseId?: string | null
@@ -51,15 +62,25 @@ export async function syncLicensesForSubscription(opts: {
       where: { id: opts.licenseId },
       data: { status: opts.status },
     })
-    return
+  } else {
+    await prisma.license.updateMany({
+      where: {
+        clientId: opts.clientId,
+        status: { notIn: [LicenseStatus.REVOKED, LicenseStatus.EXPIRED] },
+      },
+      data: { status: opts.status },
+    })
   }
+}
 
-  await prisma.license.updateMany({
+async function syncTurboIspClientProduct(clientId: string, status: ClientProductStatus) {
+  await prisma.clientProduct.updateMany({
     where: {
-      clientId: opts.clientId,
-      status: { notIn: [LicenseStatus.REVOKED, LicenseStatus.EXPIRED] },
+      clientId,
+      status: { not: status },
+      product: { slug: 'turboisp' },
     },
-    data: { status: opts.status },
+    data: { status },
   })
 }
 
@@ -69,12 +90,18 @@ export async function applySubscriptionLicenseSync(opts: {
   subscriptionStatus: string
 }): Promise<void> {
   const licenseStatus = licenseStatusForSubscription(opts.subscriptionStatus)
-  if (!licenseStatus) return
-  await syncLicensesForSubscription({
-    clientId: opts.clientId,
-    licenseId: opts.licenseId,
-    status: licenseStatus,
-  })
+  if (licenseStatus) {
+    await syncLicensesForSubscription({
+      clientId: opts.clientId,
+      licenseId: opts.licenseId,
+      status: licenseStatus,
+    })
+  }
+
+  const productStatus = clientProductStatusForSubscription(opts.subscriptionStatus)
+  if (productStatus) {
+    await syncTurboIspClientProduct(opts.clientId, productStatus)
+  }
 }
 
 /**
@@ -105,10 +132,10 @@ export async function markInvoicePaid(invoiceId: string): Promise<{ ok: boolean;
       where: { id: sub.id },
       data: { status: SubscriptionStatus.ACTIVE },
     })
-    await syncLicensesForSubscription({
+    await applySubscriptionLicenseSync({
       clientId: sub.clientId,
       licenseId: sub.licenseId,
-      status: LicenseStatus.ACTIVE,
+      subscriptionStatus: SubscriptionStatus.ACTIVE,
     })
   }
 
@@ -124,9 +151,9 @@ export async function suspendSubscriptionForNonPayment(opts: {
     where: { id: opts.subscriptionId },
     data: { status: SubscriptionStatus.SUSPENDED, gracePeriodEndsAt: null },
   })
-  await syncLicensesForSubscription({
+  await applySubscriptionLicenseSync({
     clientId: opts.clientId,
     licenseId: opts.licenseId,
-    status: LicenseStatus.SUSPENDED,
+    subscriptionStatus: SubscriptionStatus.SUSPENDED,
   })
 }

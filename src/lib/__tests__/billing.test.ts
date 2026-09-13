@@ -4,6 +4,7 @@ import {
   isInvoiceSettled,
   isInvoiceUnpaid,
   licenseStatusForSubscription,
+  clientProductStatusForSubscription,
   shouldActivateOnPayment,
 } from '../billing'
 
@@ -48,5 +49,15 @@ describe('license release on payment', () => {
     expect(licenseStatusForSubscription('SUSPENDED')).toBe('SUSPENDED')
     expect(licenseStatusForSubscription('CANCELLED')).toBe('SUSPENDED')
     expect(licenseStatusForSubscription('PENDING_PAYMENT')).toBeNull()
+  })
+})
+
+describe('client product status for subscription', () => {
+  it('mirrors billing onto the TurboISP licenses-tab row', () => {
+    expect(clientProductStatusForSubscription('ACTIVE')).toBe('ACTIVE')
+    expect(clientProductStatusForSubscription('TRIAL')).toBe('ACTIVE')
+    expect(clientProductStatusForSubscription('PENDING_PAYMENT')).toBe('PENDING')
+    expect(clientProductStatusForSubscription('SUSPENDED')).toBe('SUSPENDED')
+    expect(clientProductStatusForSubscription('CANCELLED')).toBe('CANCELLED')
   })
 })

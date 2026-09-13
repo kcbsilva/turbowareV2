@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { canActivateGrace, GRACE_FEE } from '@/lib/pricing'
 import { getClientId } from '@/lib/client-auth'
-import { syncLicensesForSubscription } from '@/lib/billing'
-import { LicenseStatus } from '@prisma/client'
+import { applySubscriptionLicenseSync } from '@/lib/billing'
 import { MAX_CLIENT_GRACE_DAYS, resolveGracePeriodEnd } from '@/lib/grace-period'
 
 // POST /api/client/subscription/grace
@@ -61,10 +60,10 @@ export async function POST(req: NextRequest) {
     })
   })
 
-  await syncLicensesForSubscription({
+  await applySubscriptionLicenseSync({
     clientId: sub.clientId,
     licenseId: sub.licenseId,
-    status: LicenseStatus.ACTIVE,
+    subscriptionStatus: 'ACTIVE',
   })
 
   return NextResponse.json({ ok: true, gracePeriodEndsAt: resolved.endsAt })

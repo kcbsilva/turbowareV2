@@ -1,8 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronDown, Loader2, Plus } from 'lucide-react'
+import { ChevronDown, Clock, Loader2, Plus } from 'lucide-react'
 import { badge } from '@/lib/badges'
+import { ExtendGraceDialog } from '@/components/ExtendGraceDialog'
+import { MAX_ADMIN_GRACE_DAYS } from '@/lib/grace-period'
 import {
   Dialog,
   DialogContent,
@@ -83,6 +85,12 @@ export function LicensesTab({ clientId }: Props) {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [graceOpen, setGraceOpen] = useState(false)
+  const [grace, setGrace] = useState<{
+    status: string
+    gracePeriodUsedAt: string | null
+    gracePeriodEndsAt: string | null
+  } | null>(null)
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -102,9 +110,10 @@ export function LicensesTab({ clientId }: Props) {
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
-    const [licRes, catRes] = await Promise.all([
+    const [licRes, catRes, subRes] = await Promise.all([
       fetch(`/api/admin/clients/${clientId}/products`, { cache: 'no-store' }),
       fetch('/api/admin/products', { cache: 'no-store' }),
+      fetch(`/api/admin/clients/${clientId}/subscription`, { cache: 'no-store' }),
     ])
     if (licRes.ok) {
       const data = await licRes.json()
@@ -116,6 +125,18 @@ export function LicensesTab({ clientId }: Props) {
     if (catRes.ok) {
       const products = await catRes.json()
       setCatalog(Array.isArray(products) ? products : [])
+    }
+    if (subRes.ok) {
+      const sub = await subRes.json()
+      setGrace(
+        sub
+          ? {
+              status: sub.status,
+              gracePeriodUsedAt: sub.gracePeriodUsedAt ?? null,
+              gracePeriodEndsAt: sub.gracePeriodEndsAt ?? null,
+            }
+          : null,
+      )
     }
     setLoading(false)
   }, [clientId, t])
@@ -198,7 +219,16 @@ export function LicensesTab({ clientId }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-2">
+        {grace && grace.status !== 'CANCELLED' && (
+          <button
+            type="button"
+            onClick={() => setGraceOpen(true)}
+            className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            {t('billing.extendGrace')}
+          </button>
+        )}
         <button
           type="button"
           onClick={openNew}
@@ -400,6 +430,50 @@ export function LicensesTab({ clientId }: Props) {
           </form>
         </DialogContent>
       </Dialog>
+
+      {grace && grace.status !== 'CANCELLED' && (
+        <ExtendGraceDialog
+          open={graceOpen}
+          onOpenChange={setGraceOpen}
+          currentEndsAt={grace.gracePeriodEndsAt}
+          maxDays={MAX_ADMIN_GRACE_DAYS}
+          confirmLabel={t('billing.extendGrace')}
+          onConfirm={async (payload) => {
+            const res = await fetch(`/api/admin/clients/${clientId}/subscription/grace`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) throw new Error(data.error || 'Failed to extend grace.')
+            await load()
+          }}
+        />
+      )}
+
+      {grace?.gracePeriodUsedAt && (
+        <div className="bg-card border border-border rounded-lg">
+          <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+            <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('billing.grace')}</h2>
+          </div>
+          <div className="px-4 py-3 text-xs space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t('billing.lastActivated')}</span>
+              <span className="text-foreground">{new Date(grace.gracePeriodUsedAt).toLocaleDateString(dateLocale(lang))}</span>
+            </div>
+            {grace.gracePeriodEndsAt && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t('billing.expires')}</span>
+                <span className="text-muted-foreground">
+                  {new Date(grace.gracePeriodEndsAt).toLocaleDateString(dateLocale(lang))}
+                  {new Date(grace.gracePeriodEndsAt) > new Date() ? ` ${t('billing.active')}` : ` ${t('billing.expired')}`}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

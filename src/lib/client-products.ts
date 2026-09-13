@@ -30,6 +30,17 @@ export async function listClientLicenses(clientId: string): Promise<{
   licenses: ClientLicenseRow[]
 }> {
   await ensureDefaultCatalog()
+  const sub = await prisma.subscription.findUnique({
+    where: { clientId },
+    select: { status: true, licenseId: true },
+  })
+  if (sub) {
+    await applySubscriptionLicenseSync({
+      clientId,
+      licenseId: sub.licenseId,
+      subscriptionStatus: sub.status,
+    })
+  }
   const client = await prisma.client.findUnique({
     where: { id: clientId },
     select: {
