@@ -6,7 +6,7 @@ import type { LucideIcon } from 'lucide-react'
 export type ClientTab = 'overview' | 'licenses' | 'billing' | 'tickets' | 'notes' | 'history'
 
 const PRIMARY: { id: ClientTab; icon: LucideIcon; label: string }[] = [
-  { id: 'overview', icon: User, label: 'Overview' },
+  { id: 'overview', icon: User, label: 'Client' },
   { id: 'licenses', icon: Key, label: 'Licenses' },
   { id: 'billing', icon: CreditCard, label: 'Billing' },
   { id: 'tickets', icon: Ticket, label: 'Tickets' },
@@ -39,15 +39,13 @@ function NavButton({
       title={item.label}
       aria-label={item.label}
       aria-current={active ? 'page' : undefined}
-      className={[
-        'profile-nav-item relative z-[1] flex items-center gap-1.5 shrink-0 px-2.5 text-[12px] font-medium whitespace-nowrap transition-colors duration-100 focus:outline-none',
-        active
-          ? 'profile-folder-tab h-full text-foreground'
-          : 'my-1 h-7 rounded-lg text-white/70 hover:bg-black/20 hover:text-white',
-      ].join(' ')}
+      className={`relative flex flex-col items-center justify-center gap-1 px-1 py-2.5 ${
+        active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+      }`}
     >
-      <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />
-      <span>{item.label}</span>
+      {active && <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-white" />}
+      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+      <span className="max-w-full truncate text-[10px] font-medium leading-none">{item.label}</span>
     </button>
   )
 }
@@ -56,12 +54,12 @@ export function ClientNavBar({ active, onSelect }: Props) {
   return (
     <nav
       aria-label="Client profile sections"
-      className="profile-nav flex items-end gap-0.5 h-9 px-3 shrink-0 overflow-x-auto scrollbar-none"
+      className="flex w-16 shrink-0 flex-col border-r border-border bg-background py-1"
     >
       {PRIMARY.map((item) => (
         <NavButton key={item.id} item={item} active={active === item.id} onSelect={onSelect} />
       ))}
-      <span aria-hidden className="self-center mx-1.5 h-4 w-px shrink-0 bg-white/25" />
+      <span aria-hidden className="mx-3 my-1 h-px shrink-0 bg-border" />
       {SECONDARY.map((item) => (
         <NavButton key={item.id} item={item} active={active === item.id} onSelect={onSelect} />
       ))}
