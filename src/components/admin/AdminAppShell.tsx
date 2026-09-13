@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import turbowareLogo from '@/app/assets/turboware-logo.png'
 import { AdminLangToggle, useAdminLang } from '@/components/admin/AdminLangProvider'
+import { ThemeToggle, useTheme } from '@/components/ThemeProvider'
 import type { MsgKey } from '@/lib/admin-i18n'
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>
@@ -70,6 +71,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const { t } = useAdminLang()
+  const { theme } = useTheme()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [me, setMe] = useState<Me | null>(null)
 
@@ -118,7 +120,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="flex h-14 shrink-0 items-center justify-center border-b border-border">
-          <Link href="/admin" className="grid size-9 place-content-center rounded-md hover:bg-white/5" aria-label="Turboware">
+          <Link href="/admin" className="grid size-9 place-content-center rounded-md hover:bg-muted" aria-label="Turboware">
             <Image
               src={turbowareLogo}
               alt=""
@@ -154,7 +156,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
 
         {me && (
           <div className="flex h-14 shrink-0 items-center justify-center border-t border-border" title={me.name || me.email || 'Admin'}>
-            <div className="grid size-8 place-content-center rounded-full bg-neutral-800 text-xs font-bold text-foreground">
+            <div className="grid size-8 place-content-center rounded-full bg-muted text-xs font-bold text-foreground">
               {initials}
             </div>
           </div>
@@ -166,7 +168,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="rounded-md p-2 text-muted-foreground hover:bg-white/5 lg:hidden"
+              className="rounded-md p-2 text-muted-foreground hover:bg-muted lg:hidden"
               aria-label={t('nav.open')}
               onClick={() => setMobileOpen(true)}
             >
@@ -179,6 +181,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center gap-2">
             <AdminLangToggle />
+            <ThemeToggle label={t(theme === 'dark' ? 'theme.toLight' : 'theme.toDark')} />
             <Link
               href="/admin/tickets"
               className="relative rounded-md border border-border bg-card p-2 text-muted-foreground transition hover:text-foreground"
@@ -192,7 +195,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-white/5"
+              className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-muted"
             >
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">{t('nav.signOut')}</span>
@@ -223,10 +226,10 @@ function NavOption({
       href={href}
       title={title}
       className={`relative flex flex-col items-center justify-center gap-1 px-1 py-2.5 ${
-        active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+        active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/70'
       }`}
     >
-      {active && <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-white" />}
+      {active && <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-foreground" />}
       <span className="relative">
         <Icon className="h-4 w-4" />
         {!!notifs && (

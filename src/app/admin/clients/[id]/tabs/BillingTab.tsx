@@ -157,7 +157,7 @@ export function BillingTab({ clientId }: Props) {
               <button
                 type="button"
                 onClick={() => setGraceOpen(true)}
-                className="rounded-md border border-white/20 px-2 py-1 text-[10px] font-semibold text-neutral-300 hover:bg-white/10"
+                className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 {t('billing.extendGrace')}
               </button>
@@ -260,7 +260,7 @@ export function BillingTab({ clientId }: Props) {
                                 href={inv.paymentUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-[10px] text-neutral-400 hover:text-white transition truncate mb-2"
+                                className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition truncate mb-2"
                               >
                                 <ExternalLink className="w-3 h-3 shrink-0" />
                                 <span className="truncate">{inv.paymentUrl}</span>

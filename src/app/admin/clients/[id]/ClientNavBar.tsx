@@ -47,7 +47,7 @@ function NavButton({
         'profile-nav-item relative z-[1] flex items-center gap-1.5 shrink-0 px-2.5 text-[12px] font-medium whitespace-nowrap transition-colors duration-100 focus:outline-none',
         active
           ? 'profile-folder-tab h-full text-foreground'
-          : 'my-1 h-7 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground',
+          : 'my-1 h-7 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground',
       ].join(' ')}
     >
       <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />

@@ -23,7 +23,7 @@ export function ClientHeader({ clientId, name, company, createdAt }: Props) {
   return (
     <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background px-4">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="grid size-8 shrink-0 place-content-center rounded-md bg-white/10">
+        <div className="grid size-8 shrink-0 place-content-center rounded-md bg-muted">
           <Building2 className="h-4 w-4 text-foreground" />
         </div>
         <div className="min-w-0">
@@ -32,7 +32,7 @@ export function ClientHeader({ clientId, name, company, createdAt }: Props) {
               {clientId.slice(-8).toUpperCase()} — {name}
               {displayTrade}
             </span>
-            <span className="shrink-0 rounded border border-border bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none text-foreground">
+            <span className="shrink-0 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none text-foreground">
               {t('profile.client')}
             </span>
           </div>

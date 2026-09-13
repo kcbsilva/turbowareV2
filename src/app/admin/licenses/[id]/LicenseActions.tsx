@@ -108,7 +108,7 @@ export function LicenseActions({ license, effectiveStatus, clients }: Props) {
             <button
               onClick={() => updateStatus('ACTIVE')}
               disabled={!!loading}
-              className="px-3 py-1.5 bg-white hover:bg-neutral-200 disabled:opacity-50 text-black text-xs font-medium rounded-md transition"
+              className="px-3 py-1.5 bg-foreground hover:opacity-90 disabled:opacity-50 text-background text-xs font-medium rounded-md transition"
             >
               {loading === 'ACTIVE' ? 'Activating…' : 'Set Active'}
             </button>

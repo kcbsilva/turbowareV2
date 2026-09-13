@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function AdminLoginLayout({ children }: { children: ReactNode }) {
   return (
-    <div className={`${sourceSans.variable} ${outfit.variable} ${sourceSans.className} h-full overflow-y-auto`}>
+    <div className={`${sourceSans.variable} ${outfit.variable} ${sourceSans.className} dark h-full overflow-y-auto bg-black`}>
       {children}
     </div>
   )

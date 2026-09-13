@@ -3,7 +3,7 @@ import ClientHeader from '../components/clientheader'
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="min-h-screen flex flex-col bg-black"
+      className="dark min-h-screen flex flex-col bg-black"
     >
       {/* Dot grid */}
       <div

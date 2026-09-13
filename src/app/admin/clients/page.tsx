@@ -99,7 +99,7 @@ export default function ClientsPage() {
 
   const statusConfig = [
     { value: 'all' as const, label: 'All', color: 'bg-neutral-200' },
-    { value: 'with-licenses' as const, label: 'Has Licenses', color: 'bg-white' },
+    { value: 'with-licenses' as const, label: 'Has Licenses', color: 'bg-foreground' },
     { value: 'no-licenses' as const, label: 'No Licenses', color: 'bg-neutral-500' },
   ]
 

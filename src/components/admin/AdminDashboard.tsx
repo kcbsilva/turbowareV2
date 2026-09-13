@@ -185,7 +185,7 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
         >
           <motion.div
             aria-hidden
-            className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/5 blur-3xl"
+            className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-foreground/5 blur-3xl"
             animate={{ x: [0, 12, 0], y: [0, 8, 0] }}
             transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
           />
@@ -203,7 +203,7 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/admin/tickets"
-                className="rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-white/5"
+                className="rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted"
               >
                 Tickets{data.openTickets > 0 ? ` (${data.openTickets})` : ''}
               </Link>
@@ -298,7 +298,7 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
                   >
                     <Link
                       href={`/admin/clients/${c.id}`}
-                      className="flex items-center gap-4 px-5 py-3.5 transition hover:bg-white/5"
+                      className="flex items-center gap-4 px-5 py-3.5 transition hover:bg-muted"
                     >
                       <div className="grid size-10 shrink-0 place-content-center rounded-full bg-neutral-800 text-sm font-bold text-foreground">
                         {c.name.charAt(0).toUpperCase()}
@@ -370,7 +370,7 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
                     <span className="text-muted-foreground">{row.label}</span>
                     <span className="font-semibold text-foreground">{row.value}%</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${row.value}%` }}
@@ -400,7 +400,7 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
                   <Link
                     key={a.href}
                     href={a.href}
-                    className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-foreground/90 transition hover:bg-white/5"
+                    className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-foreground/90 transition hover:bg-muted"
                   >
                     <a.icon className="h-4 w-4 text-muted-foreground" />
                     {a.label}

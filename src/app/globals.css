@@ -8,8 +8,43 @@
    TurboISP Brand — Color Variables
    ========================================= */
 
-:root,
+:root {
+  color-scheme: light;
+  --background: 0 0% 100%;
+  --foreground: 0 0% 9%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 9%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 9%;
+
+  --primary: 0 0% 9%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 0 0% 9%;
+
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 42%;
+
+  --accent: 0 0% 96%;
+  --accent-foreground: 0 0% 9%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 0 0% 92%;
+  --input: 0 0% 92%;
+  --ring: 0 0% 64%;
+  --radius: 0.5rem;
+
+  --scrollbar-track: #fafafa;
+  --scrollbar-thumb: #d4d4d4;
+}
+
 .dark {
+  color-scheme: dark;
   --background: 0 0% 0%;
   --foreground: 0 0% 93%;
 
@@ -37,7 +72,6 @@
   --border: 0 0% 14%;
   --input: 0 0% 14%;
   --ring: 0 0% 45%;
-  --radius: 0.5rem;
 
   --scrollbar-track: #0a0a0a;
   --scrollbar-thumb: #333333;
@@ -69,14 +103,14 @@ body {
    Worktop Desktop Background
    ============================ */
 .worktop-bg {
-  background: #000;
+  background: hsl(var(--background));
 }
 
 .worktop-bg::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-image: radial-gradient(hsla(var(--foreground) / 0.06) 1px, transparent 1px);
   background-size: 24px 24px;
   pointer-events: none;
 }
@@ -86,7 +120,7 @@ body {
    ============================ */
 .window-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #333 #0a0a0a;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 .window-scroll::-webkit-scrollbar {
@@ -95,11 +129,11 @@ body {
 }
 
 .window-scroll::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: var(--scrollbar-track);
 }
 
 .window-scroll::-webkit-scrollbar-thumb {
-  background: #333;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
@@ -110,7 +144,21 @@ body {
 
     --font-sans: var(--font-sans);
   }
-  :root,
+  :root {
+    --chart-1: 0 0% 12%;
+    --chart-2: 0 0% 32%;
+    --chart-3: 0 0% 46%;
+    --chart-4: 0 0% 64%;
+    --chart-5: 0 0% 82%;
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 0 0% 9%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 92%;
+    --sidebar-ring: 0 0% 64%;
+  }
   .dark {
     --chart-1: 0 0% 87%;
     --chart-2: 0 0% 56%;
@@ -138,13 +186,13 @@ body {
 }
 
 .profile-nav {
-  background: #000;
+  background: hsl(var(--background));
   border-bottom: 1px solid hsl(var(--border));
 }
 
 .profile-folder-tab {
   z-index: 2;
-  background: #0a0a0a;
+  background: hsl(var(--card));
   border-radius: 10px 10px 0 0;
 }
 
@@ -162,14 +210,14 @@ body {
   left: -10px;
   background: transparent;
   border-bottom-right-radius: 10px;
-  box-shadow: 4px 4px 0 4px #0a0a0a;
+  box-shadow: 4px 4px 0 4px hsl(var(--card));
 }
 
 .profile-folder-tab::after {
   right: -10px;
   background: transparent;
   border-bottom-left-radius: 10px;
-  box-shadow: -4px 4px 0 4px #0a0a0a;
+  box-shadow: -4px 4px 0 4px hsl(var(--card));
 }
 
 .scrollbar-none {
@@ -186,46 +234,87 @@ body {
     @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold;
   }
   .tw-badge-peach {
-    background-color: rgba(255, 255, 255, 0.08);
-    color: #e5e5e5;
-    border-color: rgba(255, 255, 255, 0.12);
+    background-color: #f4f4f4;
+    color: #171717;
+    border-color: #eaeaea;
   }
   .tw-badge-saffron {
+    background-color: #f4f4f4;
+    color: #171717;
+    border-color: #eaeaea;
+  }
+  .tw-badge-teal {
+    background-color: #f4f4f4;
+    color: #525252;
+    border-color: #eaeaea;
+  }
+  .tw-badge-sky {
+    background-color: #f4f4f4;
+    color: #404040;
+    border-color: #eaeaea;
+  }
+  .tw-badge-coral {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #b91c1c;
+    border-color: rgba(239, 68, 68, 0.22);
+  }
+  .tw-badge-mute {
+    background-color: #fafafa;
+    color: #737373;
+    border-color: #eaeaea;
+  }
+  .tw-badge-paid {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    border-color: rgba(16, 185, 129, 0.28);
+  }
+  .tw-badge-pending {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.28);
+  }
+  .tw-badge-overdue {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+    border-color: rgba(239, 68, 68, 0.28);
+  }
+  .dark .tw-badge-peach,
+  .dark .tw-badge-saffron {
     background-color: rgba(255, 255, 255, 0.08);
     color: #e5e5e5;
     border-color: rgba(255, 255, 255, 0.12);
   }
-  .tw-badge-teal {
+  .dark .tw-badge-teal {
     background-color: rgba(255, 255, 255, 0.08);
     color: #a3a3a3;
     border-color: rgba(255, 255, 255, 0.12);
   }
-  .tw-badge-sky {
+  .dark .tw-badge-sky {
     background-color: rgba(255, 255, 255, 0.08);
     color: #d4d4d4;
     border-color: rgba(255, 255, 255, 0.12);
   }
-  .tw-badge-coral {
+  .dark .tw-badge-coral {
     background-color: rgba(239, 68, 68, 0.15);
     color: #fca5a5;
     border-color: rgba(239, 68, 68, 0.25);
   }
-  .tw-badge-mute {
+  .dark .tw-badge-mute {
     background-color: rgba(255, 255, 255, 0.04);
     color: #737373;
     border-color: rgba(255, 255, 255, 0.08);
   }
-  .tw-badge-paid {
+  .dark .tw-badge-paid {
     background-color: rgba(16, 185, 129, 0.16);
     color: #6ee7b7;
     border-color: rgba(16, 185, 129, 0.32);
   }
-  .tw-badge-pending {
+  .dark .tw-badge-pending {
     background-color: rgba(245, 158, 11, 0.16);
     color: #fcd34d;
     border-color: rgba(245, 158, 11, 0.32);
   }
-  .tw-badge-overdue {
+  .dark .tw-badge-overdue {
     background-color: rgba(239, 68, 68, 0.16);
     color: #fca5a5;
     border-color: rgba(239, 68, 68, 0.32);
