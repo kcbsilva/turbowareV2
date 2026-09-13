@@ -31,6 +31,7 @@ model Client {
   asaasCustomerId String?       // Asaas customer ID for payment sync
   tickets         SupportTicket[]
   products        ClientProduct[]
+  documents       ClientDocument[]
 
   @@schema("turboware")
   @@map("clients")
@@ -46,6 +47,25 @@ model ClientNote {
 
   @@schema("turboware")
   @@map("client_notes")
+}
+
+model ClientDocument {
+  id         String              @id @default(cuid())
+  clientId   String
+  client     Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  kind       ClientDocumentKind
+  title      String
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+  data       Bytes
+  notes      String?
+  uploadedBy String              @default("Admin")
+  createdAt  DateTime            @default(now())
+
+  @@index([clientId, createdAt])
+  @@schema("turboware")
+  @@map("client_documents")
 }
 
 model License {
@@ -193,6 +213,19 @@ enum InvoiceStatus {
 enum PaymentGateway {
   ASAAS
   STRIPE
+
+  @@schema("turboware")
+}
+
+enum ClientDocumentKind {
+  ID_FRONT
+  ID_BACK
+  PASSPORT
+  SELFIE
+  PROOF_OF_ADDRESS
+  COMPANY
+  CONTRACT
+  OTHER
 
   @@schema("turboware")
 }

@@ -13,6 +13,7 @@ import { BillingTab } from './tabs/BillingTab'
 import { NotesTab } from './tabs/NotesTab'
 import { HistoryTab } from './tabs/HistoryTab'
 import { TicketsTab } from './tabs/TicketsTab'
+import { DocumentsTab } from './tabs/DocumentsTab'
 
 interface Client {
   id: string
@@ -114,6 +115,9 @@ export default function ClientProfilePage() {
         )}
         {activeTab === 'billing' && (
           <BillingTab clientId={client.id} />
+        )}
+        {activeTab === 'documents' && (
+          <DocumentsTab clientId={client.id} />
         )}
         {activeTab === 'tickets' && (
           <TicketsTab clientId={client.id} clientName={client.name} />

@@ -1,16 +1,17 @@
 'use client'
 
-import { User, Key, ClipboardList, History, CreditCard, Ticket } from 'lucide-react'
+import { User, Key, ClipboardList, History, CreditCard, Ticket, FileText } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
 import type { MsgKey } from '@/lib/admin-i18n'
 
-export type ClientTab = 'overview' | 'licenses' | 'billing' | 'tickets' | 'notes' | 'history'
+export type ClientTab = 'overview' | 'licenses' | 'billing' | 'documents' | 'tickets' | 'notes' | 'history'
 
 const PRIMARY: { id: ClientTab; icon: LucideIcon; labelKey: MsgKey }[] = [
   { id: 'overview', icon: User, labelKey: 'profile.tab.overview' },
   { id: 'licenses', icon: Key, labelKey: 'profile.tab.licenses' },
   { id: 'billing', icon: CreditCard, labelKey: 'profile.tab.billing' },
+  { id: 'documents', icon: FileText, labelKey: 'profile.tab.documents' },
   { id: 'tickets', icon: Ticket, labelKey: 'profile.tab.tickets' },
 ]
 

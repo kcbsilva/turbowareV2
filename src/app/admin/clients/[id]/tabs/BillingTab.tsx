@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback, Fragment } from 'react'
-import { CheckCircle, AlertTriangle, RefreshCw, Loader2, CreditCard, ExternalLink, Send, Plus } from 'lucide-react'
-import { formatBRL, getMonthlyPrice, getInstallationFee, type Region } from '@/lib/pricing'
+import { useState, useEffect, useCallback } from 'react'
+import { AlertTriangle, RefreshCw, Loader2, CreditCard, ExternalLink, ChevronDown, Plus, Trash2 } from 'lucide-react'
+import { formatBRL, getInstallationFee, type Region } from '@/lib/pricing'
 import { badge } from '@/lib/badges'
 import { formatInvoiceNumber, resolveInvoiceDisplayStatus } from '@/lib/invoice-display'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
-import { dateLocale } from '@/lib/admin-i18n'
 import type { MsgKey } from '@/lib/admin-i18n'
 import {
   Dialog,
@@ -16,6 +15,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { ChargeType } from '@/lib/charges'
 
 interface Invoice {
@@ -48,14 +53,6 @@ interface Subscription {
   license: { key: string; status: string; maxSeats: number } | null
 }
 
-const STATUS_STYLES = {
-  TRIAL:           badge.sky,
-  PENDING_PAYMENT: badge.peach,
-  ACTIVE:          badge.teal,
-  SUSPENDED:       badge.coral,
-  CANCELLED:       badge.mute,
-}
-
 const INVOICE_TYPE_KEY = {
   INSTALLATION: 'billing.inv.installation',
   MONTHLY:      'billing.inv.monthly',
@@ -79,22 +76,14 @@ const INVOICE_STATUS_BADGE = {
   WAIVED:  badge.mute,
 } as const
 
-const SUB_STATUS_KEY = {
-  TRIAL:           'billing.sub.trial',
-  PENDING_PAYMENT: 'billing.sub.pending',
-  ACTIVE:          'billing.sub.active',
-  SUSPENDED:       'billing.sub.suspended',
-  CANCELLED:       'billing.sub.cancelled',
-} as const satisfies Record<string, MsgKey>
-
 interface Props { clientId: string }
 
 export function BillingTab({ clientId }: Props) {
-  const { t, lang } = useAdminLang()
+  const { t } = useAdminLang()
   const [sub, setSub]           = useState<Subscription | null | undefined>(undefined)
   const [loading, setLoading]   = useState(true)
-  const [paying, setPaying]     = useState<string | null>(null)
   const [sending, setSending]   = useState<string | null>(null)  // `${invoiceId}-asaas` | `${invoiceId}-stripe`
+  const [removing, setRemoving] = useState<string | null>(null)
   const [chargeOpen, setChargeOpen] = useState(false)
   const [savingCharge, setSavingCharge] = useState(false)
   const [togglingPlan, setTogglingPlan] = useState(false)
@@ -118,13 +107,6 @@ export function BillingTab({ clientId }: Props) {
 
   useEffect(() => { load() }, [load])
 
-  async function markPaid(invoiceId: string) {
-    setPaying(invoiceId)
-    await fetch(`/api/admin/clients/${clientId}/subscription/invoices/${invoiceId}/pay`, { method: 'POST' })
-    setPaying(null)
-    load()
-  }
-
   async function sendPaymentLink(invoiceId: string, gateway: 'asaas' | 'stripe') {
     setSending(`${invoiceId}-${gateway}`)
     try {
@@ -143,6 +125,23 @@ export function BillingTab({ clientId }: Props) {
       }
     } finally {
       setSending(null)
+    }
+  }
+
+  async function removeInvoice(inv: Invoice) {
+    const number = formatInvoiceNumber(inv.id, inv.createdAt)
+    if (!window.confirm(t('billing.removeConfirm', { n: number }))) return
+    setRemoving(inv.id)
+    try {
+      const res = await fetch(`/api/admin/invoices/${inv.id}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert(data.error || t('billing.removeError'))
+        return
+      }
+      await load()
+    } finally {
+      setRemoving(null)
     }
   }
 
@@ -210,8 +209,6 @@ export function BillingTab({ clientId }: Props) {
     await load()
   }
 
-  const monthly = sub ? getMonthlyPrice(sub.seats) : null
-
   if (loading || sub === undefined) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -234,62 +231,13 @@ export function BillingTab({ clientId }: Props) {
 
   return (
     <div className="space-y-4">
-
-      {/* Subscription overview */}
-      <div className={card}>
-        <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
-          <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('billing.subscription')}</h2>
-          <div className="flex items-center gap-2">
-            <button onClick={load} className="text-muted-foreground hover:text-foreground transition" title={t('billing.refresh')}>
-              <RefreshCw className="w-3 h-3" />
-            </button>
-          </div>
-        </div>
-        <div className="px-4 py-3 grid grid-cols-2 gap-3 text-xs">
-          <div>
-            <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('billing.status')}</dt>
-            <dd>
-              <span className={STATUS_STYLES[sub.status]}>
-                {t(SUB_STATUS_KEY[sub.status])}
-              </span>
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('billing.product')}</dt>
-            <dd className="font-medium text-foreground">{sub.product}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('billing.users')}</dt>
-            <dd className="font-medium text-foreground">{t('billing.seats', { n: sub.seats.toLocaleString(dateLocale(lang)) })}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('billing.monthly')}</dt>
-            <dd className="font-medium text-foreground">{monthly ? formatBRL(monthly) : t('billing.enterprise')}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('billing.billingDay')}</dt>
-            <dd className="font-medium text-foreground">{t('billing.day', { n: sub.billingDate })}</dd>
-          </div>
-          {sub.trialEndsAt && (
-            <div>
-              <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('billing.trialEnds')}</dt>
-              <dd className="font-medium text-foreground">{new Date(sub.trialEndsAt).toLocaleDateString(dateLocale(lang))}</dd>
-            </div>
-          )}
-          {sub.license && (
-            <div className="col-span-2">
-              <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('billing.licenseKey')}</dt>
-              <dd className="font-mono text-xs text-foreground">{sub.license.key}</dd>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Invoices */}
       <div className={card}>
         <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2">
           <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('billing.invoices')}</h2>
           <div className="flex items-center gap-2">
+            <button onClick={load} className="text-muted-foreground hover:text-foreground transition" title={t('billing.refresh')}>
+              <RefreshCw className="w-3 h-3" />
+            </button>
             {pendingInvs.length > 0 && (
               <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <AlertTriangle className="w-3 h-3 text-destructive" />
@@ -325,6 +273,7 @@ export function BillingTab({ clientId }: Props) {
                   <th className="px-4 py-2.5 font-medium">{t('billing.product')}</th>
                   <th className="px-4 py-2.5 font-medium">{t('billing.value')}</th>
                   <th className="px-4 py-2.5 font-medium">{t('billing.status')}</th>
+                  <th className="px-4 py-2.5 font-medium" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -332,9 +281,9 @@ export function BillingTab({ clientId }: Props) {
                   const display = resolveInvoiceDisplayStatus(inv)
                   const st = INVOICE_STATUS_BADGE[display]
                   const unpaid = display === 'PENDING' || display === 'OVERDUE'
+                  const canRemove = display !== 'PAID'
                   return (
-                    <Fragment key={inv.id}>
-                      <tr className="hover:bg-muted/30">
+                      <tr key={inv.id} className="hover:bg-muted/30">
                         <td className="px-4 py-3">
                           <p className="font-mono text-[11px] font-semibold text-foreground">
                             {formatInvoiceNumber(inv.id, inv.createdAt)}
@@ -343,58 +292,74 @@ export function BillingTab({ clientId }: Props) {
                             {t(INVOICE_TYPE_KEY[inv.type])}
                             {inv.installmentNo ? ` · ${inv.installmentNo}` : ''}
                           </p>
+                          {inv.notes && <p className="text-[10px] text-muted-foreground mt-1">{inv.notes}</p>}
+                          {inv.paymentUrl && unpaid && (
+                            <a
+                              href={inv.paymentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition truncate max-w-[220px] mt-1"
+                            >
+                              <ExternalLink className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{inv.paymentUrl}</span>
+                            </a>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-foreground">{sub.product}</td>
                         <td className="px-4 py-3 font-mono text-foreground">{formatBRL(inv.amount)}</td>
                         <td className="px-4 py-3">
                           <span className={st}>{t(INVOICE_STATUS_KEY[display])}</span>
                         </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-nowrap items-center justify-end gap-1.5">
+                              {unpaid && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger
+                                  disabled={!!sending || !!removing}
+                                  className="tw-btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md whitespace-nowrap disabled:opacity-50"
+                                >
+                                  {sending?.startsWith(`${inv.id}-`)
+                                    ? <Loader2 className="w-3 h-3 animate-spin" />
+                                    : <CreditCard className="w-3 h-3" />}
+                                  {sending === `${inv.id}-asaas`
+                                    ? t('billing.asaasBusy')
+                                    : sending === `${inv.id}-stripe`
+                                      ? t('billing.stripeBusy')
+                                      : t('billing.pay')}
+                                  <ChevronDown className="w-3 h-3" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    disabled={!!sending}
+                                    onClick={() => sendPaymentLink(inv.id, 'stripe')}
+                                  >
+                                    {inv.paymentGateway === 'STRIPE' ? t('billing.stripeRegen') : t('billing.stripe')}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    disabled={!!sending}
+                                    onClick={() => sendPaymentLink(inv.id, 'asaas')}
+                                  >
+                                    {inv.paymentGateway === 'ASAAS' ? t('billing.asaasRegen') : t('billing.asaas')}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              )}
+                              {canRemove && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeInvoice(inv)}
+                                  disabled={!!removing || !!sending}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md whitespace-nowrap border border-border text-destructive hover:bg-muted disabled:opacity-50"
+                                >
+                                  {removing === inv.id
+                                    ? <Loader2 className="w-3 h-3 animate-spin" />
+                                    : <Trash2 className="w-3 h-3" />}
+                                  {removing === inv.id ? t('billing.removing') : t('billing.remove')}
+                                </button>
+                              )}
+                          </div>
+                        </td>
                       </tr>
-                      {unpaid && (
-                        <tr>
-                          <td colSpan={4} className="px-4 pb-3 pt-0">
-                            {inv.notes && <p className="text-[10px] text-muted-foreground mb-2">{inv.notes}</p>}
-                            {inv.paymentUrl && (
-                              <a
-                                href={inv.paymentUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition truncate mb-2"
-                              >
-                                <ExternalLink className="w-3 h-3 shrink-0" />
-                                <span className="truncate">{inv.paymentUrl}</span>
-                              </a>
-                            )}
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <button
-                                onClick={() => markPaid(inv.id)}
-                                disabled={paying === inv.id}
-                                className="tw-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md transition hover:opacity-90 disabled:opacity-50"
-                              >
-                                {paying === inv.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
-                                {paying === inv.id ? t('billing.marking') : t('billing.markPaid')}
-                              </button>
-                              <button
-                                onClick={() => sendPaymentLink(inv.id, 'asaas')}
-                                disabled={!!sending}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted transition disabled:opacity-50"
-                              >
-                                {sending === `${inv.id}-asaas` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-                                {sending === `${inv.id}-asaas` ? t('billing.asaasBusy') : inv.paymentGateway === 'ASAAS' ? t('billing.asaasRegen') : t('billing.asaas')}
-                              </button>
-                              <button
-                                onClick={() => sendPaymentLink(inv.id, 'stripe')}
-                                disabled={!!sending}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted transition disabled:opacity-50"
-                              >
-                                {sending === `${inv.id}-stripe` ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
-                                {sending === `${inv.id}-stripe` ? t('billing.stripeBusy') : inv.paymentGateway === 'STRIPE' ? t('billing.stripeRegen') : t('billing.stripe')}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
                   )
                 })}
               </tbody>
