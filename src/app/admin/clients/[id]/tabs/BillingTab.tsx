@@ -130,7 +130,7 @@ export function BillingTab({ clientId }: Props) {
               <button
                 type="button"
                 onClick={() => setGraceOpen(true)}
-                className="rounded-md border border-[#fca311]/40 px-2 py-1 text-[10px] font-semibold text-[#c47b00] hover:bg-[#fca311]/10"
+                className="rounded-md border border-white/20 px-2 py-1 text-[10px] font-semibold text-neutral-300 hover:bg-white/10"
               >
                 Extend Grace
               </button>
@@ -182,9 +182,9 @@ export function BillingTab({ clientId }: Props) {
 
       {/* Pending invoices — admin can mark as paid */}
       {pendingInvs.length > 0 && (
-        <div className={`${card} border-[#F5C9BC]`}>
-          <div className="px-4 py-2.5 border-b border-[#F5C9BC] flex items-center gap-2">
-            <AlertTriangle className="w-3.5 h-3.5 text-[#C45C3A]" />
+        <div className={`${card} border-destructive/40`}>
+          <div className="px-4 py-2.5 border-b border-destructive/40 flex items-center gap-2">
+            <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
             <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Pending Invoices</h2>
           </div>
           <div className="divide-y divide-border">
@@ -203,7 +203,7 @@ export function BillingTab({ clientId }: Props) {
                       </p>
                     )}
                   </div>
-                  <p className="text-sm font-bold font-mono text-[#0F766E] shrink-0">{formatBRL(inv.amount)}</p>
+                  <p className="text-sm font-bold font-mono text-muted-foreground shrink-0">{formatBRL(inv.amount)}</p>
                 </div>
 
                 {/* Existing payment link */}
@@ -212,7 +212,7 @@ export function BillingTab({ clientId }: Props) {
                     href={inv.paymentUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-[10px] text-[#2B6CB0] hover:text-[#1B2430] transition truncate"
+                    className="flex items-center gap-1.5 text-[10px] text-neutral-400 hover:text-white transition truncate"
                   >
                     <ExternalLink className="w-3 h-3 shrink-0" />
                     <span className="truncate">{inv.paymentUrl}</span>
@@ -236,7 +236,7 @@ export function BillingTab({ clientId }: Props) {
                   <button
                     onClick={() => sendPaymentLink(inv.id, 'asaas')}
                     disabled={!!sending}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md border border-[#B7E0D8] text-[#0D9488] hover:bg-[#E6F5F2] transition disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted transition disabled:opacity-50"
                   >
                     {sending === `${inv.id}-asaas` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                     {sending === `${inv.id}-asaas` ? 'Gerando…' : inv.paymentGateway === 'ASAAS' ? 'Regenerar Asaas' : 'Asaas (Pix/Boleto)'}
@@ -291,7 +291,7 @@ export function BillingTab({ clientId }: Props) {
             {sub.gracePeriodEndsAt && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Expires</span>
-                <span className={new Date(sub.gracePeriodEndsAt) > new Date() ? 'text-[#0F766E]' : 'text-muted-foreground'}>
+                <span className={new Date(sub.gracePeriodEndsAt) > new Date() ? 'text-muted-foreground' : 'text-muted-foreground'}>
                   {new Date(sub.gracePeriodEndsAt).toLocaleDateString('pt-BR')}
                   {new Date(sub.gracePeriodEndsAt) > new Date() ? ' (active)' : ' (expired)'}
                 </span>
@@ -316,7 +316,7 @@ export function BillingTab({ clientId }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-mono text-foreground">{formatBRL(inv.amount)}</span>
-                  <CheckCircle className="w-3.5 h-3.5 text-[#0D9488]" />
+                  <CheckCircle className="w-3.5 h-3.5 text-foreground" />
                 </div>
               </div>
             ))}

@@ -190,7 +190,7 @@ function ActivationWizard({ onActivated }: { onActivated: () => void }) {
             {result.plan.monthlyAmount !== null && (
               <div className="flex justify-between px-4 py-2.5">
                 <span className="text-muted-foreground">Monthly</span>
-                <span className="font-medium text-[#fca311]">{formatBRL(result.plan.monthlyAmount!)}</span>
+                <span className="font-medium text-white">{formatBRL(result.plan.monthlyAmount!)}</span>
               </div>
             )}
             {result.plan.trialEndsAt && (
@@ -224,8 +224,8 @@ function ActivationWizard({ onActivated }: { onActivated: () => void }) {
 
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-2" style={{ backgroundColor: '#fca311' }}>
-            <span className="text-base font-black" style={{ color: '#081124' }}>T</span>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-2" style={{ backgroundColor: '#fff' }}>
+            <span className="text-base font-black" style={{ color: '#000' }}>T</span>
           </div>
           <h1 className="text-lg font-bold text-foreground">Activate TurboISP</h1>
           <p className="text-xs text-muted-foreground leading-relaxed">
@@ -289,7 +289,7 @@ function ActivationWizard({ onActivated }: { onActivated: () => void }) {
           onClick={handleActivate}
           disabled={loading || !password.trim() || !cnpj || fetchingProfile}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
-          style={{ backgroundColor: '#fca311', color: '#081124' }}
+          style={{ backgroundColor: '#fff', color: '#000' }}
         >
           {loading
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Activating…</>
@@ -394,7 +394,7 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
               <button
                 type="button"
                 onClick={() => setGraceOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md border border-[#fca311]/40 text-[#fca311] hover:bg-[#fca311]/10 transition"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md border border-white/20 text-white hover:bg-white/10 transition"
               >
                 <Clock className="w-3.5 h-3.5" />
                 Extend Grace <span className="text-muted-foreground font-normal">(+R$5,00 on next bill)</span>
@@ -451,7 +451,7 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
               {dateError && <p className="text-xs text-destructive">{dateError}</p>}
               <div className="flex gap-2">
                 <button onClick={() => { setChangingDate(false); setDateError('') }} className="flex-1 py-1.5 text-xs border border-border rounded-md text-muted-foreground hover:text-foreground transition">Cancel</button>
-                <button onClick={changeDate} disabled={dateLoading || !newDate} className="flex-1 py-1.5 text-xs font-semibold rounded-md hover:opacity-90 disabled:opacity-40 transition" style={{ backgroundColor: '#fca311', color: '#081124' }}>
+                <button onClick={changeDate} disabled={dateLoading || !newDate} className="flex-1 py-1.5 text-xs font-semibold rounded-md hover:opacity-90 disabled:opacity-40 transition" style={{ backgroundColor: '#fff', color: '#000' }}>
                   {dateLoading ? 'Saving…' : 'Confirm'}
                 </button>
               </div>
@@ -496,7 +496,7 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md transition hover:opacity-90"
-                      style={{ backgroundColor: '#fca311', color: '#081124' }}
+                      style={{ backgroundColor: '#fff', color: '#000' }}
                     >
                       <ExternalLink className="w-3 h-3" />
                       Pagar agora
@@ -665,7 +665,7 @@ export default function DashboardPage() {
               onClick={changePassword}
               disabled={passwordModal.saving}
               className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
-              style={{ backgroundColor: '#fca311', color: '#081124' }}
+              style={{ backgroundColor: '#fff', color: '#000' }}
             >
               {passwordModal.saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : 'Update password'}
             </button>

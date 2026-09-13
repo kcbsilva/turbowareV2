@@ -169,7 +169,7 @@ export function ExtendGraceDialog({
             onClick={() => void submit()}
             disabled={saving || !preview.ok}
             className="h-9 rounded-md px-3 text-xs font-semibold disabled:opacity-50"
-            style={{ backgroundColor: '#fca311', color: '#081124' }}
+            style={{ backgroundColor: '#fff', color: '#000' }}
           >
             {saving ? 'Saving…' : confirmLabel}
           </button>

@@ -8,7 +8,7 @@ interface Profile {
   phone: string | null; company: string | null; cnpj: string | null
 }
 
-const input = 'w-full px-3 py-2.5 rounded-lg text-sm bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#fca311]/50 focus:border-[#fca311]/50 transition'
+const input = 'w-full px-3 py-2.5 rounded-lg text-sm bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition'
 const card  = 'bg-white/3 border border-white/8 rounded-xl p-6'
 
 export default function ProfilePage() {
@@ -84,7 +84,7 @@ export default function ProfilePage() {
       {/* Personal info */}
       <form onSubmit={saveProfile} className={card}>
         <div className="flex items-center gap-2 mb-5">
-          <User className="w-4 h-4 text-[#fca311]" />
+          <User className="w-4 h-4 text-white" />
           <h2 className="text-sm font-semibold text-white">Personal Information</h2>
         </div>
 
@@ -115,7 +115,7 @@ export default function ProfilePage() {
 
         <button type="submit" disabled={saving}
           className="mt-5 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
-          style={{ backgroundColor: '#fca311', color: '#081124' }}>
+          style={{ backgroundColor: '#fff', color: '#000' }}>
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {saving ? 'Saving…' : 'Save changes'}
         </button>
@@ -124,7 +124,7 @@ export default function ProfilePage() {
       {/* Change password */}
       <form onSubmit={savePassword} className={card}>
         <div className="flex items-center gap-2 mb-5">
-          <Lock className="w-4 h-4 text-[#fca311]" />
+          <Lock className="w-4 h-4 text-white" />
           <h2 className="text-sm font-semibold text-white">Change Password</h2>
         </div>
 
@@ -141,7 +141,7 @@ export default function ProfilePage() {
 
         <button type="submit" disabled={pwSaving}
           className="mt-5 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
-          style={{ backgroundColor: '#fca311', color: '#081124' }}>
+          style={{ backgroundColor: '#fff', color: '#000' }}>
           {pwSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
           {pwSaving ? 'Updating…' : 'Update password'}
         </button>

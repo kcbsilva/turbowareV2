@@ -159,7 +159,7 @@ export default function LoginForm() {
               <div>
                 <label htmlFor="admin-email" className={loginLabelClass}>Email</label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1a2333]/35" />
+                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                   <input
                     id="admin-email"
                     type="email"
@@ -176,7 +176,7 @@ export default function LoginForm() {
               <div>
                 <label htmlFor="admin-password" className={loginLabelClass}>Password</label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1a2333]/35" />
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                   <input
                     id="admin-password"
                     type={showPassword ? 'text' : 'password'}
@@ -190,7 +190,7 @@ export default function LoginForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#1a2333]/35 hover:text-[#1a2333] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-neutral-500 hover:text-white transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -218,14 +218,14 @@ export default function LoginForm() {
           {step === 'forgot' && (
             <div>
               {forgotSent ? (
-                <p className="text-sm text-[#1a2333]/70 leading-relaxed">
+                <p className="text-sm text-neutral-400 leading-relaxed">
                   If an account exists for that email, a single-use reset link has been sent. Check your inbox to continue.
                 </p>
               ) : (
                 <>
                   <label htmlFor="admin-forgot-email" className={loginLabelClass}>Email</label>
                   <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1a2333]/35" />
+                    <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                     <input
                       id="admin-forgot-email"
                       type="email"
@@ -258,7 +258,7 @@ export default function LoginForm() {
             <div>
               <label htmlFor="admin-mfa" className={loginLabelClass}>Authenticator code</label>
               <div className="relative">
-                <ShieldCheck className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1a2333]/35" />
+                <ShieldCheck className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                 <input
                   id="admin-mfa"
                   type="text"
@@ -289,7 +289,7 @@ export default function LoginForm() {
               <div>
                 <label htmlFor="admin-new-password" className={loginLabelClass}>New password</label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1a2333]/35" />
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                   <input
                     id="admin-new-password"
                     type="password"
@@ -306,7 +306,7 @@ export default function LoginForm() {
               <div>
                 <label htmlFor="admin-confirm-password" className={loginLabelClass}>Confirm password</label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1a2333]/35" />
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                   <input
                     id="admin-confirm-password"
                     type="password"

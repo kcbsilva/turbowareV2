@@ -3,14 +3,13 @@ import ClientHeader from '../components/clientheader'
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="min-h-screen flex flex-col"
-      style={{ background: 'linear-gradient(135deg, #060c1a 0%, #0a1428 40%, #071020 70%, #060c1a 100%)' }}
+      className="min-h-screen flex flex-col bg-black"
     >
       {/* Dot grid */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(rgba(252,163,17,0.07) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)',
           backgroundSize: '28px 28px',
         }}
       />

@@ -2,11 +2,11 @@
 
 import { useEffect } from 'react'
 
-/** Turboware is light-only. Strip leftover dark class / saved preference. */
+/** Turboware is dark-only (Vercel-style black). */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    document.documentElement.classList.remove('dark')
-    localStorage.removeItem('tw-theme')
+    document.documentElement.classList.add('dark')
+    localStorage.setItem('tw-theme', 'dark')
   }, [])
 
   return <>{children}</>

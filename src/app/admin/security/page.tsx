@@ -92,7 +92,7 @@ export default function SecurityPage() {
       </p>
 
       {message && (
-        <p className={`mb-4 text-xs rounded-md px-3 py-2 ${message.ok ? 'text-[#0D9488] bg-[#E6F5F2] border border-[#B7E0D8]' : 'text-[#E85D4C] bg-[#FDECEA] border border-[#F3C4BE]'}`}>
+        <p className={`mb-4 text-xs rounded-md px-3 py-2 ${message.ok ? 'text-foreground bg-muted border border-border' : 'text-destructive bg-destructive/10 border border-destructive/30'}`}>
           {message.text}
         </p>
       )}
@@ -100,7 +100,7 @@ export default function SecurityPage() {
       <div className="rounded-xl border border-border bg-card/50 p-5">
         <div className="flex items-center gap-3 mb-4">
           {mfaEnabled
-            ? <ShieldCheck className="w-5 h-5 text-[#0D9488]" />
+            ? <ShieldCheck className="w-5 h-5 text-foreground" />
             : <Shield className="w-5 h-5 text-muted-foreground" />}
           <div>
             <p className="text-sm font-medium text-foreground">
@@ -133,7 +133,7 @@ export default function SecurityPage() {
             </code>
             <a
               href={setup.otpauthUrl}
-              className="text-xs text-[#0F766E] underline break-all"
+              className="text-xs text-muted-foreground underline break-all"
             >
               Open in authenticator app
             </a>

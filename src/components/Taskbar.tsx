@@ -196,7 +196,7 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
                     <span className="text-muted-foreground">{item.icon}</span>
                     <span className="text-xs font-medium">{item.label}</span>
                     {item.href === "/admin/tickets" && openTickets > 0 && (
-                      <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#fca311] text-[#081124]">
+                      <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white text-black">
                         {openTickets}
                       </span>
                     )}
@@ -231,8 +231,8 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
           onClick={() => setStartOpen((v) => !v)}
           className="flex items-center gap-2 px-2.5 py-1.5 rounded-md transition-all"
           style={{
-            backgroundColor: startOpen ? "rgba(252,163,17,0.15)" : undefined,
-            color: startOpen ? "#fca311" : "white",
+            backgroundColor: startOpen ? "rgba(255,255,255,0.12)" : undefined,
+            color: "white",
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.backgroundColor =
@@ -240,7 +240,7 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.backgroundColor = startOpen
-              ? "rgba(252,163,17,0.15)"
+              ? "rgba(255,255,255,0.12)"
               : "";
           }}
           aria-label="Open start menu"
@@ -281,7 +281,7 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
             boxShadow: !minimized
               ? "inset 0 1px 2px rgba(0,0,0,0.4)"
               : undefined,
-            outline: !minimized ? "2px solid #fca311" : undefined,
+            outline: !minimized ? "2px solid #fff" : undefined,
             outlineOffset: "-2px",
           }}
         >

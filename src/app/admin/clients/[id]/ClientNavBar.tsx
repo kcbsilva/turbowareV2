@@ -42,7 +42,7 @@ function NavButton({
       className={[
         'profile-nav-item relative z-[1] flex items-center gap-1.5 shrink-0 px-2.5 text-[12px] font-medium whitespace-nowrap transition-colors duration-100 focus:outline-none',
         active
-          ? 'profile-folder-tab h-full text-[#1B2430]'
+          ? 'profile-folder-tab h-full text-foreground'
           : 'my-1 h-7 rounded-lg text-white/70 hover:bg-black/20 hover:text-white',
       ].join(' ')}
     >

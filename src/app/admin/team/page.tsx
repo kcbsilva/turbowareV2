@@ -149,7 +149,7 @@ export default function TeamPage() {
       )}
 
       {createdPassword && (
-        <div className="rounded-lg border border-[#B7E0D8] bg-[#E6F5F2] px-4 py-3 text-xs">
+        <div className="rounded-lg border border-border bg-muted px-4 py-3 text-xs">
           <p className="font-medium text-foreground">
             Temporary password for {createdPassword.email}
           </p>

@@ -98,9 +98,9 @@ export default function ClientsPage() {
   const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const statusConfig = [
-    { value: 'all' as const, label: 'All', color: 'bg-[#1B2430]' },
-    { value: 'with-licenses' as const, label: 'Has Licenses', color: 'bg-[#0D9488]' },
-    { value: 'no-licenses' as const, label: 'No Licenses', color: 'bg-[#5C6570]' },
+    { value: 'all' as const, label: 'All', color: 'bg-neutral-200' },
+    { value: 'with-licenses' as const, label: 'Has Licenses', color: 'bg-white' },
+    { value: 'no-licenses' as const, label: 'No Licenses', color: 'bg-neutral-500' },
   ]
 
   const statCards = [

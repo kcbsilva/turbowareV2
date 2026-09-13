@@ -74,7 +74,7 @@ export function LoginNetworkBackdrop() {
         const x = near ? mouse.x + (Math.random() - 0.5) * CURSOR_RADIUS * 1.4 : Math.random() * w
         const y = near ? mouse.y + (Math.random() - 0.5) * CURSOR_RADIUS * 1.4 : Math.random() * h
         const a = near ? 0.08 + Math.random() * 0.12 : 0.03 + Math.random() * 0.04
-        ctx!.fillStyle = Math.random() > 0.7 ? `rgba(252,163,17,${a})` : `rgba(8,17,36,${a})`
+        ctx!.fillStyle = `rgba(255,255,255,${a})`
         ctx!.fillRect(x, y, 1 + Math.random() * 1.5, 1 + Math.random() * 1.5)
       }
     }
@@ -131,8 +131,8 @@ export function LoginNetworkBackdrop() {
 
           const warm = mouse.active && alpha > 0.28
           ctx!.strokeStyle = warm
-            ? `rgba(252,163,17,${Math.min(alpha, 0.55)})`
-            : `rgba(35,59,110,${Math.min(alpha, 0.4)})`
+            ? `rgba(255,255,255,${Math.min(alpha, 0.45)})`
+            : `rgba(255,255,255,${Math.min(alpha, 0.12)})`
           ctx!.lineWidth = warm ? 1.25 : 1
           ctx!.beginPath()
           ctx!.moveTo(a.x, a.y)
@@ -146,7 +146,7 @@ export function LoginNetworkBackdrop() {
           const dist = Math.hypot(n.x - mouse.x, n.y - mouse.y)
           if (dist > CURSOR_RADIUS) continue
           const a = (1 - dist / CURSOR_RADIUS) * 0.45
-          ctx!.strokeStyle = `rgba(252,163,17,${a})`
+          ctx!.strokeStyle = `rgba(255,255,255,${a})`
           ctx!.lineWidth = 1
           ctx!.beginPath()
           ctx!.moveTo(mouse.x, mouse.y)
@@ -155,11 +155,11 @@ export function LoginNetworkBackdrop() {
         }
 
         const pulse = 3 + Math.sin(staticPhase * 0.08) * 0.8
-        ctx!.fillStyle = 'rgba(252,163,17,0.85)'
+        ctx!.fillStyle = 'rgba(255,255,255,0.9)'
         ctx!.beginPath()
         ctx!.arc(mouse.x, mouse.y, pulse, 0, Math.PI * 2)
         ctx!.fill()
-        ctx!.strokeStyle = 'rgba(252,163,17,0.25)'
+        ctx!.strokeStyle = 'rgba(255,255,255,0.2)'
         ctx!.lineWidth = 1
         ctx!.beginPath()
         ctx!.arc(mouse.x, mouse.y, 18 + Math.sin(staticPhase * 0.06) * 2, 0, Math.PI * 2)
@@ -173,8 +173,8 @@ export function LoginNetworkBackdrop() {
           if (dist < CURSOR_RADIUS) glow = 1 - dist / CURSOR_RADIUS
         }
         ctx!.fillStyle = glow > 0.15
-          ? `rgba(252,163,17,${0.45 + glow * 0.5})`
-          : 'rgba(35,59,110,0.55)'
+          ? `rgba(255,255,255,${0.45 + glow * 0.5})`
+          : 'rgba(255,255,255,0.22)'
         ctx!.beginPath()
         ctx!.arc(n.x, n.y, n.r + glow * 1.5, 0, Math.PI * 2)
         ctx!.fill()

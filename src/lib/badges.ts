@@ -10,15 +10,15 @@ export const badge = {
 } as const
 
 export const twColor = {
-  paper: '#F3FAF7',
-  surface: '#FBFEFC',
-  ink: '#1B2430',
-  mute: '#5C6570',
-  line: '#D5E8E3',
-  teal: '#0D9488',
-  tealDeep: '#0F766E',
-  sky: '#3B82C4',
-  peach: '#E85D4C',
-  coral: '#E85D4C',
-  navy: '#081124',
+  paper: '#000000',
+  surface: '#0a0a0a',
+  ink: '#ededed',
+  mute: '#888888',
+  line: '#262626',
+  teal: '#e5e5e5',
+  tealDeep: '#a3a3a3',
+  sky: '#d4d4d4',
+  peach: '#fca5a5',
+  coral: '#f87171',
+  navy: '#000000',
 } as const

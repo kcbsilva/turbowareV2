@@ -129,7 +129,7 @@ function StatCard({
     <TiltCard className="rounded-2xl">
       <Link
         href={href}
-        className="group relative block overflow-hidden rounded-2xl border border-[#D5E8E3] bg-white/80 p-5 shadow-[0_8px_30px_rgba(13,148,136,0.08)] backdrop-blur-sm"
+        className="group relative block overflow-hidden rounded-2xl border border-border bg-card p-5"
       >
         <div
           className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full blur-2xl"
@@ -147,13 +147,13 @@ function StatCard({
             live
           </span>
         </div>
-        <p className="relative mt-4 text-sm font-medium text-gray-500">{label}</p>
-        <p className="relative text-3xl font-bold tracking-tight text-gray-900">
+        <p className="relative mt-4 text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="relative text-3xl font-bold tracking-tight text-foreground">
           <CountUp value={value} />
         </p>
-        <p className="relative mt-1 text-xs text-gray-500">{hint}</p>
+        <p className="relative mt-1 text-xs text-muted-foreground">{hint}</p>
         <SparkBars values={spark} color={accent} />
-        <ArrowUpRight className="absolute right-4 top-4 h-4 w-4 text-gray-300 transition group-hover:text-[#0F766E]" />
+        <ArrowUpRight className="absolute right-4 top-4 h-4 w-4 text-muted-foreground/40 transition group-hover:text-foreground" />
       </Link>
     </TiltCard>
   )
@@ -167,11 +167,11 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
 
   return (
     <div className="relative min-h-full overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(13,148,136,0.16),_transparent_50%),radial-gradient(ellipse_at_bottom_left,_rgba(14,32,72,0.06),_transparent_45%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.04),_transparent_50%)]" />
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
-          backgroundImage: 'radial-gradient(rgba(13,148,136,0.12) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)',
           backgroundSize: '22px 22px',
         }}
       />
@@ -181,35 +181,35 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease }}
-          className="relative overflow-hidden rounded-2xl border border-[#B7E0D8] bg-gradient-to-br from-[#E6F5F2] via-white to-[#EAF4FB] p-6 shadow-[0_12px_40px_rgba(13,148,136,0.12)]"
+          className="relative overflow-hidden rounded-2xl border border-border bg-card p-6"
         >
           <motion.div
             aria-hidden
-            className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#0D9488]/25 blur-3xl"
+            className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/5 blur-3xl"
             animate={{ x: [0, 12, 0], y: [0, 8, 0] }}
             transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
           />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#0F766E]">
+              <p className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 <Sparkles className="h-3.5 w-3.5" />
                 {greeting()}
               </p>
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900">Admin dashboard</h1>
-              <p className="mt-1 max-w-lg text-sm text-gray-600">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">Admin dashboard</h1>
+              <p className="mt-1 max-w-lg text-sm text-muted-foreground">
                 Tenants, licenses, and support in one place — {data.total} clients on the books.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/admin/tickets"
-                className="rounded-full border border-[#B7E0D8] bg-white/80 px-4 py-2 text-xs font-semibold text-gray-800 shadow-sm hover:bg-white"
+                className="rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-white/5"
               >
                 Tickets{data.openTickets > 0 ? ` (${data.openTickets})` : ''}
               </Link>
               <Link
                 href="/admin/clients/new"
-                className="rounded-full bg-[#0D9488] px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(13,148,136,0.35)] hover:brightness-105"
+                className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
               >
                 Set up tenant
               </Link>
@@ -226,7 +226,7 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
               icon: Users,
               href: '/admin/clients',
               spark,
-              accent: '#2B6CB0',
+              accent: '#a3a3a3',
             },
             {
               label: 'With licenses',
@@ -235,7 +235,7 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
               icon: KeyRound,
               href: '/admin/licenses',
               spark: licenseSpark,
-              accent: '#0D9488',
+              accent: '#e5e5e5',
             },
             {
               label: 'Open tickets',
@@ -244,7 +244,7 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
               icon: Ticket,
               href: '/admin/tickets',
               spark: ticketSpark,
-              accent: '#3B82C4',
+              accent: '#737373',
             },
             {
               label: 'Pending invoices',
@@ -253,7 +253,7 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
               icon: Activity,
               href: '/admin/invoices',
               spark: invoiceSpark,
-              accent: '#E85D4C',
+              accent: '#f87171',
             },
           ].map((card, i) => (
             <motion.div
@@ -272,23 +272,23 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.45, ease }}
-            className="lg:col-span-2 overflow-hidden rounded-2xl border border-[#D5E8E3] bg-white/85 shadow-[0_8px_30px_rgba(15,23,42,0.04)] backdrop-blur-sm"
+            className="lg:col-span-2 overflow-hidden rounded-2xl border border-border bg-card"
           >
-            <div className="flex items-center justify-between border-b border-[#E6F5F2] px-5 py-4">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div>
-                <h3 className="text-base font-semibold text-gray-900">Recent clients</h3>
-                <p className="text-xs text-gray-500">Newest tenants first</p>
+                <h3 className="text-base font-semibold text-foreground">Recent clients</h3>
+                <p className="text-xs text-muted-foreground">Newest tenants first</p>
               </div>
-              <Link href="/admin/clients" className="text-sm font-semibold text-[#0F766E] hover:underline">
+              <Link href="/admin/clients" className="text-sm font-semibold text-foreground hover:underline">
                 View all
               </Link>
             </div>
             {data.recent.length === 0 ? (
-              <div className="px-5 py-12 text-center text-sm text-gray-500">
+              <div className="px-5 py-12 text-center text-sm text-muted-foreground">
                 No clients yet. They&apos;ll appear here once they register.
               </div>
             ) : (
-              <div className="divide-y divide-[#E6F5F2]">
+              <div className="divide-y divide-border">
                 {data.recent.map((c, i) => (
                   <motion.div
                     key={c.id}
@@ -298,20 +298,20 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
                   >
                     <Link
                       href={`/admin/clients/${c.id}`}
-                      className="flex items-center gap-4 px-5 py-3.5 transition hover:bg-[#E6F5F2]/50"
+                      className="flex items-center gap-4 px-5 py-3.5 transition hover:bg-white/5"
                     >
-                      <div className="grid size-10 shrink-0 place-content-center rounded-full bg-gradient-to-br from-[#0D9488] to-[#3B82C4] text-sm font-bold text-white shadow-sm">
+                      <div className="grid size-10 shrink-0 place-content-center rounded-full bg-neutral-800 text-sm font-bold text-foreground">
                         {c.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-gray-900">{c.name}</p>
-                        <p className="truncate text-xs text-gray-500">{c.subtitle}</p>
+                        <p className="truncate text-sm font-semibold text-foreground">{c.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{c.subtitle}</p>
                       </div>
-                      <div className="hidden items-center gap-1.5 text-xs text-gray-500 md:flex">
-                        <KeyRound className="h-3 w-3 text-[#0D9488]" />
+                      <div className="hidden items-center gap-1.5 text-xs text-muted-foreground md:flex">
+                        <KeyRound className="h-3 w-3" />
                         {c.licenses} {c.licenses === 1 ? 'license' : 'licenses'}
                       </div>
-                      <p className="hidden text-xs text-gray-400 lg:block">
+                      <p className="hidden text-xs text-muted-foreground lg:block">
                         {new Date(c.createdAt).toLocaleDateString()}
                       </p>
                     </Link>
@@ -326,10 +326,10 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.28, duration: 0.45, ease }}
-              className="rounded-2xl border border-[#D5E8E3] bg-white/85 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.04)] backdrop-blur-sm"
+              className="rounded-2xl border border-border bg-card p-5"
             >
-              <h3 className="mb-1 text-base font-semibold text-gray-900">Signups</h3>
-              <p className="mb-4 text-xs text-gray-500">Last six months</p>
+              <h3 className="mb-1 text-base font-semibold text-foreground">Signups</h3>
+              <p className="mb-4 text-xs text-muted-foreground">Last six months</p>
               <div className="flex h-28 items-end gap-2">
                 {data.signups.map((m) => {
                   const max = Math.max(1, ...data.signups.map((s) => s.value))
@@ -339,10 +339,10 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
                         initial={{ height: 8 }}
                         animate={{ height: `${Math.max(10, (m.value / max) * 100)}%` }}
                         transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-                        className="w-full rounded-t-lg bg-gradient-to-t from-[#0F766E] to-[#0D9488]"
+                        className="w-full rounded-t-lg bg-foreground"
                         title={`${m.label}: ${m.value}`}
                       />
-                      <span className="text-[10px] font-medium text-gray-400">{m.label}</span>
+                      <span className="text-[10px] font-medium text-muted-foreground">{m.label}</span>
                     </div>
                   )
                 })}
@@ -353,24 +353,24 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.34, duration: 0.45, ease }}
-              className="rounded-2xl border border-[#D5E8E3] bg-white/85 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.04)] backdrop-blur-sm"
+              className="rounded-2xl border border-border bg-card p-5"
             >
-              <h3 className="mb-4 text-base font-semibold text-gray-900">Coverage</h3>
+              <h3 className="mb-4 text-base font-semibold text-foreground">Coverage</h3>
               {[
-                { label: 'Licensed clients', value: data.coverage, color: '#0D9488' },
-                { label: 'Open tickets', value: Math.min(100, data.openTickets * 10), color: '#3B82C4' },
+                { label: 'Licensed clients', value: data.coverage, color: '#e5e5e5' },
+                { label: 'Open tickets', value: Math.min(100, data.openTickets * 10), color: '#737373' },
                 {
                   label: 'New this month',
                   value: data.total === 0 ? 0 : Math.min(100, Math.round((data.newThisMonth / data.total) * 100)),
-                  color: '#2B6CB0',
+                  color: '#a3a3a3',
                 },
               ].map((row) => (
                 <div key={row.label} className="mb-4 last:mb-0">
                   <div className="mb-1.5 flex justify-between text-xs">
-                    <span className="text-gray-500">{row.label}</span>
-                    <span className="font-semibold text-gray-800">{row.value}%</span>
+                    <span className="text-muted-foreground">{row.label}</span>
+                    <span className="font-semibold text-foreground">{row.value}%</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${row.value}%` }}
@@ -387,10 +387,10 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.45, ease }}
-              className="rounded-2xl bg-gradient-to-br from-[#1B2430] to-[#14244a] p-5 text-white shadow-[0_12px_32px_rgba(8,17,36,0.25)]"
+              className="rounded-2xl border border-border bg-card p-5 text-foreground"
             >
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#0D9488]">Quick actions</p>
-              <p className="mt-1 text-sm text-white/70">Keep the pipeline moving</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick actions</p>
+              <p className="mt-1 text-sm text-muted-foreground">Keep the pipeline moving</p>
               <div className="mt-4 space-y-1">
                 {[
                   { href: '/admin/clients/new', icon: UserPlus, label: 'Set up tenant' },
@@ -400,9 +400,9 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
                   <Link
                     key={a.href}
                     href={a.href}
-                    className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-white/90 transition hover:bg-white/10"
+                    className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-foreground/90 transition hover:bg-white/5"
                   >
-                    <a.icon className="h-4 w-4 text-[#0D9488]" />
+                    <a.icon className="h-4 w-4 text-muted-foreground" />
                     {a.label}
                   </Link>
                 ))}

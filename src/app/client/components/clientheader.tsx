@@ -24,15 +24,14 @@ export default function ClientHeader() {
   }
 
   return (
-    <header className="relative z-10 border-b border-white/5 bg-[rgba(5,12,28,0.92)] backdrop-blur-xl">
+    <header className="relative z-10 border-b border-white/10 bg-black/90 backdrop-blur-xl">
       <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
 
         {/* Logo */}
         <Link href="/client/dashboard" className="flex items-center gap-2 shrink-0">
           <Image src={turbowareLogo} alt="Turboware" className="h-7 w-7" height={28} width={28} />
           <span className="text-sm font-bold tracking-tight text-white hidden sm:block">Turboware</span>
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border hidden sm:inline"
-            style={{ color: '#fca311', borderColor: 'rgba(252,163,17,0.3)', backgroundColor: 'rgba(252,163,17,0.08)' }}>
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border border-white/15 bg-white/5 text-neutral-300 hidden sm:inline">
             Portal
           </span>
         </Link>
@@ -43,7 +42,7 @@ export default function ClientHeader() {
             const active = pathname === href || (href !== '/client/dashboard' && pathname.startsWith(href))
             const base   = 'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition whitespace-nowrap'
             const style  = active
-              ? 'text-[#fca311] bg-[rgba(252,163,17,0.12)]'
+              ? 'text-white bg-white/10'
               : 'text-white/50 hover:text-white/80 hover:bg-white/5'
             return (
               <Link key={href} href={href} className={`${base} ${style}`}>

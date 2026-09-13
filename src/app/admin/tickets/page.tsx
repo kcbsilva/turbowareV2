@@ -163,7 +163,7 @@ export default function AdminTicketsPage() {
             const isAdmin = msg.authorType === 'ADMIN'
             return (
               <div key={msg.id} className={`flex gap-3 ${isAdmin ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${isAdmin ? 'bg-[#0D9488] text-white' : 'bg-[#E6F5F2] text-[#5C6570]'}`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${isAdmin ? 'bg-white text-black' : 'bg-muted text-muted-foreground'}`}>
                   {isAdmin ? 'A' : 'C'}
                 </div>
                 <div className={`max-w-[80%] ${isAdmin ? 'items-end flex flex-col' : ''}`}>

@@ -1,6 +1,6 @@
 .login-shell {
   font-family: var(--font-login), 'Source Sans 3', 'Segoe UI', sans-serif;
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 .login-heading {

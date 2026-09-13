@@ -5,15 +5,15 @@ import { motion } from 'framer-motion'
 import { LoginNetworkBackdrop } from '@/components/LoginNetworkBackdrop'
 import '@/app/turboisp/login-surface.css'
 
-export const loginLabelClass = 'block text-sm font-medium text-[#1a2333] mb-1.5'
+export const loginLabelClass = 'block text-sm font-medium text-neutral-300 mb-1.5'
 const loginInputBase =
-  'w-full h-11 rounded-md border border-[#1a2333]/15 bg-[#f4f6fa] text-[#1a2333] placeholder:text-[#1a2333]/40 text-sm outline-none transition-[border-color,box-shadow] focus:border-[#233b6e] focus:bg-white focus:ring-2 focus:ring-[#233b6e]/20'
+  'w-full h-11 rounded-md border border-white/10 bg-white/5 text-neutral-100 placeholder:text-neutral-500 text-sm outline-none transition-[border-color,box-shadow] focus:border-white/30 focus:bg-black focus:ring-2 focus:ring-white/10'
 export const loginInputClass = `${loginInputBase} px-3`
 export const loginInputClassIcon = `${loginInputBase} pl-10 pr-3`
 export const loginLinkClass =
-  'text-sm font-medium text-[#233b6e] hover:text-[#fca311] underline-offset-4 hover:underline transition-colors'
+  'text-sm font-medium text-neutral-300 hover:text-white underline-offset-4 hover:underline transition-colors'
 export const loginBtnClass =
-  'mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#fca311] text-sm font-semibold text-[#081124] transition-[background-color,transform,opacity] hover:bg-[#ffb83a] active:scale-[0.985] disabled:opacity-50'
+  'mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-white text-sm font-semibold text-black transition-[background-color,transform,opacity] hover:bg-neutral-200 active:scale-[0.985] disabled:opacity-50'
 
 type Props = {
   children: ReactNode
@@ -49,11 +49,11 @@ export function TurboAuthShell({
   }, [])
 
   return (
-    <section className="login-shell relative isolate flex min-h-dvh w-full items-center justify-center overflow-x-hidden overflow-y-auto bg-[#e8ecf3] px-4 py-10 text-[#1a2333] antialiased">
+    <section className="login-shell relative isolate flex min-h-dvh w-full items-center justify-center overflow-x-hidden overflow-y-auto bg-black px-4 py-10 text-neutral-200 antialiased">
       <LoginNetworkBackdrop />
 
       <motion.div
-        className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-[#081124]/10 bg-white shadow-[0_24px_64px_-24px_rgba(8,17,36,0.35)]"
+        className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-[0_24px_64px_-24px_rgba(0,0,0,0.8)]"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -70,12 +70,12 @@ export function TurboAuthShell({
               />
             </div>
             {title && (
-              <h1 className="login-heading text-center text-2xl font-semibold tracking-[-0.02em] text-[#081124]">
+              <h1 className="login-heading text-center text-2xl font-semibold tracking-[-0.02em] text-white">
                 {title}
               </h1>
             )}
             {subtitle && (
-              <p className={`text-center text-sm text-[#1a2333]/55 ${title ? 'mt-1.5' : ''}`}>
+              <p className={`text-center text-sm text-neutral-400 ${title ? 'mt-1.5' : ''}`}>
                 {subtitle}
               </p>
             )}
@@ -85,9 +85,9 @@ export function TurboAuthShell({
 
           {footer && <div className="mt-5 text-center text-sm">{footer}</div>}
 
-          <footer className="mt-8 text-center text-xs text-black space-y-2">
+          <footer className="mt-8 text-center text-xs text-neutral-500 space-y-2">
             {visitorIP && (
-              <p className="text-xs font-medium text-emerald-600">
+              <p className="text-xs font-medium text-neutral-400">
                 {ipLabel}: {visitorIP}
               </p>
             )}

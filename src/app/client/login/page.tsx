@@ -87,7 +87,7 @@ export default function ClientLoginPage() {
       ipLabel={lang === 'pt' ? 'Seu IP' : 'Your IP'}
       headerExtra={
         <div className="mb-4 flex justify-end">
-          <div className="flex overflow-hidden rounded-md border border-[#1a2333]/15" role="group" aria-label="Language">
+          <div className="flex overflow-hidden rounded-md border border-white/10" role="group" aria-label="Language">
             {(['pt', 'en'] as const).map((code) => (
               <button
                 key={code}
@@ -95,7 +95,7 @@ export default function ClientLoginPage() {
                 onClick={() => setLang(code)}
                 className={cn(
                   'px-2.5 py-1 text-[10px] font-bold transition-colors',
-                  lang === code ? 'bg-[#fca311] text-[#081124]' : 'text-[#1a2333]/45 hover:text-[#1a2333]',
+                  lang === code ? 'bg-white text-black' : 'text-neutral-500 hover:text-neutral-200',
                 )}
               >
                 {code.toUpperCase()}
@@ -142,7 +142,7 @@ export default function ClientLoginPage() {
           <div>
             <label htmlFor="client-password" className={loginLabelClass}>{t.password}</label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1a2333]/35" />
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
               <input
                 id="client-password"
                 type={showPassword ? 'text' : 'password'}
@@ -156,7 +156,7 @@ export default function ClientLoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#1a2333]/35 hover:text-[#1a2333] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-neutral-500 hover:text-white transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

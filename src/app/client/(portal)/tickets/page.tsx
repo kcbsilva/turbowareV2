@@ -80,7 +80,7 @@ export default function TicketsPage() {
   useEffect(() => { loadTickets() }, [])
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [selected?.messages.length])
 
-  const inp  = 'w-full px-3 py-2.5 rounded-lg text-sm bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#fca311]/50 focus:border-[#fca311]/50 transition'
+  const inp  = 'w-full px-3 py-2.5 rounded-lg text-sm bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition'
   const card = 'bg-white/3 border border-white/8 rounded-xl'
 
   // ── Thread view ────────────────────────────────────────────────────────────
@@ -107,11 +107,11 @@ export default function TicketsPage() {
             const isAdmin = msg.authorType === 'ADMIN'
             return (
               <div key={msg.id} className={`flex gap-3 ${isAdmin ? '' : 'flex-row-reverse'}`}>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${isAdmin ? 'bg-[#fca311] text-[#081124]' : 'bg-white/10 text-white/60'}`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${isAdmin ? 'bg-white text-black' : 'bg-white/10 text-white/60'}`}>
                   {isAdmin ? 'S' : 'C'}
                 </div>
                 <div className={`max-w-[80%] ${isAdmin ? '' : 'items-end flex flex-col'}`}>
-                  <div className={`px-3.5 py-2.5 rounded-xl text-sm text-white/90 leading-relaxed ${isAdmin ? 'bg-white/8 rounded-tl-none' : 'bg-[#fca311]/15 border border-[#fca311]/20 rounded-tr-none'}`}>
+                  <div className={`px-3.5 py-2.5 rounded-xl text-sm text-white/90 leading-relaxed ${isAdmin ? 'bg-white/8 rounded-tl-none' : 'bg-white/10 border border-white/15 rounded-tr-none'}`}>
                     {msg.body}
                   </div>
                   <p className="text-[10px] text-white/20 mt-1 px-1">
@@ -129,7 +129,7 @@ export default function TicketsPage() {
             <input className={`${inp} flex-1`} placeholder="Write a reply…" value={reply} onChange={e => setReply(e.target.value)} />
             <button type="submit" disabled={sending || !reply.trim()}
               className="px-4 py-2.5 rounded-lg font-semibold text-sm transition hover:opacity-90 disabled:opacity-40 flex items-center gap-1.5"
-              style={{ backgroundColor: '#fca311', color: '#081124' }}>
+              style={{ backgroundColor: '#fff', color: '#000' }}>
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </form>
@@ -176,7 +176,7 @@ export default function TicketsPage() {
           <button type="button" onClick={() => setCreating(false)} className="flex-1 py-2.5 text-sm border border-white/10 rounded-lg text-white/40 hover:text-white/70 transition">Cancel</button>
           <button type="submit" disabled={submitting}
             className="flex-1 py-2.5 text-sm font-semibold rounded-lg transition hover:opacity-90 disabled:opacity-40 flex items-center justify-center gap-2"
-            style={{ backgroundColor: '#fca311', color: '#081124' }}>
+            style={{ backgroundColor: '#fff', color: '#000' }}>
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {submitting ? 'Submitting…' : 'Submit ticket'}
           </button>
@@ -192,7 +192,7 @@ export default function TicketsPage() {
         <h1 className="text-lg font-bold text-white">Support Tickets</h1>
         <button onClick={() => setCreating(true)}
           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition hover:opacity-90"
-          style={{ backgroundColor: '#fca311', color: '#081124' }}>
+          style={{ backgroundColor: '#fff', color: '#000' }}>
           <Plus className="w-3.5 h-3.5" /> New ticket
         </button>
       </div>
@@ -203,7 +203,7 @@ export default function TicketsPage() {
         <div className={`${card} flex flex-col items-center justify-center py-16 text-center gap-3`}>
           <Ticket className="w-10 h-10 text-white/10" />
           <p className="text-sm text-white/40">No tickets yet</p>
-          <button onClick={() => setCreating(true)} className="text-xs text-[#fca311] hover:opacity-80 transition">Open your first ticket →</button>
+          <button onClick={() => setCreating(true)} className="text-xs text-white hover:opacity-80 transition">Open your first ticket →</button>
         </div>
       ) : (
         <div className={`${card} divide-y divide-white/5`}>
@@ -213,8 +213,8 @@ export default function TicketsPage() {
             return (
               <button key={t.id} onClick={() => openTicket(t.id)}
                 className="w-full px-4 py-3.5 flex items-start gap-3 hover:bg-white/3 transition text-left">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${t.status === 'CLOSED' ? 'bg-white/5' : 'bg-[#fca311]/10'}`}>
-                  <Ticket className={`w-3.5 h-3.5 ${t.status === 'CLOSED' ? 'text-white/20' : 'text-[#fca311]'}`} />
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${t.status === 'CLOSED' ? 'bg-white/5' : 'bg-white/10'}`}>
+                  <Ticket className={`w-3.5 h-3.5 ${t.status === 'CLOSED' ? 'text-white/20' : 'text-white'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">

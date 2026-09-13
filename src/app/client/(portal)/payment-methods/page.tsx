@@ -126,7 +126,7 @@ export default function PaymentMethodsPage() {
                   {inv.paymentUrl && inv.status === 'PENDING' && (
                     <a href={inv.paymentUrl} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-md transition hover:opacity-90"
-                      style={{ backgroundColor: '#fca311', color: '#081124' }}>
+                      style={{ backgroundColor: '#fff', color: '#000' }}>
                       <ExternalLink className="w-3 h-3" /> Pay now
                     </a>
                   )}

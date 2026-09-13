@@ -38,7 +38,7 @@ function TierCard({ tier, selected, onSelect }: { tier: Tier; selected: boolean;
   return (
     <button
       onClick={onSelect}
-      className={`w-full text-left p-4 rounded-xl border transition ${selected ? 'border-[#fca311]/60 bg-[#fca311]/8' : 'border-white/10 bg-white/3 hover:bg-white/5'}`}
+      className={`w-full text-left p-4 rounded-xl border transition ${selected ? 'border-white/40 bg-white/10' : 'border-white/10 bg-white/3 hover:bg-white/5'}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -46,8 +46,8 @@ function TierCard({ tier, selected, onSelect }: { tier: Tier; selected: boolean;
           {tier.description && <p className="text-xs text-white/40 mt-0.5">{tier.description}</p>}
         </div>
         <div className="text-right shrink-0">
-          {tier.priceBR != null && <p className="text-sm font-bold text-[#fca311]">R$ {tier.priceBR.toFixed(2).replace('.', ',')}<span className="text-[10px] font-normal text-white/30">/mo</span></p>}
-          {tier.priceUS != null && tier.priceBR == null && <p className="text-sm font-bold text-[#fca311]">${tier.priceUS}<span className="text-[10px] font-normal text-white/30">/mo</span></p>}
+          {tier.priceBR != null && <p className="text-sm font-bold text-white">R$ {tier.priceBR.toFixed(2).replace('.', ',')}<span className="text-[10px] font-normal text-white/30">/mo</span></p>}
+          {tier.priceUS != null && tier.priceBR == null && <p className="text-sm font-bold text-white">${tier.priceUS}<span className="text-[10px] font-normal text-white/30">/mo</span></p>}
           {tier.maxSeats && <p className="text-[10px] text-white/30">Up to {tier.maxSeats.toLocaleString()} seats</p>}
         </div>
       </div>
@@ -60,7 +60,7 @@ function TierCard({ tier, selected, onSelect }: { tier: Tier; selected: boolean;
           ))}
         </ul>
       )}
-      {selected && <div className="mt-2 flex justify-end"><span className="text-[10px] font-semibold text-[#fca311]">✓ Selected</span></div>}
+      {selected && <div className="mt-2 flex justify-end"><span className="text-[10px] font-semibold text-white">✓ Selected</span></div>}
     </button>
   )
 }
@@ -133,7 +133,7 @@ function ProductCard({ product, onRequestSent }: { product: Product; onRequestSe
           <div className="mt-4">
             <button
               onClick={() => setExpanded(e => !e)}
-              className="flex items-center gap-1.5 text-xs text-[#fca311] hover:opacity-80 transition"
+              className="flex items-center gap-1.5 text-xs text-white hover:opacity-80 transition"
             >
               {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               {expanded ? 'Hide plans' : `View ${product.tiers.length} plan${product.tiers.length !== 1 ? 's' : ''}`}
@@ -154,7 +154,7 @@ function ProductCard({ product, onRequestSent }: { product: Product; onRequestSe
             {error && <p className="text-xs text-red-400 mb-2">{error}</p>}
             <button onClick={request} disabled={requesting || (product.tiers.length > 0 && !selectedTier && !expanded)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition hover:opacity-90 disabled:opacity-40"
-              style={{ backgroundColor: '#fca311', color: '#081124' }}>
+              style={{ backgroundColor: '#fff', color: '#000' }}>
               {requesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
               {requesting ? 'Requesting…' : 'Request access'}
             </button>

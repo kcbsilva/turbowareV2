@@ -18,7 +18,7 @@ export function ClientHeader({ clientId, name, company, createdAt }: Props) {
   const displayTrade = company?.trim() ? ` (${company.trim()})` : ''
 
   return (
-    <div className="flex h-14 shrink-0 items-center justify-between gap-4 bg-[#0F766E] px-5">
+    <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-black px-5">
       <div className="flex min-w-0 items-center gap-3">
         <div className="grid size-8 shrink-0 place-content-center rounded-md bg-white/15">
           <Building2 className="h-4 w-4 text-white" />
