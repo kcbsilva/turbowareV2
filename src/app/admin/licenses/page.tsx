@@ -48,8 +48,7 @@ export default async function LicensesPage({
         </div>
         <Link
           href="/admin/licenses/new"
-          className="px-3 py-1.5 text-xs font-semibold rounded-md transition"
-          style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+          className="tw-btn-primary px-3 py-1.5 text-xs font-semibold rounded-md transition"
         >
           + Generate Key
         </Link>

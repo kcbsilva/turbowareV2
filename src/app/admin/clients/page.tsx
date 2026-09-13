@@ -159,8 +159,7 @@ export default function ClientsPage() {
             <button
               type="button"
               onClick={() => router.push('/admin/clients/new')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold"
-              style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+              className="tw-btn-primary flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold"
             >
               <UserPlus className="w-3.5 h-3.5" />
               New tenant

@@ -185,8 +185,7 @@ export function TicketsTab({ clientId, clientName }: Props) {
             <button
               type="submit"
               disabled={submitting || !form.title.trim() || !form.body.trim()}
-              className="ml-auto px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-40"
-              style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+              className="tw-btn-primary ml-auto px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-40"
             >
               {submitting ? 'Opening…' : 'Open ticket'}
             </button>
@@ -265,8 +264,7 @@ export function TicketsTab({ clientId, clientName }: Props) {
             <button
               type="submit"
               disabled={sending || !reply.trim()}
-              className="px-3 py-2 rounded-md text-xs font-semibold disabled:opacity-40"
-              style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+              className="tw-btn-primary px-3 py-2 rounded-md text-xs font-semibold disabled:opacity-40"
             >
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
@@ -287,8 +285,7 @@ export function TicketsTab({ clientId, clientName }: Props) {
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold"
-          style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+          className="tw-btn-primary flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold"
         >
           <Plus className="w-3.5 h-3.5" />
           New ticket

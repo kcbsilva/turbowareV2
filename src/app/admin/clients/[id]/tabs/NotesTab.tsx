@@ -61,8 +61,7 @@ export function NotesTab({ clientId, initialNotes }: Props) {
           <button
             type="submit"
             disabled={posting || !body.trim()}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-md self-end transition disabled:opacity-40"
-            style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+            className="tw-btn-primary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-md self-end transition disabled:opacity-40"
           >
             <Send size={12} />
             {posting ? 'Posting…' : 'Post'}

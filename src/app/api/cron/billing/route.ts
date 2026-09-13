@@ -3,8 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 import { getMonthlyPrice, getPriceByLabel, getTierByLabel, nextBillingDate, type Region } from '@/lib/pricing'
-import { isInvoiceUnpaid, suspendSubscriptionForNonPayment } from '@/lib/billing'
-import { OVERDUE_GRACE_DAYS } from '@/lib/access-gate'
+import { reconcileSubscriptionLicenseSync } from '@/lib/billing'
 
 /**
  * GET /api/cron/billing
@@ -14,8 +13,8 @@ import { OVERDUE_GRACE_DAYS } from '@/lib/access-gate'
  *
  * Responsibilities:
  *  1. TRIAL subscriptions past trialEndsAt → PENDING_PAYMENT + first MONTHLY invoice
- *  2. ACTIVE subscriptions past gracePeriodEndsAt, or unpaid invoices 3+ days past due → SUSPENDED
- *  3. PENDING_PAYMENT subscriptions with an unpaid invoice older than 3 days → SUSPENDED
+ *  2. Reconcile overdue suspension and license status using the platform access rules
+ *  3. Repair license status for existing suspended subscriptions
  *  4. ACTIVE subscriptions whose billingDate matches today → new MONTHLY invoice
  */
 export async function GET(req: NextRequest) {
@@ -30,7 +29,6 @@ export async function GET(req: NextRequest) {
 
   const now        = new Date()
   const todayDay   = now.getDate()
-  const graceCutoff   = new Date(now.getTime() - OVERDUE_GRACE_DAYS * 24 * 60 * 60 * 1000)
   const startOfMonth  = new Date(now.getFullYear(), now.getMonth(), 1)
 
   const results = {
@@ -42,10 +40,10 @@ export async function GET(req: NextRequest) {
     errors:             [] as string[],
   }
 
-  // ── Fetch all active/pending/trial subscriptions ──────────────────────────────
+  // Include suspended subscriptions so previously missed license updates recover.
   const subscriptions = await prisma.subscription.findMany({
     where: {
-      status: { in: ['TRIAL', 'ACTIVE', 'PENDING_PAYMENT'] },
+      status: { in: ['TRIAL', 'ACTIVE', 'PENDING_PAYMENT', 'SUSPENDED'] },
     },
     include: {
       invoices: { orderBy: { createdAt: 'asc' } },
@@ -54,7 +52,7 @@ export async function GET(req: NextRequest) {
 
   results.processed = subscriptions.length
 
-  for (const sub of subscriptions) {
+  for (let sub of subscriptions) {
     try {
       // ── 1. TRIAL past trial end → PENDING_PAYMENT + first MONTHLY invoice ──────
       if (sub.status === 'TRIAL' && sub.trialEndsAt && sub.trialEndsAt < now) {
@@ -101,57 +99,26 @@ export async function GET(req: NextRequest) {
           results.trialExpired++
         }
 
+        const reconciled = await reconcileSubscriptionLicenseSync(sub.clientId)
+        if (reconciled?.status === 'SUSPENDED') results.suspended++
         continue
       }
 
-      // ── 2. ACTIVE unpaid past extra grace (or 3 days after due) → SUSPENDED ─
-      if (sub.status === 'ACTIVE') {
-        const unpaid = sub.invoices.filter(isInvoiceUnpaid)
-        const graceExpired = Boolean(sub.gracePeriodEndsAt && sub.gracePeriodEndsAt < now && unpaid.length)
-        const overduePastWindow = unpaid.some(
-          (inv) => inv.dueDate && inv.dueDate <= graceCutoff,
-        )
-
-        if (graceExpired || overduePastWindow) {
-          await prisma.invoice.updateMany({
-            where: {
-              subscriptionId: sub.id,
-              status: 'PENDING',
-              dueDate: { lte: now },
-            },
-            data: { status: 'OVERDUE' },
-          })
-          await suspendSubscriptionForNonPayment({
-            subscriptionId: sub.id,
-            clientId: sub.clientId,
-            licenseId: sub.licenseId,
-          })
-          if (graceExpired) results.gracePeriodExpired++
-          results.suspended++
-          continue
+      // The same reconciliation runs when billing, licenses, and platform access
+      // are read, including paid grace and non-blocking grace-fee invoices.
+      const reconciled = await reconcileSubscriptionLicenseSync(sub.clientId)
+      if (!reconciled) continue
+      if (sub.status !== 'SUSPENDED' && reconciled.status === 'SUSPENDED') {
+        if (sub.gracePeriodEndsAt && sub.gracePeriodEndsAt <= now) {
+          results.gracePeriodExpired++
         }
+        results.suspended++
       }
-
-      // ── 3. PENDING_PAYMENT with stale unpaid invoice (>3 days) → SUSPENDED ─────
-      if (sub.status === 'PENDING_PAYMENT') {
-        const hasStaleInvoice = sub.invoices.some(
-          (inv) => isInvoiceUnpaid(inv) && (inv.dueDate ?? inv.createdAt) <= graceCutoff,
-        )
-
-        if (hasStaleInvoice) {
-          await suspendSubscriptionForNonPayment({
-            subscriptionId: sub.id,
-            clientId: sub.clientId,
-            licenseId: sub.licenseId,
-          })
-          results.suspended++
-        }
-
-        continue
-      }
+      sub = reconciled
+      if (sub.status !== 'ACTIVE') continue
 
       // ── 4. ACTIVE + billing day matches today → new MONTHLY invoice ───────────────
-      if (sub.status === 'ACTIVE' && sub.billingDate === todayDay) {
+      if (sub.billingDate === todayDay) {
         // ── 4a. Apply pending downgrade before calculating invoice amount ──────────
         if (sub.pendingDowngradeTier) {
           const region         = (sub.region ?? 'BR') as Region

@@ -176,27 +176,14 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
                   <button
                     key={item.href}
                     onClick={() => navigate(item.href)}
-                    className="flex items-center gap-2.5 w-full text-left px-3 py-1.5 rounded-md transition-colors text-foreground"
-                    style={{
-                      backgroundColor: active
-                        ? "hsl(var(--accent) / 0.12)"
-                        : undefined,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!active)
-                        (e.currentTarget as HTMLElement).style.backgroundColor =
-                          "hsl(var(--accent) / 0.08)";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!active)
-                        (e.currentTarget as HTMLElement).style.backgroundColor =
-                          "";
-                    }}
+                    className={`flex items-center gap-2.5 w-full text-left px-3 py-1.5 rounded-md transition-colors text-foreground ${
+                      active ? 'bg-muted' : 'hover:bg-muted/70'
+                    }`}
                   >
                     <span className="text-muted-foreground">{item.icon}</span>
                     <span className="text-xs font-medium">{item.label}</span>
                     {item.href === "/admin/tickets" && openTickets > 0 && (
-                      <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white text-black">
+                      <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-foreground text-background">
                         {openTickets}
                       </span>
                     )}

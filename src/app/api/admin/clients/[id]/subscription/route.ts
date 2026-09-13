@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 import { isValidTransition } from '@/lib/transitions'
-import { applySubscriptionLicenseSync } from '@/lib/billing'
+import { reconcileSubscriptionLicenseSync } from '@/lib/billing'
 import { SubscriptionStatus } from '@prisma/client'
 
 type Params = { params: Promise<{ id: string }> }
@@ -10,13 +10,7 @@ type Params = { params: Promise<{ id: string }> }
 // GET /api/admin/clients/[id]/subscription
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params
-  const sub = await prisma.subscription.findUnique({
-    where: { clientId: id },
-    include: {
-      invoices: { orderBy: { createdAt: 'desc' } },
-      license:  { select: { key: true, status: true, maxSeats: true } },
-    },
-  })
+  const sub = await reconcileSubscriptionLicenseSync(id)
   return NextResponse.json(sub ?? null)
 }
 
@@ -53,7 +47,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     )
   }
 
-  const updated = await prisma.subscription.update({
+  await prisma.subscription.update({
     where: { id: sub.id },
     data: {
       ...(status !== undefined
@@ -72,13 +66,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     },
   })
 
-  if (status !== undefined) {
-    await applySubscriptionLicenseSync({
-      clientId: updated.clientId,
-      licenseId: updated.licenseId,
-      subscriptionStatus: updated.status,
-    })
-  }
-
-  return NextResponse.json(updated)
+  return NextResponse.json(await reconcileSubscriptionLicenseSync(id, {
+    activateLicenses: status === 'ACTIVE' || status === 'TRIAL',
+  }))
 }

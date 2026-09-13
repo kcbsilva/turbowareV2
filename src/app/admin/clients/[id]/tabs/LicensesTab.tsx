@@ -232,8 +232,7 @@ export function LicensesTab({ clientId }: Props) {
         <button
           type="button"
           onClick={openNew}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition"
-          style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+          className="tw-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition"
         >
           <Plus size={12} /> {t('licenses.new')}
         </button>
@@ -421,8 +420,7 @@ export function LicensesTab({ clientId }: Props) {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-3 py-1.5 text-xs font-semibold rounded-md disabled:opacity-50"
-                style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+                className="tw-btn-primary px-3 py-1.5 text-xs font-semibold rounded-md disabled:opacity-50"
               >
                 {saving ? t('licenses.creating') : t('licenses.create')}
               </button>

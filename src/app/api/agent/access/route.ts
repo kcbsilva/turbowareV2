@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { resolveAccessGate } from '@/lib/access-gate'
 import { turbowarePortalLoginUrl } from '@/lib/portal-url'
+import { reconcileSubscriptionLicenseSync } from '@/lib/billing'
 
 /**
  * GET /api/agent/access?tenantSlug=acme
@@ -43,19 +44,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Client not found' }, { status: 404 })
   }
 
-  const client = await prisma.client.findUnique({
-    where: { id: clientId },
-    include: {
-      subscription: {
-        include: {
-          invoices: { select: { status: true, type: true, dueDate: true, createdAt: true } },
-          license: { select: { status: true } },
-        },
-      },
-    },
-  })
-
-  if (!client?.subscription) {
+  const sub = await reconcileSubscriptionLicenseSync(clientId)
+  if (!sub) {
     return NextResponse.json({
       mode: 'blocked',
       daysRemaining: 0,
@@ -65,7 +55,6 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  const sub = client.subscription
   const gate = resolveAccessGate({
     subscriptionStatus: sub.status,
     licenseStatus: sub.license?.status ?? null,

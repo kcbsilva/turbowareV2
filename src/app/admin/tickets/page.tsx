@@ -191,8 +191,7 @@ export default function AdminTicketsPage() {
             <button
               type="submit"
               disabled={sending || !reply.trim()}
-              className="px-3 py-2 rounded-md text-xs font-semibold disabled:opacity-40"
-              style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+              className="tw-btn-primary px-3 py-2 rounded-md text-xs font-semibold disabled:opacity-40"
             >
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>

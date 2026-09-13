@@ -1,6 +1,6 @@
 import { ClientProductStatus, type Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { applySubscriptionLicenseSync } from '@/lib/billing'
+import { reconcileSubscriptionLicenseSync } from '@/lib/billing'
 import { getPriceByLabel, getTierByLabel, type Region } from '@/lib/pricing'
 import { ensureDefaultCatalog } from '@/lib/product-catalog'
 import { isValidSignupSlug, normalizeSignupSlug } from '@/lib/signup-slug'
@@ -30,17 +30,7 @@ export async function listClientLicenses(clientId: string): Promise<{
   licenses: ClientLicenseRow[]
 }> {
   await ensureDefaultCatalog()
-  const sub = await prisma.subscription.findUnique({
-    where: { clientId },
-    select: { status: true, licenseId: true },
-  })
-  if (sub) {
-    await applySubscriptionLicenseSync({
-      clientId,
-      licenseId: sub.licenseId,
-      subscriptionStatus: sub.status,
-    })
-  }
+  await reconcileSubscriptionLicenseSync(clientId)
   const client = await prisma.client.findUnique({
     where: { id: clientId },
     select: {
@@ -117,23 +107,17 @@ async function syncTurboIspSubscription(opts: {
 
   if (opts.status === 'ACTIVE') data.status = 'ACTIVE'
   if (opts.status === 'SUSPENDED') data.status = 'SUSPENDED'
+  if (opts.status === 'PENDING') data.status = 'PENDING_PAYMENT'
+  if (opts.status === 'SUSPENDED') data.gracePeriodEndsAt = null
   if (opts.status === 'CANCELLED') {
     data.status = 'CANCELLED'
     data.gracePeriodEndsAt = null
   }
 
-  if (Object.keys(data).length === 0) return
-
-  const updated = await prisma.subscription.update({
-    where: { id: sub.id },
-    data,
-  })
-
-  await applySubscriptionLicenseSync({
-    clientId: updated.clientId,
-    licenseId: updated.licenseId,
-    subscriptionStatus: updated.status,
-  })
+  if (Object.keys(data).length > 0) {
+    await prisma.subscription.update({ where: { id: sub.id }, data })
+  }
+  await reconcileSubscriptionLicenseSync(opts.clientId, { activateLicenses: opts.status === 'ACTIVE' })
 }
 
 async function assertSlugAvailable(clientId: string, slug: string) {
@@ -288,12 +272,18 @@ export async function createClientLicense(opts: {
     })
     await syncTurboIspSubscription({
       clientId: opts.clientId,
-      status: 'ACTIVE',
       tierName: tier.name,
     })
   }
 
-  return { activation, turboisp }
+  const current = await prisma.clientProduct.findUniqueOrThrow({
+    where: { id: activation.id },
+    include: {
+      tier: { select: { id: true, name: true } },
+      product: { select: { id: true, name: true, slug: true, logoEmoji: true } },
+    },
+  })
+  return { activation: current, turboisp }
 }
 
 export async function upsertClientProduct(opts: {
@@ -339,10 +329,14 @@ export async function upsertClientProduct(opts: {
   if (activation.product.slug === 'turboisp') {
     await syncTurboIspSubscription({
       clientId: opts.clientId,
-      status: nextStatus,
+      status: opts.status,
       tierName: activation.tier?.name ?? tierName,
     })
   }
 
-  return { activation }
+  const current = await prisma.clientProduct.findUniqueOrThrow({
+    where: { id: activation.id },
+    include: { tier: { select: { id: true, name: true } }, product: { select: { slug: true } } },
+  })
+  return { activation: current }
 }

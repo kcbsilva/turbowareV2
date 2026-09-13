@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
 import { getClientId } from '@/lib/client-auth'
-import { applySubscriptionLicenseSync } from '@/lib/billing'
+import { isInvoiceUnpaid, reconcileSubscriptionLicenseSync } from '@/lib/billing'
 import {
   getMonthlyPrice,
   getProratedAmount,
@@ -15,20 +15,14 @@ export async function GET(req: NextRequest) {
   const clientId = getClientId(req)
   if (!clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const sub = await prisma.subscription.findUnique({
-    where: { clientId },
-    include: {
-      invoices: { orderBy: { createdAt: 'desc' } },
-      license: { select: { key: true, status: true, maxSeats: true } },
-    },
-  })
+  const sub = await reconcileSubscriptionLicenseSync(clientId)
 
   if (!sub) return NextResponse.json(null)
 
   // Auto-advance expired trial to PENDING_PAYMENT
   if (sub.status === 'TRIAL' && sub.trialEndsAt && sub.trialEndsAt < new Date()) {
-    const hasPendingInvoices = sub.invoices.some((i) => i.status === 'PENDING')
-    const updated = await prisma.subscription.update({
+    const hasPendingInvoices = sub.invoices.some(isInvoiceUnpaid)
+    await prisma.subscription.update({
       where: { id: sub.id },
       data: { status: hasPendingInvoices ? 'PENDING_PAYMENT' : 'ACTIVE' },
       include: {
@@ -36,25 +30,7 @@ export async function GET(req: NextRequest) {
         license: { select: { key: true, status: true, maxSeats: true } },
       },
     })
-    await applySubscriptionLicenseSync({
-      clientId: updated.clientId,
-      licenseId: updated.licenseId,
-      subscriptionStatus: updated.status,
-    })
-    return NextResponse.json(updated)
-  }
-
-  // Auto-expire grace period
-  if (sub.gracePeriodEndsAt && sub.gracePeriodEndsAt < new Date()) {
-    const hasPending = sub.invoices.some((i) => i.status === 'PENDING')
-    if (sub.status === 'ACTIVE' && hasPending) {
-      await prisma.subscription.update({ where: { id: sub.id }, data: { status: 'SUSPENDED' } })
-      await applySubscriptionLicenseSync({
-        clientId: sub.clientId,
-        licenseId: sub.licenseId,
-        subscriptionStatus: 'SUSPENDED',
-      })
-    }
+    return NextResponse.json(await reconcileSubscriptionLicenseSync(clientId))
   }
 
   return NextResponse.json(sub)

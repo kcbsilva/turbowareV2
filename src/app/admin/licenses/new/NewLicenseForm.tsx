@@ -156,8 +156,7 @@ export function NewLicenseForm({
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 text-xs font-semibold rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+          className="tw-btn-primary w-full py-2 text-xs font-semibold rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Generating…' : 'Generate License Key'}
         </button>

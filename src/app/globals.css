@@ -26,7 +26,7 @@
   --secondary-foreground: 0 0% 9%;
 
   --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 42%;
+  --muted-foreground: 0 0% 35%;
 
   --accent: 0 0% 96%;
   --accent-foreground: 0 0% 9%;
@@ -61,7 +61,7 @@
   --secondary-foreground: 0 0% 93%;
 
   --muted: 0 0% 10%;
-  --muted-foreground: 0 0% 55%;
+  --muted-foreground: 0 0% 70%;
 
   --accent: 0 0% 12%;
   --accent-foreground: 0 0% 93%;
@@ -230,6 +230,9 @@ body {
 }
 
 @layer components {
+  .tw-btn-primary {
+    @apply bg-foreground text-background;
+  }
   .tw-badge {
     @apply inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold;
   }
@@ -259,8 +262,8 @@ body {
     border-color: rgba(239, 68, 68, 0.22);
   }
   .tw-badge-mute {
-    background-color: #fafafa;
-    color: #737373;
+    background-color: #f4f4f4;
+    color: #404040;
     border-color: #eaeaea;
   }
   .tw-badge-paid {
@@ -286,7 +289,7 @@ body {
   }
   .dark .tw-badge-teal {
     background-color: rgba(255, 255, 255, 0.08);
-    color: #a3a3a3;
+    color: #e5e5e5;
     border-color: rgba(255, 255, 255, 0.12);
   }
   .dark .tw-badge-sky {
@@ -300,9 +303,9 @@ body {
     border-color: rgba(239, 68, 68, 0.25);
   }
   .dark .tw-badge-mute {
-    background-color: rgba(255, 255, 255, 0.04);
-    color: #737373;
-    border-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #d4d4d4;
+    border-color: rgba(255, 255, 255, 0.12);
   }
   .dark .tw-badge-paid {
     background-color: rgba(16, 185, 129, 0.16);

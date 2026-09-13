@@ -3,7 +3,8 @@
  * Used by: admin /pay route, Asaas webhook, Stripe webhook, billing cron.
  */
 import { prisma } from '@/lib/prisma'
-import { ClientProductStatus, LicenseStatus, SubscriptionStatus } from '@prisma/client'
+import { ClientProductStatus, LicenseStatus, SubscriptionStatus, type Prisma } from '@prisma/client'
+import { resolveAccessGate } from '@/lib/access-gate'
 
 type InvoiceLike = {
   id: string
@@ -56,25 +57,19 @@ export async function syncLicensesForSubscription(opts: {
   clientId: string
   licenseId?: string | null
   status: LicenseStatus
-}): Promise<void> {
-  if (opts.licenseId) {
-    await prisma.license.update({
-      where: { id: opts.licenseId },
-      data: { status: opts.status },
-    })
-  } else {
-    await prisma.license.updateMany({
-      where: {
-        clientId: opts.clientId,
-        status: { notIn: [LicenseStatus.REVOKED, LicenseStatus.EXPIRED] },
-      },
-      data: { status: opts.status },
-    })
-  }
+}, db: Prisma.TransactionClient = prisma): Promise<void> {
+  await db.license.updateMany({
+    where: {
+      clientId: opts.clientId,
+      ...(opts.licenseId ? { id: opts.licenseId } : {}),
+      status: { notIn: [LicenseStatus.REVOKED, LicenseStatus.EXPIRED], not: opts.status },
+    },
+    data: { status: opts.status },
+  })
 }
 
-async function syncTurboIspClientProduct(clientId: string, status: ClientProductStatus) {
-  await prisma.clientProduct.updateMany({
+async function syncTurboIspClientProduct(clientId: string, status: ClientProductStatus, db: Prisma.TransactionClient) {
+  await db.clientProduct.updateMany({
     where: {
       clientId,
       status: { not: status },
@@ -88,20 +83,76 @@ export async function applySubscriptionLicenseSync(opts: {
   clientId: string
   licenseId?: string | null
   subscriptionStatus: string
-}): Promise<void> {
+  activateLicenses?: boolean
+}, db: Prisma.TransactionClient = prisma): Promise<void> {
   const licenseStatus = licenseStatusForSubscription(opts.subscriptionStatus)
-  if (licenseStatus) {
+  if (licenseStatus && (opts.activateLicenses !== false || licenseStatus !== LicenseStatus.ACTIVE)) {
     await syncLicensesForSubscription({
       clientId: opts.clientId,
       licenseId: opts.licenseId,
       status: licenseStatus,
-    })
+    }, db)
   }
 
   const productStatus = clientProductStatusForSubscription(opts.subscriptionStatus)
   if (productStatus) {
-    await syncTurboIspClientProduct(opts.clientId, productStatus)
+    await syncTurboIspClientProduct(opts.clientId, productStatus, db)
   }
+}
+
+/**
+ * Reconcile stored billing and license states with the platform's overdue rule.
+ * Reads repair old rows too, without waiting for the daily billing job. Lock the
+ * subscription so concurrent license/billing reads cannot overwrite each other.
+ */
+export async function reconcileSubscriptionLicenseSync(
+  clientId: string,
+  opts: { activateLicenses?: boolean } = {},
+) {
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`
+      SELECT id FROM turboware.subscriptions WHERE "clientId" = ${clientId} FOR UPDATE
+    `
+    const include = {
+      invoices: { orderBy: { createdAt: 'desc' as const } },
+      license: { select: { key: true, status: true, maxSeats: true } },
+    }
+    const sub = await tx.subscription.findUnique({ where: { clientId }, include })
+    if (!sub) return null
+
+    const now = new Date()
+    const gate = resolveAccessGate({
+      subscriptionStatus: sub.status,
+      invoices: sub.invoices,
+      gracePeriodEndsAt: sub.gracePeriodEndsAt,
+      now,
+    })
+    const status = gate.mode === 'blocked' && gate.reason === 'overdue'
+      ? SubscriptionStatus.SUSPENDED
+      : sub.status
+
+    if (status !== sub.status) {
+      await tx.subscription.update({
+        where: { id: sub.id },
+        data: { status, gracePeriodEndsAt: null },
+      })
+      await tx.invoice.updateMany({
+        where: { subscriptionId: sub.id, status: 'PENDING', type: { not: 'GRACE_FEE' }, dueDate: { lte: now } },
+        data: { status: 'OVERDUE' },
+      })
+    }
+
+    await applySubscriptionLicenseSync({
+      clientId,
+      licenseId: sub.licenseId,
+      subscriptionStatus: status,
+      // Ordinary reads must preserve a license suspended manually. Payment and
+      // explicit activation can release it after the overdue rule is checked.
+      activateLicenses: opts.activateLicenses ?? false,
+    }, tx)
+
+    return tx.subscription.findUnique({ where: { clientId }, include })
+  })
 }
 
 /**

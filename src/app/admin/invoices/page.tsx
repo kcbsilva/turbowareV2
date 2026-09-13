@@ -48,8 +48,8 @@ export default function InvoicesPage() {
     <div className="h-full flex flex-col p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--accent)/0.12)' }}>
-            <Receipt className="w-4 h-4" style={{ color: 'hsl(var(--accent))' }} />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted">
+            <Receipt className="w-4 h-4 text-foreground" />
           </div>
           <div>
             <h1 className="text-base font-bold text-foreground">Invoices</h1>

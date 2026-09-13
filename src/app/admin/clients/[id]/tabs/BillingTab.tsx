@@ -308,8 +308,7 @@ export function BillingTab({ clientId }: Props) {
             <button
               type="button"
               onClick={openCharge}
-              className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md"
-              style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+              className="tw-btn-primary flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md"
             >
               <Plus className="w-3 h-3" /> {t('billing.charge')}
             </button>
@@ -370,8 +369,7 @@ export function BillingTab({ clientId }: Props) {
                               <button
                                 onClick={() => markPaid(inv.id)}
                                 disabled={paying === inv.id}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md transition hover:opacity-90 disabled:opacity-50"
-                                style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+                                className="tw-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md transition hover:opacity-90 disabled:opacity-50"
                               >
                                 {paying === inv.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
                                 {paying === inv.id ? t('billing.marking') : t('billing.markPaid')}
@@ -387,7 +385,7 @@ export function BillingTab({ clientId }: Props) {
                               <button
                                 onClick={() => sendPaymentLink(inv.id, 'stripe')}
                                 disabled={!!sending}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md border border-violet-500/30 text-violet-400 hover:bg-violet-500/10 transition disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted transition disabled:opacity-50"
                               >
                                 {sending === `${inv.id}-stripe` ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
                                 {sending === `${inv.id}-stripe` ? t('billing.stripeBusy') : inv.paymentGateway === 'STRIPE' ? t('billing.stripeRegen') : t('billing.stripe')}
@@ -514,8 +512,7 @@ export function BillingTab({ clientId }: Props) {
               <button
                 type="submit"
                 disabled={savingCharge}
-                className="px-3 py-1.5 text-xs font-semibold rounded-md disabled:opacity-50"
-                style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+                className="tw-btn-primary px-3 py-1.5 text-xs font-semibold rounded-md disabled:opacity-50"
               >
                 {savingCharge ? t('billing.creatingCharge') : t('billing.createCharge')}
               </button>

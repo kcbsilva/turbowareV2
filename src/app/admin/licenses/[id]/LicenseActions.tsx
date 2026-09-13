@@ -85,8 +85,7 @@ export function LicenseActions({ license, effectiveStatus, clients }: Props) {
           <button
             onClick={assignClient}
             disabled={!hasClientChanged || !!loading}
-            className="px-3 py-1.5 text-xs font-medium rounded-md transition disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+            className="tw-btn-primary px-3 py-1.5 text-xs font-medium rounded-md transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading === 'client' ? 'Saving…' : 'Save'}
           </button>

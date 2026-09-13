@@ -124,8 +124,7 @@ export default function NewClientPage() {
         <button
           type="button"
           onClick={() => router.push(`/admin/clients/${result.id}`)}
-          className="mt-4 w-full py-2 text-xs font-semibold rounded-md"
-          style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+          className="tw-btn-primary mt-4 w-full py-2 text-xs font-semibold rounded-md"
         >
           Open client profile
         </button>
@@ -262,8 +261,7 @@ export default function NewClientPage() {
                 setError('')
                 setStep((s) => (s + 1) as Step)
               }}
-              className="flex-1 py-2 text-xs font-semibold rounded-md"
-              style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+              className="tw-btn-primary flex-1 py-2 text-xs font-semibold rounded-md"
             >
               Continue
             </button>
@@ -271,8 +269,7 @@ export default function NewClientPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2 text-xs font-semibold rounded-md disabled:opacity-50"
-              style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+              className="tw-btn-primary flex-1 py-2 text-xs font-semibold rounded-md disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create tenant'}
             </button>

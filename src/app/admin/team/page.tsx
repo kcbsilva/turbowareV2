@@ -107,8 +107,8 @@ export default function TeamPage() {
   return (
     <div className="p-6 space-y-5">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--accent)/0.12)' }}>
-          <Users className="w-4 h-4" style={{ color: 'hsl(var(--accent))' }} />
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted">
+          <Users className="w-4 h-4 text-foreground" />
         </div>
         <div>
           <h1 className="text-base font-bold text-foreground">Team</h1>
@@ -136,8 +136,7 @@ export default function TeamPage() {
             <button
               type="submit"
               disabled={creating}
-              className="px-3 py-2 text-xs font-semibold rounded-md disabled:opacity-50"
-              style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+              className="tw-btn-primary px-3 py-2 text-xs font-semibold rounded-md disabled:opacity-50"
             >
               {creating ? 'Creating…' : 'Create + temp password'}
             </button>

@@ -101,8 +101,8 @@ export default function ProductsPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--accent)/0.12)' }}>
-          <Package className="w-4 h-4" style={{ color: 'hsl(var(--accent))' }} />
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted">
+          <Package className="w-4 h-4 text-foreground" />
         </div>
         <div>
           <h1 className="text-base font-bold text-foreground">Products & Pricing</h1>
@@ -124,12 +124,11 @@ export default function ProductsPage() {
               <button
                 key={code}
                 onClick={() => setTableRegion(code)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition"
-                style={{
-                  backgroundColor: tableRegion === code ? 'hsl(var(--accent)/0.12)' : 'transparent',
-                  borderColor:     tableRegion === code ? 'hsl(var(--accent)/0.3)'  : 'transparent',
-                  color:           tableRegion === code ? 'hsl(var(--accent))'      : 'hsl(var(--muted-foreground))',
-                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition ${
+                  tableRegion === code
+                    ? 'bg-muted border-border text-foreground'
+                    : 'border-transparent text-muted-foreground'
+                }`}
               >
                 <span>{flag}</span>
                 <span className="hidden sm:inline">{label}</span>
@@ -139,10 +138,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Installation fee */}
-        <div
-          className="px-4 py-3 flex items-center justify-between border-b border-border"
-          style={{ backgroundColor: 'hsl(var(--accent)/0.04)' }}
-        >
+        <div className="px-4 py-3 flex items-center justify-between border-b border-border bg-muted/50">
           <span className="text-xs text-muted-foreground font-medium">One-time Installation</span>
           <span className="text-sm font-bold text-foreground">
             {CURRENCY_SYMBOL[tableRegion]}&nbsp;{INSTALLATION_FEES[tableRegion].toLocaleString('en-US')}
@@ -273,11 +269,7 @@ export default function ProductsPage() {
             <button
               type="submit"
               disabled={saving || !selectedClient || !selectedTier}
-              className="w-full px-4 py-1.5 rounded-md text-xs font-semibold transition disabled:opacity-40"
-              style={{
-                backgroundColor: 'hsl(var(--accent))',
-                color: 'hsl(var(--accent-foreground))',
-              }}
+              className="tw-btn-primary w-full px-4 py-1.5 rounded-md text-xs font-semibold transition disabled:opacity-40"
             >
               {saving ? 'Applying…' : 'Apply Plan'}
             </button>
@@ -370,14 +362,7 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-4 py-3">
                       {hasPlan ? (
-                        <span
-                          className="px-2 py-0.5 rounded-full text-[10px] font-semibold border"
-                          style={{
-                            color: 'hsl(var(--accent))',
-                            borderColor: 'hsl(var(--accent)/0.3)',
-                            backgroundColor: 'hsl(var(--accent)/0.08)',
-                          }}
-                        >
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold border border-border bg-muted text-foreground">
                           {Number(sub!.subscriberTier).toLocaleString('en-US')} clients
                           {(() => {
                             const t = PRICING_TIERS.find((x) => x.label === sub!.subscriberTier)
