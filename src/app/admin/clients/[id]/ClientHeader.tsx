@@ -1,6 +1,8 @@
 'use client'
 
 import { Building2 } from 'lucide-react'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { dateLocale } from '@/lib/admin-i18n'
 
 interface Props {
   clientId: string
@@ -10,7 +12,8 @@ interface Props {
 }
 
 export function ClientHeader({ clientId, name, company, createdAt }: Props) {
-  const formattedDate = new Date(createdAt).toLocaleDateString('en-US', {
+  const { t, lang } = useAdminLang()
+  const formattedDate = new Date(createdAt).toLocaleDateString(dateLocale(lang), {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -30,10 +33,10 @@ export function ClientHeader({ clientId, name, company, createdAt }: Props) {
               {displayTrade}
             </span>
             <span className="shrink-0 rounded border border-border bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none text-foreground">
-              Client
+              {t('profile.client')}
             </span>
           </div>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">Since {formattedDate}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{t('profile.since')} {formattedDate}</p>
         </div>
       </div>
     </div>

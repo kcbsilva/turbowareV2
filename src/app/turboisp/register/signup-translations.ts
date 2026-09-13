@@ -3,7 +3,7 @@ export type SignupLocale = 'en' | 'pt' | 'fr' | 'es'
 export const SIGNUP_LOCALES: SignupLocale[] = ['en', 'pt', 'fr', 'es']
 
 export function localeLabel(code: SignupLocale): string {
-  if (code === 'pt') return 'Português'
+  if (code === 'pt') return 'Português (Brasil)'
   if (code === 'fr') return 'Français'
   if (code === 'es') return 'Español'
   return 'English'

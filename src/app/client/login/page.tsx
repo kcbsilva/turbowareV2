@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatLoginIdentifierInput } from '@/lib/client-login'
 
-type Lang = 'en' | 'pt'
+type Lang = 'en' | 'pt-BR'
 
 const COPY: Record<Lang, {
   title: string
@@ -27,7 +27,7 @@ const COPY: Record<Lang, {
   noAccount: string
   requestAccess: string
 }> = {
-  pt: {
+  'pt-BR': {
     title: 'Entrar no TurboISP',
     subtitle: 'Acesse licenças, faturas e suporte da sua operação.',
     identifier: 'E-mail ou CNPJ',
@@ -51,7 +51,7 @@ const COPY: Record<Lang, {
 
 export default function ClientLoginPage() {
   const router = useRouter()
-  const [lang, setLang] = useState<Lang>('pt')
+  const [lang, setLang] = useState<Lang>('pt-BR')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -76,7 +76,7 @@ export default function ClientLoginPage() {
       router.push('/client/dashboard')
     } else {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || (lang === 'pt' ? 'E-mail, CNPJ ou senha inválidos.' : 'Invalid email, business number, or password.'))
+      setError(data.error || (lang === 'pt-BR' ? 'E-mail, CNPJ ou senha inválidos.' : 'Invalid email, business number, or password.'))
     }
   }
 
@@ -84,11 +84,11 @@ export default function ClientLoginPage() {
     <TurboAuthShell
       title={t.title}
       subtitle={t.subtitle}
-      ipLabel={lang === 'pt' ? 'Seu IP' : 'Your IP'}
+      ipLabel={lang === 'pt-BR' ? 'Seu IP' : 'Your IP'}
       headerExtra={
         <div className="mb-4 flex justify-end">
           <div className="flex overflow-hidden rounded-md border border-white/10" role="group" aria-label="Language">
-            {(['pt', 'en'] as const).map((code) => (
+            {(['pt-BR', 'en'] as const).map((code) => (
               <button
                 key={code}
                 type="button"
@@ -98,7 +98,7 @@ export default function ClientLoginPage() {
                   lang === code ? 'bg-white text-black' : 'text-neutral-500 hover:text-neutral-200',
                 )}
               >
-                {code.toUpperCase()}
+                {code === 'pt-BR' ? 'PT-BR' : 'EN'}
               </button>
             ))}
           </div>
@@ -133,7 +133,7 @@ export default function ClientLoginPage() {
               value={identifier}
               onChange={(e) => setIdentifier(formatLoginIdentifierInput(e.target.value))}
               className={loginInputClass}
-              placeholder={lang === 'pt' ? 'email@empresa.com ou 00.000.000/0000-00' : 'you@company.com or business number'}
+              placeholder={lang === 'pt-BR' ? 'email@empresa.com ou 00.000.000/0000-00' : 'you@company.com or business number'}
               required
               autoFocus
             />

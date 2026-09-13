@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers'
 import { AdminAppShell } from '@/components/admin/AdminAppShell'
+import { AdminLangProvider } from '@/components/admin/AdminLangProvider'
 import { COOKIE_NAME, verifyAdminToken } from '@/lib/auth'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -7,9 +8,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const token = cookieStore.get(COOKIE_NAME)?.value
   const isAuthenticated = token ? await verifyAdminToken(token) : false
 
-  if (!isAuthenticated) {
-    return <>{children}</>
-  }
-
-  return <AdminAppShell>{children}</AdminAppShell>
+  return (
+    <AdminLangProvider>
+      {isAuthenticated ? <AdminAppShell>{children}</AdminAppShell> : children}
+    </AdminLangProvider>
+  )
 }

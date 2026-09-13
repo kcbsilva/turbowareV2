@@ -12,11 +12,13 @@ import {
   loginLinkClass,
 } from '@/components/TurboAuthShell'
 import { cn } from '@/lib/utils'
+import { AdminLangToggle, useAdminLang } from '@/components/admin/AdminLangProvider'
 
 type Step = 'login' | 'forgot' | 'mfa' | 'newPassword'
 
 export default function LoginForm() {
   const router = useRouter()
+  const { t } = useAdminLang()
   const [step, setStep] = useState<Step>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -116,15 +118,15 @@ export default function LoginForm() {
       router.push('/admin')
     } else {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || 'Invalid credentials. Please try again.')
+        setError(data.error || t('login.invalid'))
     }
   }
 
   const titles: Record<Step, { title?: string; subtitle?: string }> = {
     login: {},
-    forgot: { title: 'Reset password', subtitle: 'We will email a single-use reset link' },
-    mfa: { title: 'Two-factor verification', subtitle: 'Enter the 6-digit code from your authenticator app' },
-    newPassword: { title: 'Set new password', subtitle: 'Choose a new password before continuing' },
+    forgot: { title: t('login.resetTitle'), subtitle: t('login.resetSubtitle') },
+    mfa: { title: t('login.mfaTitle'), subtitle: t('login.mfaSubtitle') },
+    newPassword: { title: t('login.newPassTitle'), subtitle: t('login.newPassSubtitle') },
   }
 
   const { title, subtitle } = titles[step]
@@ -134,11 +136,16 @@ export default function LoginForm() {
     <TurboAuthShell
       title={title}
       subtitle={subtitle}
-      ipLabel="Your IP"
+      ipLabel={t('login.ip')}
+      headerExtra={
+        <div className="mb-4 flex justify-end">
+          <AdminLangToggle />
+        </div>
+      }
       footer={
         step === 'login' ? (
           <Link href="/client/login" className={loginLinkClass}>
-            Client portal
+            {t('login.portal')}
           </Link>
         ) : undefined
       }
@@ -157,7 +164,7 @@ export default function LoginForm() {
           {step === 'login' && (
             <>
               <div>
-                <label htmlFor="admin-email" className={loginLabelClass}>Email</label>
+                <label htmlFor="admin-email" className={loginLabelClass}>{t('login.email')}</label>
                 <div className="relative">
                   <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                   <input
@@ -174,7 +181,7 @@ export default function LoginForm() {
               </div>
 
               <div>
-                <label htmlFor="admin-password" className={loginLabelClass}>Password</label>
+                <label htmlFor="admin-password" className={loginLabelClass}>{t('login.password')}</label>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                   <input
@@ -191,7 +198,7 @@ export default function LoginForm() {
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-neutral-500 hover:text-white transition-colors"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -209,7 +216,7 @@ export default function LoginForm() {
                     setError('')
                   }}
                 >
-                  Forgot password?
+                  {t('login.forgot')}
                 </button>
               </div>
             </>
@@ -334,14 +341,14 @@ export default function LoginForm() {
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               {loading
-                ? 'Please wait…'
+                ? t('login.submitting')
                 : step === 'forgot'
-                  ? 'Send reset link'
+                  ? t('login.resetTitle')
                   : step === 'mfa'
-                    ? 'Verify'
+                    ? t('login.mfaTitle')
                     : step === 'newPassword'
-                      ? 'Save password'
-                      : 'Sign in'}
+                      ? t('login.newPassTitle')
+                      : t('login.submit')}
             </button>
           )}
         </fieldset>

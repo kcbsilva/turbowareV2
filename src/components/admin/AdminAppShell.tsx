@@ -19,41 +19,39 @@ import {
   X,
 } from 'lucide-react'
 import turbowareLogo from '@/app/assets/turboware-logo.png'
+import { AdminLangToggle, useAdminLang } from '@/components/admin/AdminLangProvider'
+import type { MsgKey } from '@/lib/admin-i18n'
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>
 
-const NAV = [
-  { href: '/admin', label: 'Home', icon: LayoutDashboard, exact: true },
-  { href: '/admin/clients', label: 'Clients', icon: Users, exact: false },
-  { href: '/admin/licenses', label: 'Licenses', icon: Key, exact: false },
-  { href: '/admin/tickets', label: 'Tickets', icon: Ticket, exact: false },
-  { href: '/admin/invoices', label: 'Invoices', icon: Receipt, exact: false },
-  { href: '/admin/products', label: 'Products', icon: Package, exact: false },
-] as const
+const NAV: { href: string; labelKey: MsgKey; icon: IconType; exact: boolean }[] = [
+  { href: '/admin', labelKey: 'nav.home', icon: LayoutDashboard, exact: true },
+  { href: '/admin/clients', labelKey: 'nav.clients', icon: Users, exact: false },
+  { href: '/admin/licenses', labelKey: 'nav.licenses', icon: Key, exact: false },
+  { href: '/admin/tickets', labelKey: 'nav.tickets', icon: Ticket, exact: false },
+  { href: '/admin/invoices', labelKey: 'nav.invoices', icon: Receipt, exact: false },
+  { href: '/admin/products', labelKey: 'nav.products', icon: Package, exact: false },
+]
 
-const ACCOUNT_NAV = [
-  { href: '/admin/team', label: 'Team', icon: UserCog, exact: false },
-  { href: '/admin/security', label: 'Security', icon: Shield, exact: true },
-] as const
+const ACCOUNT_NAV: { href: string; labelKey: MsgKey; icon: IconType; exact: boolean }[] = [
+  { href: '/admin/team', labelKey: 'nav.team', icon: UserCog, exact: false },
+  { href: '/admin/security', labelKey: 'nav.security', icon: Shield, exact: true },
+]
 
-const TITLES: Record<string, string> = {
-  '/admin': 'Dashboard',
-  '/admin/clients': 'Clients',
-  '/admin/clients/new': 'New Tenant',
-  '/admin/licenses': 'Licenses',
-  '/admin/licenses/new': 'New License',
-  '/admin/tickets': 'Tickets',
-  '/admin/invoices': 'Invoices',
-  '/admin/team': 'Team',
-  '/admin/products': 'Products',
-  '/admin/security': 'Security',
-}
-
-function pageTitle(pathname: string) {
-  if (TITLES[pathname]) return TITLES[pathname]
-  if (pathname.startsWith('/admin/licenses/')) return 'License'
-  if (pathname.startsWith('/admin/clients/')) return 'Client'
-  return 'Admin'
+function pageTitleKey(pathname: string): MsgKey {
+  if (pathname === '/admin') return 'title.dashboard'
+  if (pathname === '/admin/clients') return 'title.clients'
+  if (pathname === '/admin/clients/new') return 'title.clientsNew'
+  if (pathname === '/admin/licenses') return 'title.licenses'
+  if (pathname === '/admin/licenses/new') return 'licenses.new'
+  if (pathname.startsWith('/admin/licenses/')) return 'title.license'
+  if (pathname.startsWith('/admin/clients/')) return 'title.client'
+  if (pathname === '/admin/tickets') return 'title.tickets'
+  if (pathname === '/admin/invoices') return 'title.invoices'
+  if (pathname === '/admin/team') return 'title.team'
+  if (pathname === '/admin/products') return 'title.products'
+  if (pathname === '/admin/security') return 'title.security'
+  return 'title.admin'
 }
 
 function isActive(pathname: string, href: string, exact: boolean) {
@@ -71,6 +69,7 @@ interface Me {
 export function AdminAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { t } = useAdminLang()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [me, setMe] = useState<Me | null>(null)
 
@@ -99,7 +98,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
     router.push('/admin/login')
   }
 
-  const title = pageTitle(pathname)
+  const title = t(pageTitleKey(pathname))
   const initials = (me?.name || me?.email || 'A').charAt(0).toUpperCase()
 
   return (
@@ -108,7 +107,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           className="fixed inset-0 z-30 bg-black/70 lg:hidden"
-          aria-label="Close navigation"
+          aria-label={t('nav.close')}
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -136,7 +135,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               Icon={item.icon}
-              title={item.label}
+              title={t(item.labelKey)}
               active={isActive(pathname, item.href, item.exact)}
               notifs={item.href === '/admin/tickets' ? me?.openTickets : undefined}
             />
@@ -147,7 +146,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               Icon={item.icon}
-              title={item.label}
+              title={t(item.labelKey)}
               active={isActive(pathname, item.href, item.exact)}
             />
           ))}
@@ -168,7 +167,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               className="rounded-md p-2 text-muted-foreground hover:bg-white/5 lg:hidden"
-              aria-label="Open navigation"
+              aria-label={t('nav.open')}
               onClick={() => setMobileOpen(true)}
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -179,10 +178,11 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <AdminLangToggle />
             <Link
               href="/admin/tickets"
               className="relative rounded-md border border-border bg-card p-2 text-muted-foreground transition hover:text-foreground"
-              aria-label="Tickets"
+              aria-label={t('nav.tickets')}
             >
               <Bell className="h-5 w-5" />
               {(me?.openTickets ?? 0) > 0 && (
@@ -195,7 +195,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
               className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-white/5"
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign out</span>
+              <span className="hidden sm:inline">{t('nav.signOut')}</span>
             </button>
           </div>
         </header>

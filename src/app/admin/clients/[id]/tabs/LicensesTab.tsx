@@ -11,6 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { dateLocale } from '@/lib/admin-i18n'
+import type { MsgKey } from '@/lib/admin-i18n'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,11 +47,18 @@ interface LicenseRow {
   tier: { id: string; name: string } | null
 }
 
-const STATUS_STYLES: Record<ProductStatus, { badge: string; label: string }> = {
-  ACTIVE:    { badge: badge.paid,    label: 'Active' },
-  PENDING:   { badge: badge.pending, label: 'Pending' },
-  SUSPENDED: { badge: badge.overdue, label: 'Suspended' },
-  CANCELLED: { badge: badge.mute,    label: 'Cancelled' },
+const STATUS_BADGE: Record<ProductStatus, string> = {
+  ACTIVE: badge.paid,
+  PENDING: badge.pending,
+  SUSPENDED: badge.overdue,
+  CANCELLED: badge.mute,
+}
+
+const STATUS_KEY: Record<ProductStatus, MsgKey> = {
+  ACTIVE: 'licenses.status.active',
+  PENDING: 'licenses.status.pending',
+  SUSPENDED: 'licenses.status.suspended',
+  CANCELLED: 'licenses.status.cancelled',
 }
 
 function planLabel(name: string | null | undefined) {
@@ -65,6 +75,7 @@ interface Props {
 }
 
 export function LicensesTab({ clientId }: Props) {
+  const { t, lang } = useAdminLang()
   const [licenses, setLicenses] = useState<LicenseRow[]>([])
   const [defaultSlug, setDefaultSlug] = useState('')
   const [catalog, setCatalog] = useState<CatalogProduct[]>([])
@@ -99,14 +110,14 @@ export function LicensesTab({ clientId }: Props) {
       setLicenses(data.licenses ?? [])
       setDefaultSlug(data.defaultSlug ?? '')
     } else {
-      setError('Could not load licenses.')
+      setError(t('licenses.loadError'))
     }
     if (catRes.ok) {
       const products = await catRes.json()
       setCatalog(Array.isArray(products) ? products : [])
     }
     setLoading(false)
-  }, [clientId])
+  }, [clientId, t])
 
   useEffect(() => { load() }, [load])
 
@@ -131,7 +142,7 @@ export function LicensesTab({ clientId }: Props) {
     })
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || 'Update failed.')
+      setError(data.error || t('licenses.updateError'))
     } else {
       await load()
     }
@@ -142,7 +153,7 @@ export function LicensesTab({ clientId }: Props) {
     e.preventDefault()
     setFormError('')
     if (!form.productId || !form.tierId || !form.dueDate || !form.tenantSlug.trim()) {
-      setFormError('Product, tier, due date, and tenant slug are required.')
+      setFormError(t('licenses.required'))
       return
     }
     setSaving(true)
@@ -159,7 +170,7 @@ export function LicensesTab({ clientId }: Props) {
     const data = await res.json().catch(() => ({}))
     setSaving(false)
     if (!res.ok) {
-      setFormError(data.error || 'Could not create license.')
+      setFormError(data.error || t('licenses.createError'))
       return
     }
     setDialogOpen(false)
@@ -183,7 +194,7 @@ export function LicensesTab({ clientId }: Props) {
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition"
           style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
         >
-          <Plus size={12} /> New License
+          <Plus size={12} /> {t('licenses.new')}
         </button>
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
@@ -192,24 +203,24 @@ export function LicensesTab({ clientId }: Props) {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
-              <th className="px-4 py-2.5 font-medium">Product</th>
-              <th className="px-4 py-2.5 font-medium">Plan</th>
-              <th className="px-4 py-2.5 font-medium">Due date</th>
-              <th className="px-4 py-2.5 font-medium">Tenant slug</th>
-              <th className="px-4 py-2.5 font-medium">Status</th>
-              <th className="px-4 py-2.5 font-medium text-right">Options</th>
+              <th className="px-4 py-2.5 font-medium">{t('licenses.product')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('licenses.plan')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('licenses.dueDate')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('licenses.tenantSlug')}</th>
+              <th className="px-4 py-2.5 font-medium">{t('licenses.status')}</th>
+              <th className="px-4 py-2.5 font-medium text-right">{t('licenses.options')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {licenses.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-10 text-center text-xs text-muted-foreground">
-                  No licenses yet.
+                  {t('licenses.empty')}
                 </td>
               </tr>
             ) : (
               licenses.map((row) => {
-                const st = STATUS_STYLES[row.status]
+                const st = STATUS_BADGE[row.status]
                 const rowBusy = busy === row.productId
                 const canCancel = row.status !== 'CANCELLED'
                 const productTiers = catalog.find((p) => p.id === row.productId)?.tiers ?? []
@@ -223,11 +234,11 @@ export function LicensesTab({ clientId }: Props) {
                     </td>
                     <td className="px-4 py-3 text-foreground">{planLabel(row.tier?.name)}</td>
                     <td className="px-4 py-3 text-foreground">
-                      {row.expiresAt ? new Date(row.expiresAt).toLocaleDateString() : '—'}
+                      {row.expiresAt ? new Date(row.expiresAt).toLocaleDateString(dateLocale(lang)) : '—'}
                     </td>
                     <td className="px-4 py-3 font-mono text-foreground">{row.tenantSlug || '—'}</td>
                     <td className="px-4 py-3">
-                      <span className={st.badge}>{st.label}</span>
+                      <span className={st}>{t(STATUS_KEY[row.status])}</span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
@@ -238,7 +249,7 @@ export function LicensesTab({ clientId }: Props) {
                             disabled={rowBusy}
                             className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted disabled:opacity-50"
                           >
-                            Status <ChevronDown className="w-3 h-3" />
+                            {t('licenses.statusBtn')} <ChevronDown className="w-3 h-3" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             {(['ACTIVE', 'SUSPENDED', 'PENDING'] as const).map((s) => (
@@ -247,7 +258,7 @@ export function LicensesTab({ clientId }: Props) {
                                 disabled={row.status === s}
                                 onClick={() => patch(row.productId, { status: s })}
                               >
-                                {STATUS_STYLES[s].label}
+                                {t(STATUS_KEY[s])}
                               </DropdownMenuItem>
                             ))}
                           </DropdownMenuContent>
@@ -258,16 +269,16 @@ export function LicensesTab({ clientId }: Props) {
                             disabled={rowBusy || productTiers.length === 0}
                             className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted disabled:opacity-50"
                           >
-                            Plan <ChevronDown className="w-3 h-3" />
+                            {t('licenses.planBtn')} <ChevronDown className="w-3 h-3" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {productTiers.map((t) => (
+                            {productTiers.map((tier) => (
                               <DropdownMenuItem
-                                key={t.id}
-                                disabled={row.tier?.id === t.id}
-                                onClick={() => patch(row.productId, { tierId: t.id })}
+                                key={tier.id}
+                                disabled={row.tier?.id === tier.id}
+                                onClick={() => patch(row.productId, { tierId: tier.id })}
                               >
-                                {planLabel(t.name)}
+                                {planLabel(tier.name)}
                               </DropdownMenuItem>
                             ))}
                           </DropdownMenuContent>
@@ -277,12 +288,12 @@ export function LicensesTab({ clientId }: Props) {
                           type="button"
                           disabled={rowBusy || !canCancel}
                           onClick={() => {
-                            if (!window.confirm(`Cancel ${row.product.name} for this client?`)) return
+                            if (!window.confirm(t('licenses.cancelConfirm', { name: row.product.name }))) return
                             patch(row.productId, { status: 'CANCELLED' })
                           }}
                           className="px-2 py-1 text-[10px] font-semibold rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-40"
                         >
-                          Cancel
+                          {t('licenses.cancel')}
                         </button>
                       </div>
                     </td>
@@ -297,19 +308,19 @@ export function LicensesTab({ clientId }: Props) {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md" showCloseButton>
           <DialogHeader>
-            <DialogTitle>New License</DialogTitle>
-            <DialogDescription>Select the product and configure this client’s license.</DialogDescription>
+            <DialogTitle>{t('licenses.dialogTitle')}</DialogTitle>
+            <DialogDescription>{t('licenses.dialogDesc')}</DialogDescription>
           </DialogHeader>
           <form onSubmit={createLicense} className="space-y-3">
             <label className="block space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Product</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('licenses.product')}</span>
               <select
                 value={form.productId}
                 onChange={(e) => setForm((f) => ({ ...f, productId: e.target.value, tierId: '' }))}
                 className={inputClass}
                 required
               >
-                <option value="">Select product</option>
+                <option value="">{t('licenses.selectProduct')}</option>
                 {catalog.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -319,7 +330,7 @@ export function LicensesTab({ clientId }: Props) {
             </label>
 
             <label className="block space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Tier</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('licenses.plan')}</span>
               <select
                 value={form.tierId}
                 onChange={(e) => setForm((f) => ({ ...f, tierId: e.target.value }))}
@@ -327,17 +338,17 @@ export function LicensesTab({ clientId }: Props) {
                 required
                 disabled={!selectedProduct}
               >
-                <option value="">Select tier</option>
-                {(selectedProduct?.tiers ?? []).map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {planLabel(t.name)}
+                <option value="">{t('licenses.selectTier')}</option>
+                {(selectedProduct?.tiers ?? []).map((tier) => (
+                  <option key={tier.id} value={tier.id}>
+                    {planLabel(tier.name)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="block space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Due date</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('licenses.dueDate')}</span>
               <input
                 type="date"
                 value={form.dueDate}
@@ -348,11 +359,11 @@ export function LicensesTab({ clientId }: Props) {
             </label>
 
             <label className="block space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Tenant slug</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('licenses.tenantSlug')}</span>
               <input
                 value={form.tenantSlug}
                 onChange={(e) => setForm((f) => ({ ...f, tenantSlug: e.target.value.toLowerCase() }))}
-                placeholder="acme"
+                placeholder={t('licenses.slugPlaceholder')}
                 className={inputClass}
                 required
               />
@@ -366,7 +377,7 @@ export function LicensesTab({ clientId }: Props) {
                 onClick={() => setDialogOpen(false)}
                 className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border text-foreground hover:bg-muted"
               >
-                Cancel
+                {t('licenses.cancel')}
               </button>
               <button
                 type="submit"
@@ -374,7 +385,7 @@ export function LicensesTab({ clientId }: Props) {
                 className="px-3 py-1.5 text-xs font-semibold rounded-md disabled:opacity-50"
                 style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
               >
-                {saving ? 'Creating…' : 'Create license'}
+                {saving ? t('licenses.creating') : t('licenses.create')}
               </button>
             </DialogFooter>
           </form>
