@@ -7,6 +7,9 @@ export const badge = {
   sky: 'tw-badge tw-badge-sky',
   coral: 'tw-badge tw-badge-coral',
   mute: 'tw-badge tw-badge-mute',
+  paid: 'tw-badge tw-badge-paid',
+  pending: 'tw-badge tw-badge-pending',
+  overdue: 'tw-badge tw-badge-overdue',
 } as const
 
 export const twColor = {

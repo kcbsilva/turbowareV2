@@ -110,7 +110,7 @@ export default function ClientProfilePage() {
           />
         )}
         {activeTab === 'licenses' && (
-          <LicensesTab clientId={client.id} licenses={client.licenses} />
+          <LicensesTab clientId={client.id} />
         )}
         {activeTab === 'billing' && (
           <BillingTab clientId={client.id} />

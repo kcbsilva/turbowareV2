@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Receipt, Loader2 } from 'lucide-react'
 import { badge } from '@/lib/badges'
+import { formatInvoiceNumber, resolveInvoiceDisplayStatus } from '@/lib/invoice-display'
 
 interface InvoiceRow {
   id: string
@@ -12,6 +13,7 @@ interface InvoiceRow {
   status: 'PENDING' | 'PAID' | 'OVERDUE' | 'WAIVED'
   dueDate: string
   paidAt: string | null
+  createdAt: string
   paymentGateway: string | null
   subscription: {
     product: string
@@ -20,12 +22,12 @@ interface InvoiceRow {
   }
 }
 
-const STATUS_CLS: Record<InvoiceRow['status'], string> = {
-  PENDING: badge.peach,
-  PAID: badge.teal,
-  OVERDUE: badge.coral,
-  WAIVED: badge.mute,
-}
+const STATUS_CLS = {
+  PENDING: { cls: badge.pending, label: 'Pending' },
+  PAID: { cls: badge.paid, label: 'Paid' },
+  OVERDUE: { cls: badge.overdue, label: 'Overdue' },
+  WAIVED: { cls: badge.mute, label: 'Waived' },
+} as const
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceRow[]>([])
@@ -78,33 +80,41 @@ export default function InvoicesPage() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
+                <th className="px-4 py-2.5 font-medium">Invoice</th>
                 <th className="px-4 py-2.5 font-medium">Client</th>
-                <th className="px-4 py-2.5 font-medium">Type</th>
-                <th className="px-4 py-2.5 font-medium">Amount</th>
+                <th className="px-4 py-2.5 font-medium">Product</th>
+                <th className="px-4 py-2.5 font-medium">Value</th>
                 <th className="px-4 py-2.5 font-medium">Status</th>
                 <th className="px-4 py-2.5 font-medium">Due</th>
                 <th className="px-4 py-2.5 font-medium">Gateway</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {invoices.map((inv) => (
+              {invoices.map((inv) => {
+                const display = resolveInvoiceDisplayStatus(inv)
+                const st = STATUS_CLS[display]
+                return (
                 <tr key={inv.id} className="hover:bg-muted/30">
+                  <td className="px-4 py-3 font-mono text-[11px] font-semibold text-foreground">
+                    {formatInvoiceNumber(inv.id, inv.createdAt)}
+                  </td>
                   <td className="px-4 py-3">
                     <Link href={`/admin/clients/${inv.subscription.client.id}`} className="text-primary hover:underline font-medium">
                       {inv.subscription.client.company || inv.subscription.client.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-foreground">{inv.type.replace('_', ' ')}</td>
+                  <td className="px-4 py-3 text-foreground">{inv.subscription.product}</td>
                   <td className="px-4 py-3 font-mono text-foreground">{inv.amount.toLocaleString()}</td>
                   <td className="px-4 py-3">
-                    <span className={STATUS_CLS[inv.status]}>
-                      {inv.status}
+                    <span className={st.cls}>
+                      {st.label}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{new Date(inv.dueDate).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-muted-foreground">{inv.paymentGateway || '—'}</td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         )}

@@ -215,4 +215,19 @@ body {
     color: #737373;
     border-color: rgba(255, 255, 255, 0.08);
   }
+  .tw-badge-paid {
+    background-color: rgba(16, 185, 129, 0.16);
+    color: #6ee7b7;
+    border-color: rgba(16, 185, 129, 0.32);
+  }
+  .tw-badge-pending {
+    background-color: rgba(245, 158, 11, 0.16);
+    color: #fcd34d;
+    border-color: rgba(245, 158, 11, 0.32);
+  }
+  .tw-badge-overdue {
+    background-color: rgba(239, 68, 68, 0.16);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.32);
+  }
 }
