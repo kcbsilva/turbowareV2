@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
@@ -93,25 +94,45 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const emailChanged      = newEmail !== undefined && newEmail !== existing?.email
   const verificationToken = emailChanged && newEmail ? crypto.randomBytes(32).toString('hex') : undefined
 
-  await prisma.client.update({
-    where: { id },
-    data: {
-      ...(name !== undefined ? { name: name.trim() } : {}),
-      ...(email !== undefined ? { email: newEmail } : {}),
-      ...(phone !== undefined ? { phone: phone?.trim() || null } : {}),
-      ...(company !== undefined ? { company: company?.trim() || null } : {}),
-      ...(cnpj !== undefined ? { cnpj: cnpj?.replace(/\D/g, '') || null } : {}),
-      ...(internalNotes !== undefined ? { internalNotes: internalNotes?.trim() || null } : {}),
-      ...(passwordHash ? { password: passwordHash } : {}),
-      ...(emailChanged ? {
-        emailVerified:                   false,
-        emailVerificationToken:          verificationToken ?? null,
-        emailVerificationTokenExpiresAt: verificationToken
-          ? new Date(Date.now() + 24 * 60 * 60 * 1000)
-          : null,
-      } : {}),
-    },
-  })
+  try {
+    await prisma.client.update({
+      where: { id },
+      data: {
+        ...(name !== undefined ? { name: name.trim() } : {}),
+        ...(email !== undefined ? { email: newEmail } : {}),
+        ...(phone !== undefined ? { phone: phone?.trim() || null } : {}),
+        ...(company !== undefined ? { company: company?.trim() || null } : {}),
+        ...(cnpj !== undefined ? { cnpj: cnpj?.replace(/\D/g, '') || null } : {}),
+        ...(internalNotes !== undefined ? { internalNotes: internalNotes?.trim() || null } : {}),
+        ...(passwordHash ? { password: passwordHash } : {}),
+        ...(emailChanged ? {
+          emailVerified:                   false,
+          emailVerificationToken:          verificationToken ?? null,
+          emailVerificationTokenExpiresAt: verificationToken
+            ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+            : null,
+        } : {}),
+      },
+    })
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      const target = Array.isArray(err.meta?.target) ? err.meta.target.join(',') : String(err.meta?.target ?? '')
+      if (target.includes('cnpj')) {
+        return NextResponse.json(
+          { error: 'This CNPJ is already assigned to another client.' },
+          { status: 409 },
+        )
+      }
+      if (target.includes('email')) {
+        return NextResponse.json(
+          { error: 'This email is already assigned to another client.' },
+          { status: 409 },
+        )
+      }
+      return NextResponse.json({ error: 'A unique field is already in use.' }, { status: 409 })
+    }
+    throw err
+  }
 
   // Send new verification email if email changed — non-fatal
   if (emailChanged && newEmail && verificationToken) {

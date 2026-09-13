@@ -21,9 +21,10 @@ interface Client {
 
 interface Props {
   client: Client
+  onUpdated?: (client: Client) => void
 }
 
-export function OverviewTab({ client }: Props) {
+export function OverviewTab({ client, onUpdated }: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -46,6 +47,17 @@ export function OverviewTab({ client }: Props) {
   const [resendingVerification, setResendingVerification] = useState(false)
   const [verificationMsg, setVerificationMsg] = useState('')
   const [canDelete, setCanDelete] = useState(false)
+
+  useEffect(() => {
+    setForm({
+      name: client.name,
+      email: client.email || '',
+      phone: client.phone || '',
+      company: client.company || '',
+      cnpj: client.cnpj || '',
+      internalNotes: client.internalNotes || '',
+    })
+  }, [client])
 
   useEffect(() => {
     fetch('/api/admin/me')
@@ -87,8 +99,14 @@ export function OverviewTab({ client }: Props) {
       body: JSON.stringify(form),
     })
     setSaving(false)
-    if (res.ok) { setEditing(false); router.refresh() }
-    else { const d = await res.json(); setError(d.error || 'Save failed.') }
+    if (res.ok) {
+      const updated = await res.json().catch(() => null)
+      if (updated) onUpdated?.(updated)
+      setEditing(false)
+    } else {
+      const d = await res.json().catch(() => ({}))
+      setError(d.error || 'Save failed.')
+    }
   }
 
   async function resetPassword() {

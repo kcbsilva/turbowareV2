@@ -104,7 +104,10 @@ export default function ClientProfilePage() {
       <ClientNavBar active={activeTab} onSelect={setActiveTab} />
       <main className="min-h-0 flex-1 overflow-y-auto window-scroll bg-[#FBFEFC] p-6">
         {activeTab === 'overview' && (
-          <OverviewTab client={client} />
+          <OverviewTab
+            client={client}
+            onUpdated={(updated) => setClient((current) => (current ? { ...current, ...updated } : current))}
+          />
         )}
         {activeTab === 'licenses' && (
           <LicensesTab clientId={client.id} licenses={client.licenses} />
