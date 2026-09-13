@@ -39,13 +39,15 @@ function NavButton({
       title={item.label}
       aria-label={item.label}
       aria-current={active ? 'page' : undefined}
-      className={`relative flex flex-col items-center justify-center gap-1 px-1 py-2.5 ${
-        active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-      }`}
+      className={[
+        'profile-nav-item relative z-[1] flex items-center gap-1.5 shrink-0 px-2.5 text-[12px] font-medium whitespace-nowrap transition-colors duration-100 focus:outline-none',
+        active
+          ? 'profile-folder-tab h-full text-foreground'
+          : 'my-1 h-7 rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground',
+      ].join(' ')}
     >
-      {active && <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-white" />}
-      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-      <span className="max-w-full truncate text-[10px] font-medium leading-none">{item.label}</span>
+      <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />
+      <span>{item.label}</span>
     </button>
   )
 }
@@ -54,12 +56,12 @@ export function ClientNavBar({ active, onSelect }: Props) {
   return (
     <nav
       aria-label="Client profile sections"
-      className="flex w-16 shrink-0 flex-col border-r border-border bg-background py-1"
+      className="profile-nav flex h-9 shrink-0 items-end gap-0.5 overflow-x-auto px-4 scrollbar-none"
     >
       {PRIMARY.map((item) => (
         <NavButton key={item.id} item={item} active={active === item.id} onSelect={onSelect} />
       ))}
-      <span aria-hidden className="mx-3 my-1 h-px shrink-0 bg-border" />
+      <span aria-hidden className="mx-1.5 h-4 w-px shrink-0 self-center bg-border" />
       {SECONDARY.map((item) => (
         <NavButton key={item.id} item={item} active={active === item.id} onSelect={onSelect} />
       ))}

@@ -101,32 +101,30 @@ export default function ClientProfilePage() {
         company={client.company}
         createdAt={client.createdAt}
       />
-      <div className="flex min-h-0 min-w-0 flex-1">
-        <ClientNavBar active={activeTab} onSelect={setActiveTab} />
-        <main className="min-h-0 flex-1 overflow-y-auto window-scroll bg-background p-4">
-          {activeTab === 'overview' && (
-            <OverviewTab
-              client={client}
-              onUpdated={(updated) => setClient((current) => (current ? { ...current, ...updated } : current))}
-            />
-          )}
-          {activeTab === 'licenses' && (
-            <LicensesTab clientId={client.id} licenses={client.licenses} />
-          )}
-          {activeTab === 'billing' && (
-            <BillingTab clientId={client.id} />
-          )}
-          {activeTab === 'tickets' && (
-            <TicketsTab clientId={client.id} clientName={client.name} />
-          )}
-          {activeTab === 'notes' && (
-            <NotesTab clientId={client.id} initialNotes={client.clientNotes} />
-          )}
-          {activeTab === 'history' && (
-            <HistoryTab client={client} licenses={client.licenses} notes={client.clientNotes} tickets={client.tickets ?? []} />
-          )}
-        </main>
-      </div>
+      <ClientNavBar active={activeTab} onSelect={setActiveTab} />
+      <main className="min-h-0 flex-1 overflow-y-auto window-scroll bg-background p-4">
+        {activeTab === 'overview' && (
+          <OverviewTab
+            client={client}
+            onUpdated={(updated) => setClient((current) => (current ? { ...current, ...updated } : current))}
+          />
+        )}
+        {activeTab === 'licenses' && (
+          <LicensesTab clientId={client.id} licenses={client.licenses} />
+        )}
+        {activeTab === 'billing' && (
+          <BillingTab clientId={client.id} />
+        )}
+        {activeTab === 'tickets' && (
+          <TicketsTab clientId={client.id} clientName={client.name} />
+        )}
+        {activeTab === 'notes' && (
+          <NotesTab clientId={client.id} initialNotes={client.clientNotes} />
+        )}
+        {activeTab === 'history' && (
+          <HistoryTab client={client} licenses={client.licenses} notes={client.clientNotes} tickets={client.tickets ?? []} />
+        )}
+      </main>
     </div>
   )
 }
