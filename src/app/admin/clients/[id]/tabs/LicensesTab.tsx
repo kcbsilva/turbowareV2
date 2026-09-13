@@ -1,8 +1,16 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, Loader2, Package } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ChevronDown, Loader2, Plus } from 'lucide-react'
 import { badge } from '@/lib/badges'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,9 +23,6 @@ type ProductStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'CANCELLED'
 interface Tier {
   id: string
   name: string
-  description: string | null
-  maxSeats: number | null
-  maxMapItems: number | null
   sortOrder: number
 }
 
@@ -25,15 +30,18 @@ interface CatalogProduct {
   id: string
   name: string
   slug: string
-  description: string | null
   logoEmoji: string | null
   tiers: Tier[]
-  activation: {
-    id: string
-    status: ProductStatus
-    tierId: string | null
-    tier: { id: string; name: string } | null
-  } | null
+}
+
+interface LicenseRow {
+  id: string
+  productId: string
+  status: ProductStatus
+  tenantSlug: string | null
+  expiresAt: string | null
+  product: { id: string; name: string; slug: string; logoEmoji: string | null }
+  tier: { id: string; name: string } | null
 }
 
 const STATUS_STYLES: Record<ProductStatus, { badge: string; label: string }> = {
@@ -49,26 +57,69 @@ function planLabel(name: string | null | undefined) {
   return name
 }
 
+const inputClass =
+  'w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition'
+
 interface Props {
   clientId: string
 }
 
 export function LicensesTab({ clientId }: Props) {
-  const [products, setProducts] = useState<CatalogProduct[]>([])
+  const [licenses, setLicenses] = useState<LicenseRow[]>([])
+  const [defaultSlug, setDefaultSlug] = useState('')
+  const [catalog, setCatalog] = useState<CatalogProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
 
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [form, setForm] = useState({
+    productId: '',
+    tierId: '',
+    dueDate: '',
+    tenantSlug: '',
+  })
+
+  const selectedProduct = useMemo(
+    () => catalog.find((p) => p.id === form.productId) ?? null,
+    [catalog, form.productId],
+  )
+
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
-    const res = await fetch(`/api/admin/clients/${clientId}/products`, { cache: 'no-store' })
-    if (res.ok) setProducts(await res.json())
-    else setError('Could not load products.')
+    const [licRes, catRes] = await Promise.all([
+      fetch(`/api/admin/clients/${clientId}/products`, { cache: 'no-store' }),
+      fetch('/api/admin/products', { cache: 'no-store' }),
+    ])
+    if (licRes.ok) {
+      const data = await licRes.json()
+      setLicenses(data.licenses ?? [])
+      setDefaultSlug(data.defaultSlug ?? '')
+    } else {
+      setError('Could not load licenses.')
+    }
+    if (catRes.ok) {
+      const products = await catRes.json()
+      setCatalog(Array.isArray(products) ? products : [])
+    }
     setLoading(false)
   }, [clientId])
 
   useEffect(() => { load() }, [load])
+
+  function openNew() {
+    setFormError('')
+    setForm({
+      productId: '',
+      tierId: '',
+      dueDate: '',
+      tenantSlug: defaultSlug,
+    })
+    setDialogOpen(true)
+  }
 
   async function patch(productId: string, body: { status?: ProductStatus; tierId?: string | null }) {
     setBusy(productId)
@@ -87,6 +138,34 @@ export function LicensesTab({ clientId }: Props) {
     setBusy(null)
   }
 
+  async function createLicense(e: React.FormEvent) {
+    e.preventDefault()
+    setFormError('')
+    if (!form.productId || !form.tierId || !form.dueDate || !form.tenantSlug.trim()) {
+      setFormError('Product, tier, due date, and tenant slug are required.')
+      return
+    }
+    setSaving(true)
+    const res = await fetch(`/api/admin/clients/${clientId}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productId: form.productId,
+        tierId: form.tierId,
+        dueDate: form.dueDate,
+        tenantSlug: form.tenantSlug.trim().toLowerCase(),
+      }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setSaving(false)
+    if (!res.ok) {
+      setFormError(data.error || 'Could not create license.')
+      return
+    }
+    setDialogOpen(false)
+    await load()
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -97,55 +176,58 @@ export function LicensesTab({ clientId }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-[11px] text-muted-foreground">
-        Available Turboware services for this client. Change plan, status, or cancel from Options.
-      </p>
+      <div className="flex items-center justify-end">
+        <button
+          type="button"
+          onClick={openNew}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition"
+          style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+        >
+          <Plus size={12} /> New License
+        </button>
+      </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
 
-      {products.length === 0 ? (
-        <div className="bg-card border border-border rounded-lg px-6 py-10 flex flex-col items-center gap-2 text-muted-foreground">
-          <Package className="w-8 h-8 opacity-20" />
-          <p className="text-xs">No products in the catalog yet.</p>
-        </div>
-      ) : (
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
-                <th className="px-4 py-2.5 font-medium">Product</th>
-                <th className="px-4 py-2.5 font-medium">Plan</th>
-                <th className="px-4 py-2.5 font-medium">Status</th>
-                <th className="px-4 py-2.5 font-medium text-right">Options</th>
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
+              <th className="px-4 py-2.5 font-medium">Product</th>
+              <th className="px-4 py-2.5 font-medium">Plan</th>
+              <th className="px-4 py-2.5 font-medium">Due date</th>
+              <th className="px-4 py-2.5 font-medium">Tenant slug</th>
+              <th className="px-4 py-2.5 font-medium">Status</th>
+              <th className="px-4 py-2.5 font-medium text-right">Options</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {licenses.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-10 text-center text-xs text-muted-foreground">
+                  No licenses yet.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {products.map((p) => {
-                const status = p.activation?.status
-                const st = status ? STATUS_STYLES[status] : null
-                const rowBusy = busy === p.id
-                const canCancel = status && status !== 'CANCELLED'
+            ) : (
+              licenses.map((row) => {
+                const st = STATUS_STYLES[row.status]
+                const rowBusy = busy === row.productId
+                const canCancel = row.status !== 'CANCELLED'
+                const productTiers = catalog.find((p) => p.id === row.productId)?.tiers ?? []
                 return (
-                  <tr key={p.id} className="hover:bg-muted/30">
+                  <tr key={row.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-base leading-none">{p.logoEmoji ?? '📦'}</span>
-                        <div className="min-w-0">
-                          <p className="font-medium text-foreground">{p.name}</p>
-                          {p.description && (
-                            <p className="text-[10px] text-muted-foreground truncate">{p.description}</p>
-                          )}
-                        </div>
+                        <span className="text-base leading-none">{row.product.logoEmoji ?? '📦'}</span>
+                        <p className="font-medium text-foreground">{row.product.name}</p>
                       </div>
                     </td>
+                    <td className="px-4 py-3 text-foreground">{planLabel(row.tier?.name)}</td>
                     <td className="px-4 py-3 text-foreground">
-                      {planLabel(p.activation?.tier?.name)}
+                      {row.expiresAt ? new Date(row.expiresAt).toLocaleDateString() : '—'}
                     </td>
+                    <td className="px-4 py-3 font-mono text-foreground">{row.tenantSlug || '—'}</td>
                     <td className="px-4 py-3">
-                      {st ? (
-                        <span className={st.badge}>{st.label}</span>
-                      ) : (
-                        <span className={badge.mute}>Not licensed</span>
-                      )}
+                      <span className={st.badge}>{st.label}</span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
@@ -162,8 +244,8 @@ export function LicensesTab({ clientId }: Props) {
                             {(['ACTIVE', 'SUSPENDED', 'PENDING'] as const).map((s) => (
                               <DropdownMenuItem
                                 key={s}
-                                disabled={status === s}
-                                onClick={() => patch(p.id, { status: s })}
+                                disabled={row.status === s}
+                                onClick={() => patch(row.productId, { status: s })}
                               >
                                 {STATUS_STYLES[s].label}
                               </DropdownMenuItem>
@@ -173,17 +255,17 @@ export function LicensesTab({ clientId }: Props) {
 
                         <DropdownMenu>
                           <DropdownMenuTrigger
-                            disabled={rowBusy || p.tiers.length === 0}
+                            disabled={rowBusy || productTiers.length === 0}
                             className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted disabled:opacity-50"
                           >
                             Plan <ChevronDown className="w-3 h-3" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {p.tiers.map((t) => (
+                            {productTiers.map((t) => (
                               <DropdownMenuItem
                                 key={t.id}
-                                disabled={p.activation?.tierId === t.id}
-                                onClick={() => patch(p.id, { tierId: t.id })}
+                                disabled={row.tier?.id === t.id}
+                                onClick={() => patch(row.productId, { tierId: t.id })}
                               >
                                 {planLabel(t.name)}
                               </DropdownMenuItem>
@@ -195,8 +277,8 @@ export function LicensesTab({ clientId }: Props) {
                           type="button"
                           disabled={rowBusy || !canCancel}
                           onClick={() => {
-                            if (!window.confirm(`Cancel ${p.name} for this client?`)) return
-                            patch(p.id, { status: 'CANCELLED' })
+                            if (!window.confirm(`Cancel ${row.product.name} for this client?`)) return
+                            patch(row.productId, { status: 'CANCELLED' })
                           }}
                           className="px-2 py-1 text-[10px] font-semibold rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-40"
                         >
@@ -206,11 +288,98 @@ export function LicensesTab({ clientId }: Props) {
                     </td>
                   </tr>
                 )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>New License</DialogTitle>
+            <DialogDescription>Select the product and configure this client’s license.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={createLicense} className="space-y-3">
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Product</span>
+              <select
+                value={form.productId}
+                onChange={(e) => setForm((f) => ({ ...f, productId: e.target.value, tierId: '' }))}
+                className={inputClass}
+                required
+              >
+                <option value="">Select product</option>
+                {catalog.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Tier</span>
+              <select
+                value={form.tierId}
+                onChange={(e) => setForm((f) => ({ ...f, tierId: e.target.value }))}
+                className={inputClass}
+                required
+                disabled={!selectedProduct}
+              >
+                <option value="">Select tier</option>
+                {(selectedProduct?.tiers ?? []).map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {planLabel(t.name)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Due date</span>
+              <input
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+                className={inputClass}
+                required
+              />
+            </label>
+
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Tenant slug</span>
+              <input
+                value={form.tenantSlug}
+                onChange={(e) => setForm((f) => ({ ...f, tenantSlug: e.target.value.toLowerCase() }))}
+                placeholder="acme"
+                className={inputClass}
+                required
+              />
+            </label>
+
+            {formError && <p className="text-xs text-destructive">{formError}</p>}
+
+            <DialogFooter>
+              <button
+                type="button"
+                onClick={() => setDialogOpen(false)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border text-foreground hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-3 py-1.5 text-xs font-semibold rounded-md disabled:opacity-50"
+                style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+              >
+                {saving ? 'Creating…' : 'Create license'}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

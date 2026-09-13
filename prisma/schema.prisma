@@ -295,6 +295,7 @@ model ClientProduct {
   tier        ProductTier?        @relation(fields: [tierId], references: [id])
   status      ClientProductStatus @default(PENDING)
   notes       String?
+  tenantSlug  String?
   activatedAt DateTime?
   expiresAt   DateTime?
   createdAt   DateTime            @default(now())

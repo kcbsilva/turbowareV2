@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { ensureDefaultCatalog } from '@/lib/product-catalog'
 
 // Auth is handled by middleware for /api/admin/* routes
 
 export async function GET() {
+  await ensureDefaultCatalog()
   const products = await prisma.product.findMany({
     orderBy: { sortOrder: 'asc' },
     include: { tiers: { orderBy: { sortOrder: 'asc' } }, _count: { select: { activations: true } } },
