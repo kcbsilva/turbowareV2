@@ -10,6 +10,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     name?: string
     title?: string
     notes?: string | null
+    body?: string | null
   }>(req)
   if (error) return badRequest()
 

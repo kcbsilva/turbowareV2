@@ -323,3 +323,35 @@ body {
     border-color: rgba(239, 68, 68, 0.32);
   }
 }
+
+.contract-editor-surface p.is-editor-empty:first-child::before {
+  color: hsl(var(--muted-foreground));
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.contract-editor-surface p,
+.contract-body p {
+  margin: 0.4em 0;
+}
+
+.contract-editor-surface ul,
+.contract-body ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.4em 0;
+}
+
+.contract-editor-surface ol,
+.contract-body ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin: 0.4em 0;
+}
+
+.contract-body {
+  overflow-wrap: anywhere;
+}
+

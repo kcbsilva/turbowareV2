@@ -28,11 +28,9 @@ export async function POST(req: NextRequest, { params }: Params) {
     startsAt?: string
     notes?: string
     templateId?: string
+    body?: string
   }>(req)
   if (error) return badRequest()
-
-  const client = await prisma.client.findUnique({ where: { id: clientId }, select: { id: true } })
-  if (!client) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const result = await createContract({
     clientId,
@@ -40,6 +38,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     startsAt: body.startsAt,
     notes: body.notes,
     templateId: body.templateId,
+    body: body.body,
   })
   if ('error' in result) {
     return NextResponse.json({ error: result.error }, { status: result.status })

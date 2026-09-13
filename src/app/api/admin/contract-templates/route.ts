@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     name?: string
     title?: string
     notes?: string
+    body?: string
   }>(req)
   if (error) return badRequest()
 
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
     name: body.name ?? '',
     title: body.title ?? '',
     notes: body.notes,
+    body: body.body,
   })
   if ('error' in result) {
     return NextResponse.json({ error: result.error }, { status: result.status })

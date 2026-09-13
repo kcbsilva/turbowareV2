@@ -14,6 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { ContractBodyEditor } from '@/components/admin/ContractBodyEditor'
+import { sanitizeContractHtml } from '@/lib/contract-variables'
 import { dateLocale } from '@/lib/admin-i18n'
 import type { MsgKey } from '@/lib/admin-i18n'
 import {
@@ -58,6 +60,7 @@ interface ContractRow {
   startsAt: string
   endsAt: string | null
   notes: string | null
+  body: string | null
   licenses: LicenseRow[]
 }
 
@@ -121,8 +124,8 @@ export function ContractsTab({ clientId }: Props) {
   const [contractOpen, setContractOpen] = useState(false)
   const [savingContract, setSavingContract] = useState(false)
   const [contractError, setContractError] = useState('')
-  const [templates, setTemplates] = useState<{ id: string; name: string; title: string; notes: string | null }[]>([])
-  const [contractForm, setContractForm] = useState({ templateId: '', title: '', startsAt: '', notes: '' })
+  const [templates, setTemplates] = useState<{ id: string; name: string; title: string; notes: string | null; body: string | null }[]>([])
+  const [contractForm, setContractForm] = useState({ templateId: '', title: '', startsAt: '', notes: '', body: '' })
 
   const [licenseOpen, setLicenseOpen] = useState(false)
   const [licenseContractId, setLicenseContractId] = useState('')
@@ -188,6 +191,7 @@ export function ContractsTab({ clientId }: Props) {
       title: '',
       startsAt: new Date().toISOString().slice(0, 10),
       notes: '',
+      body: '',
     })
     setContractOpen(true)
   }
@@ -237,6 +241,7 @@ export function ContractsTab({ clientId }: Props) {
         title: contractForm.title.trim() || undefined,
         startsAt: contractForm.startsAt,
         notes: contractForm.notes.trim() || undefined,
+        body: contractForm.body || undefined,
       }),
     })
     const data = await res.json().catch(() => ({}))
@@ -353,6 +358,12 @@ export function ContractsTab({ clientId }: Props) {
             {contract.notes && (
               <p className="px-4 pt-2 text-[10px] text-muted-foreground">{contract.notes}</p>
             )}
+            {contract.body && (
+              <div
+                className="contract-body mx-4 my-3 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-foreground"
+                dangerouslySetInnerHTML={{ __html: sanitizeContractHtml(contract.body) }}
+              />
+            )}
             {contract.licenses.length === 0 ? (
               <p className="px-4 py-8 text-xs text-muted-foreground text-center">{t('contracts.noLicenses')}</p>
             ) : (
@@ -453,7 +464,7 @@ export function ContractsTab({ clientId }: Props) {
       )}
 
       <Dialog open={contractOpen} onOpenChange={setContractOpen}>
-        <DialogContent className="sm:max-w-md" showCloseButton>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl" showCloseButton>
           <DialogHeader>
             <DialogTitle>{t('contracts.dialogTitle')}</DialogTitle>
             <DialogDescription>{t('contracts.dialogDesc')}</DialogDescription>
@@ -472,6 +483,7 @@ export function ContractsTab({ clientId }: Props) {
                       templateId,
                       title: tpl?.title ?? (templateId ? f.title : f.title),
                       notes: tpl ? (tpl.notes ?? '') : f.notes,
+                      body: tpl ? (tpl.body ?? '') : f.body,
                     }))
                   }}
                   className={inputClass}
@@ -513,6 +525,14 @@ export function ContractsTab({ clientId }: Props) {
                 className={inputClass}
               />
             </label>
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.body')}</span>
+              <p className="text-[11px] text-muted-foreground">{t('templates.varHint')}</p>
+              <ContractBodyEditor
+                value={contractForm.body}
+                onChange={(body) => setContractForm((f) => ({ ...f, body }))}
+              />
+            </div>
             {contractError && <p className="text-xs text-destructive">{contractError}</p>}
             <DialogFooter>
               <button

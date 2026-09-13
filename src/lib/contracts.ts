@@ -1,5 +1,6 @@
 import { ContractStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { contractVariableValues, interpolateContractText, sanitizeContractHtml } from '@/lib/contract-variables'
 
 export function formatContractNumber(id: string, createdAt?: string | Date | null): string {
   const suffix = id.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase() || 'XXXXXX'
@@ -44,6 +45,7 @@ export async function listClientContracts(clientId: string) {
       startsAt: c.startsAt,
       endsAt: c.endsAt,
       notes: c.notes,
+      body: c.body,
       createdAt: c.createdAt,
       licenses: c.licenses.map((row) => ({
         id: row.id,
@@ -65,10 +67,26 @@ export async function createContract(opts: {
   title?: string
   startsAt?: string
   notes?: string
+  body?: string
   templateId?: string
 }) {
   let title = opts.title?.trim() ?? ''
   let notes = opts.notes?.trim() || undefined
+  let body = opts.body
+
+  const client = await prisma.client.findUnique({
+    where: { id: opts.clientId },
+    select: {
+      id: true,
+      name: true,
+      company: true,
+      email: true,
+      phone: true,
+      cnpj: true,
+      subdomain: true,
+    },
+  })
+  if (!client) return { error: 'Not found', status: 404 as const }
 
   if (opts.templateId?.trim()) {
     const template = await prisma.contractTemplate.findUnique({
@@ -77,6 +95,7 @@ export async function createContract(opts: {
     if (!template) return { error: 'Template not found', status: 400 as const }
     if (!title) title = template.title
     if (notes === undefined && template.notes) notes = template.notes
+    if ((body === undefined || !body.trim()) && template.body) body = template.body
   }
 
   if (!title) return { error: 'Title is required', status: 400 as const }
@@ -96,15 +115,34 @@ export async function createContract(opts: {
       title,
       startsAt,
       notes: notes || null,
+      body: null,
       number: 'PENDING',
       status: ContractStatus.ACTIVE,
     },
   })
 
   const number = formatContractNumber(created.id, created.createdAt)
+  const values = contractVariableValues({
+    client,
+    contract: { title, number, startsAt },
+  })
+  const filledTitle = interpolateContractText(title, values)
+  const filledNotes = notes ? interpolateContractText(notes, values) : null
+  const filledBodyRaw = body
+    ? interpolateContractText(sanitizeContractHtml(body), values)
+    : null
+  const filledBody = filledBodyRaw && filledBodyRaw.replace(/<p><\/p>/gi, '').replace(/\s/g, '')
+    ? filledBodyRaw
+    : null
+
   const contract = await prisma.contract.update({
     where: { id: created.id },
-    data: { number },
+    data: {
+      number,
+      title: filledTitle,
+      notes: filledNotes,
+      body: filledBody,
+    },
     include: { licenses: { include: LICENSE_INCLUDE } },
   })
 

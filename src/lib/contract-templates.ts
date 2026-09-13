@@ -1,5 +1,11 @@
 import { prisma } from '@/lib/prisma'
 
+function emptyToNull(html?: string | null) {
+  if (!html) return null
+  const compact = html.replace(/<p><\/p>/gi, '').replace(/<br\s*\/?>/gi, '').replace(/\s/g, '')
+  return compact ? html : null
+}
+
 export async function listContractTemplates() {
   return prisma.contractTemplate.findMany({
     orderBy: { name: 'asc' },
@@ -10,6 +16,7 @@ export async function createContractTemplate(opts: {
   name: string
   title: string
   notes?: string
+  body?: string
 }) {
   const name = opts.name.trim()
   const title = opts.title.trim()
@@ -20,6 +27,7 @@ export async function createContractTemplate(opts: {
       name,
       title,
       notes: opts.notes?.trim() || null,
+      body: emptyToNull(opts.body),
     },
   })
   return { template }
@@ -27,7 +35,7 @@ export async function createContractTemplate(opts: {
 
 export async function updateContractTemplate(
   id: string,
-  opts: { name?: string; title?: string; notes?: string | null },
+  opts: { name?: string; title?: string; notes?: string | null; body?: string | null },
 ) {
   const existing = await prisma.contractTemplate.findUnique({ where: { id } })
   if (!existing) return { error: 'Not found', status: 404 as const }
@@ -42,6 +50,7 @@ export async function updateContractTemplate(
       name,
       title,
       notes: opts.notes === undefined ? existing.notes : opts.notes?.trim() || null,
+      body: opts.body === undefined ? existing.body : emptyToNull(opts.body ?? ''),
     },
   })
   return { template }
