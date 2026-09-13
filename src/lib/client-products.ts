@@ -193,11 +193,21 @@ async function ensureTurboIspTenant(clientId: string, slug: string): Promise<
 
 export async function createClientLicense(opts: {
   clientId: string
+  contractId: string
   productId: string
   tierId: string
   dueDate: string
   tenantSlug: string
 }) {
+  const contract = await prisma.contract.findFirst({
+    where: { id: opts.contractId, clientId: opts.clientId },
+    select: { id: true, status: true },
+  })
+  if (!contract) return { error: 'Contract not found', status: 404 as const }
+  if (contract.status === 'CANCELLED') {
+    return { error: 'Cannot add a license to a cancelled contract', status: 400 as const }
+  }
+
   const product = await prisma.product.findUnique({
     where: { id: opts.productId },
     include: { tiers: true },
@@ -239,6 +249,7 @@ export async function createClientLicense(opts: {
         where: { id: existing.id },
         data: {
           status: 'ACTIVE',
+          contractId: contract.id,
           tierId: tier.id,
           tenantSlug: parsedSlug.slug,
           expiresAt: due,
@@ -252,6 +263,7 @@ export async function createClientLicense(opts: {
     : await prisma.clientProduct.create({
         data: {
           clientId: opts.clientId,
+          contractId: contract.id,
           productId: opts.productId,
           tierId: tier.id,
           tenantSlug: parsedSlug.slug,

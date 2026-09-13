@@ -8,7 +8,7 @@ import { RefreshCw } from 'lucide-react'
 import { ClientHeader } from './ClientHeader'
 import { ClientNavBar, type ClientTab } from './ClientNavBar'
 import { OverviewTab } from './tabs/OverviewTab'
-import { LicensesTab } from './tabs/LicensesTab'
+import { ContractsTab } from './tabs/ContractsTab'
 import { BillingTab } from './tabs/BillingTab'
 import { NotesTab } from './tabs/NotesTab'
 import { HistoryTab } from './tabs/HistoryTab'
@@ -110,8 +110,8 @@ export default function ClientProfilePage() {
             onUpdated={(updated) => setClient((current) => (current ? { ...current, ...updated } : current))}
           />
         )}
-        {activeTab === 'licenses' && (
-          <LicensesTab clientId={client.id} />
+        {activeTab === 'contracts' && (
+          <ContractsTab clientId={client.id} />
         )}
         {activeTab === 'billing' && (
           <BillingTab clientId={client.id} />

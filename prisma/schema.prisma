@@ -32,9 +32,22 @@ model Client {
   tickets         SupportTicket[]
   products        ClientProduct[]
   documents       ClientDocument[]
+  contracts       Contract[]
 
   @@schema("turboware")
   @@map("clients")
+}
+
+model ContractTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  title     String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("turboware")
+  @@map("contract_templates")
 }
 
 model ClientNote {
@@ -344,6 +357,8 @@ model ClientProduct {
   id          String              @id @default(cuid())
   clientId    String
   client      Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  contractId  String?
+  contract    Contract?           @relation(fields: [contractId], references: [id], onDelete: SetNull)
   productId   String
   product     Product             @relation(fields: [productId], references: [id])
   tierId      String?
@@ -357,8 +372,37 @@ model ClientProduct {
   updatedAt   DateTime            @updatedAt
 
   @@unique([clientId, productId])
+  @@index([contractId])
   @@schema("turboware")
   @@map("client_products")
+}
+
+model Contract {
+  id        String         @id @default(cuid())
+  clientId  String
+  client    Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  number    String
+  title     String
+  status    ContractStatus @default(ACTIVE)
+  startsAt  DateTime       @default(now())
+  endsAt    DateTime?
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  licenses  ClientProduct[]
+
+  @@index([clientId, createdAt])
+  @@schema("turboware")
+  @@map("contracts")
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+
+  @@schema("turboware")
 }
 
 enum ClientProductStatus {

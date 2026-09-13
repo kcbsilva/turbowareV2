@@ -13,15 +13,15 @@ const routeTitles: Record<string, string> = {
   '/admin/licenses/new': 'New License',
   '/admin/tickets':      'Tickets',
   '/admin/invoices':     'Invoices',
-  '/admin/team':         'Team',
   '/admin/products':     'Products',
-  '/admin/security':     'Security',
+  '/admin/settings':     'Settings',
 }
 
 function getTitle(pathname: string) {
   if (routeTitles[pathname]) return routeTitles[pathname]
   if (pathname.startsWith('/admin/licenses/')) return 'License Detail'
   if (pathname.startsWith('/admin/clients/')) return 'Client Detail'
+  if (pathname.startsWith('/admin/settings')) return 'Settings'
   return 'Turboware Admin'
 }
 

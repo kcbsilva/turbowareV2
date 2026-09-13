@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { COOKIE_NAME, verifyAdminToken } from '@/lib/auth'
 import LoginForm from './LoginForm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function LoginPage() {
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value

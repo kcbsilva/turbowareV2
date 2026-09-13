@@ -1,0 +1,663 @@
+'use client'
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ChevronDown, Clock, FileText, Loader2, Plus } from 'lucide-react'
+import { badge } from '@/lib/badges'
+import { ExtendGraceDialog } from '@/components/ExtendGraceDialog'
+import { MAX_ADMIN_GRACE_DAYS } from '@/lib/grace-period'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { dateLocale } from '@/lib/admin-i18n'
+import type { MsgKey } from '@/lib/admin-i18n'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+
+type ProductStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'CANCELLED'
+type ContractStatus = 'DRAFT' | 'ACTIVE' | 'SUSPENDED' | 'CANCELLED'
+
+interface Tier {
+  id: string
+  name: string
+  sortOrder: number
+}
+
+interface CatalogProduct {
+  id: string
+  name: string
+  slug: string
+  logoEmoji: string | null
+  tiers: Tier[]
+}
+
+interface LicenseRow {
+  id: string
+  productId: string
+  status: ProductStatus
+  tenantSlug: string | null
+  expiresAt: string | null
+  product: { id: string; name: string; slug: string; logoEmoji: string | null }
+  tier: { id: string; name: string } | null
+}
+
+interface ContractRow {
+  id: string
+  number: string
+  title: string
+  status: ContractStatus
+  startsAt: string
+  endsAt: string | null
+  notes: string | null
+  licenses: LicenseRow[]
+}
+
+const STATUS_BADGE: Record<ProductStatus, string> = {
+  ACTIVE: badge.paid,
+  PENDING: badge.pending,
+  SUSPENDED: badge.overdue,
+  CANCELLED: badge.mute,
+}
+
+const CONTRACT_BADGE: Record<ContractStatus, string> = {
+  DRAFT: badge.mute,
+  ACTIVE: badge.paid,
+  SUSPENDED: badge.overdue,
+  CANCELLED: badge.mute,
+}
+
+const STATUS_KEY: Record<ProductStatus, MsgKey> = {
+  ACTIVE: 'licenses.status.active',
+  PENDING: 'licenses.status.pending',
+  SUSPENDED: 'licenses.status.suspended',
+  CANCELLED: 'licenses.status.cancelled',
+}
+
+const CONTRACT_STATUS_KEY: Record<ContractStatus, MsgKey> = {
+  DRAFT: 'contracts.status.draft',
+  ACTIVE: 'contracts.status.active',
+  SUSPENDED: 'contracts.status.suspended',
+  CANCELLED: 'contracts.status.cancelled',
+}
+
+function planLabel(name: string | null | undefined) {
+  if (!name) return '—'
+  if (/^\d/.test(name) || name.toLowerCase().endsWith('k+')) return `Tier ${name}`
+  return name
+}
+
+const inputClass =
+  'w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition'
+
+interface Props {
+  clientId: string
+}
+
+export function ContractsTab({ clientId }: Props) {
+  const { t, lang } = useAdminLang()
+  const [contracts, setContracts] = useState<ContractRow[]>([])
+  const [defaultSlug, setDefaultSlug] = useState('')
+  const [catalog, setCatalog] = useState<CatalogProduct[]>([])
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [graceOpen, setGraceOpen] = useState(false)
+  const [grace, setGrace] = useState<{
+    status: string
+    gracePeriodUsedAt: string | null
+    gracePeriodEndsAt: string | null
+  } | null>(null)
+
+  const [contractOpen, setContractOpen] = useState(false)
+  const [savingContract, setSavingContract] = useState(false)
+  const [contractError, setContractError] = useState('')
+  const [templates, setTemplates] = useState<{ id: string; name: string; title: string; notes: string | null }[]>([])
+  const [contractForm, setContractForm] = useState({ templateId: '', title: '', startsAt: '', notes: '' })
+
+  const [licenseOpen, setLicenseOpen] = useState(false)
+  const [licenseContractId, setLicenseContractId] = useState('')
+  const [savingLicense, setSavingLicense] = useState(false)
+  const [licenseError, setLicenseError] = useState('')
+  const [form, setForm] = useState({
+    productId: '',
+    tierId: '',
+    dueDate: '',
+    tenantSlug: '',
+  })
+
+  const selectedProduct = useMemo(
+    () => catalog.find((p) => p.id === form.productId) ?? null,
+    [catalog, form.productId],
+  )
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError('')
+    const [ctrRes, catRes, subRes, tplRes] = await Promise.all([
+      fetch(`/api/admin/clients/${clientId}/contracts`, { cache: 'no-store' }),
+      fetch('/api/admin/products', { cache: 'no-store' }),
+      fetch(`/api/admin/clients/${clientId}/subscription`, { cache: 'no-store' }),
+      fetch('/api/admin/contract-templates', { cache: 'no-store' }),
+    ])
+    if (ctrRes.ok) {
+      const data = await ctrRes.json()
+      setContracts(data.contracts ?? [])
+      setDefaultSlug(data.defaultSlug ?? '')
+    } else {
+      setError(t('contracts.loadError'))
+    }
+    if (catRes.ok) {
+      const products = await catRes.json()
+      setCatalog(Array.isArray(products) ? products : [])
+    }
+    if (subRes.ok) {
+      const sub = await subRes.json()
+      setGrace(
+        sub
+          ? {
+              status: sub.status,
+              gracePeriodUsedAt: sub.gracePeriodUsedAt ?? null,
+              gracePeriodEndsAt: sub.gracePeriodEndsAt ?? null,
+            }
+          : null,
+      )
+    }
+    if (tplRes.ok) {
+      const data = await tplRes.json()
+      setTemplates(Array.isArray(data.templates) ? data.templates : [])
+    }
+    setLoading(false)
+  }, [clientId, t])
+
+  useEffect(() => { load() }, [load])
+
+  function openNewContract() {
+    setContractError('')
+    setContractForm({
+      templateId: '',
+      title: '',
+      startsAt: new Date().toISOString().slice(0, 10),
+      notes: '',
+    })
+    setContractOpen(true)
+  }
+
+  function openNewLicense(contractId: string) {
+    setLicenseError('')
+    setLicenseContractId(contractId)
+    setForm({
+      productId: '',
+      tierId: '',
+      dueDate: '',
+      tenantSlug: defaultSlug,
+    })
+    setLicenseOpen(true)
+  }
+
+  async function patch(productId: string, body: { status?: ProductStatus; tierId?: string | null }) {
+    setBusy(productId)
+    setError('')
+    const res = await fetch(`/api/admin/clients/${clientId}/products/${productId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setError(data.error || t('licenses.updateError'))
+    } else {
+      await load()
+    }
+    setBusy(null)
+  }
+
+  async function createContract(e: React.FormEvent) {
+    e.preventDefault()
+    setContractError('')
+    if ((!contractForm.title.trim() && !contractForm.templateId) || !contractForm.startsAt) {
+      setContractError(t('contracts.required'))
+      return
+    }
+    setSavingContract(true)
+    const res = await fetch(`/api/admin/clients/${clientId}/contracts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        templateId: contractForm.templateId || undefined,
+        title: contractForm.title.trim() || undefined,
+        startsAt: contractForm.startsAt,
+        notes: contractForm.notes.trim() || undefined,
+      }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setSavingContract(false)
+    if (!res.ok) {
+      setContractError(data.error || t('contracts.createError'))
+      return
+    }
+    setContractOpen(false)
+    await load()
+  }
+
+  async function createLicense(e: React.FormEvent) {
+    e.preventDefault()
+    setLicenseError('')
+    if (!form.productId || !form.tierId || !form.dueDate || !form.tenantSlug.trim()) {
+      setLicenseError(t('licenses.required'))
+      return
+    }
+    setSavingLicense(true)
+    const res = await fetch(`/api/admin/clients/${clientId}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contractId: licenseContractId,
+        productId: form.productId,
+        tierId: form.tierId,
+        dueDate: form.dueDate,
+        tenantSlug: form.tenantSlug.trim().toLowerCase(),
+      }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setSavingLicense(false)
+    if (!res.ok) {
+      setLicenseError(data.error || t('licenses.createError'))
+      return
+    }
+    setLicenseOpen(false)
+    if (data.turboisp?.temporaryPassword && data.turboisp?.adminUsername) {
+      setNotice(
+        t('licenses.createdTenant', {
+          user: data.turboisp.adminUsername,
+          password: data.turboisp.temporaryPassword,
+        }),
+      )
+    } else {
+      setNotice('')
+    }
+    await load()
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  const card = 'bg-card border border-border rounded-lg'
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-end gap-2">
+        {grace && grace.status !== 'CANCELLED' && (
+          <button
+            type="button"
+            onClick={() => setGraceOpen(true)}
+            className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            {t('billing.extendGrace')}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={openNewContract}
+          className="tw-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition"
+        >
+          <Plus size={12} /> {t('contracts.new')}
+        </button>
+      </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      {notice && <p className="text-xs text-foreground">{notice}</p>}
+
+      {contracts.length === 0 ? (
+        <div className={`${card} px-6 py-10 flex flex-col items-center gap-2 text-muted-foreground`}>
+          <FileText className="w-8 h-8 opacity-20" />
+          <p className="text-xs">{t('contracts.empty')}</p>
+        </div>
+      ) : (
+        contracts.map((contract) => (
+          <div key={contract.id} className={card}>
+            <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-mono text-[11px] font-semibold text-foreground">{contract.number}</p>
+                  <span className={CONTRACT_BADGE[contract.status]}>{t(CONTRACT_STATUS_KEY[contract.status])}</span>
+                </div>
+                <p className="text-xs text-foreground mt-0.5">{contract.title}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {new Date(contract.startsAt).toLocaleDateString(dateLocale(lang))}
+                  {contract.endsAt ? ` – ${new Date(contract.endsAt).toLocaleDateString(dateLocale(lang))}` : ''}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => openNewLicense(contract.id)}
+                disabled={contract.status === 'CANCELLED'}
+                className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted disabled:opacity-40"
+              >
+                <Plus className="w-3 h-3" /> {t('contracts.addLicense')}
+              </button>
+            </div>
+            {contract.notes && (
+              <p className="px-4 pt-2 text-[10px] text-muted-foreground">{contract.notes}</p>
+            )}
+            {contract.licenses.length === 0 ? (
+              <p className="px-4 py-8 text-xs text-muted-foreground text-center">{t('contracts.noLicenses')}</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
+                      <th className="px-4 py-2.5 font-medium">{t('licenses.product')}</th>
+                      <th className="px-4 py-2.5 font-medium">{t('licenses.plan')}</th>
+                      <th className="px-4 py-2.5 font-medium">{t('licenses.dueDate')}</th>
+                      <th className="px-4 py-2.5 font-medium">{t('licenses.tenantSlug')}</th>
+                      <th className="px-4 py-2.5 font-medium">{t('licenses.status')}</th>
+                      <th className="px-4 py-2.5 font-medium text-right">{t('licenses.options')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {contract.licenses.map((row) => {
+                      const st = STATUS_BADGE[row.status]
+                      const rowBusy = busy === row.productId
+                      const canCancel = row.status !== 'CANCELLED'
+                      const productTiers = catalog.find((p) => p.id === row.productId)?.tiers ?? []
+                      return (
+                        <tr key={row.id} className="hover:bg-muted/30">
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-foreground">{row.product.name}</p>
+                          </td>
+                          <td className="px-4 py-3 text-foreground">{planLabel(row.tier?.name)}</td>
+                          <td className="px-4 py-3 text-foreground">
+                            {row.expiresAt ? new Date(row.expiresAt).toLocaleDateString(dateLocale(lang)) : '—'}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-foreground">{row.tenantSlug || '—'}</td>
+                          <td className="px-4 py-3">
+                            <span className={st}>{t(STATUS_KEY[row.status])}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {rowBusy && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger
+                                  disabled={rowBusy}
+                                  className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted disabled:opacity-50"
+                                >
+                                  {t('licenses.statusBtn')} <ChevronDown className="w-3 h-3" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {(['ACTIVE', 'SUSPENDED', 'PENDING'] as const).map((s) => (
+                                    <DropdownMenuItem
+                                      key={s}
+                                      disabled={row.status === s}
+                                      onClick={() => patch(row.productId, { status: s })}
+                                    >
+                                      {t(STATUS_KEY[s])}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger
+                                  disabled={rowBusy || productTiers.length === 0}
+                                  className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted disabled:opacity-50"
+                                >
+                                  {t('licenses.planBtn')} <ChevronDown className="w-3 h-3" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {productTiers.map((tier) => (
+                                    <DropdownMenuItem
+                                      key={tier.id}
+                                      disabled={row.tier?.id === tier.id}
+                                      onClick={() => patch(row.productId, { tierId: tier.id })}
+                                    >
+                                      {planLabel(tier.name)}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              <button
+                                type="button"
+                                disabled={rowBusy || !canCancel}
+                                onClick={() => {
+                                  if (!window.confirm(t('licenses.cancelConfirm', { name: row.product.name }))) return
+                                  patch(row.productId, { status: 'CANCELLED' })
+                                }}
+                                className="px-2 py-1 text-[10px] font-semibold rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                              >
+                                {t('licenses.cancel')}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ))
+      )}
+
+      <Dialog open={contractOpen} onOpenChange={setContractOpen}>
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>{t('contracts.dialogTitle')}</DialogTitle>
+            <DialogDescription>{t('contracts.dialogDesc')}</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={createContract} className="space-y-3">
+            {templates.length > 0 && (
+              <label className="block space-y-1">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.template')}</span>
+                <select
+                  value={contractForm.templateId}
+                  onChange={(e) => {
+                    const templateId = e.target.value
+                    const tpl = templates.find((row) => row.id === templateId)
+                    setContractForm((f) => ({
+                      ...f,
+                      templateId,
+                      title: tpl?.title ?? (templateId ? f.title : f.title),
+                      notes: tpl ? (tpl.notes ?? '') : f.notes,
+                    }))
+                  }}
+                  className={inputClass}
+                >
+                  <option value="">{t('contracts.templateNone')}</option>
+                  {templates.map((tpl) => (
+                    <option key={tpl.id} value={tpl.id}>
+                      {tpl.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.title')}</span>
+              <input
+                value={contractForm.title}
+                onChange={(e) => setContractForm((f) => ({ ...f, title: e.target.value }))}
+                placeholder={t('contracts.titlePlaceholder')}
+                className={inputClass}
+                required={!contractForm.templateId}
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.startsAt')}</span>
+              <input
+                type="date"
+                value={contractForm.startsAt}
+                onChange={(e) => setContractForm((f) => ({ ...f, startsAt: e.target.value }))}
+                className={inputClass}
+                required
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.notes')}</span>
+              <input
+                value={contractForm.notes}
+                onChange={(e) => setContractForm((f) => ({ ...f, notes: e.target.value }))}
+                className={inputClass}
+              />
+            </label>
+            {contractError && <p className="text-xs text-destructive">{contractError}</p>}
+            <DialogFooter>
+              <button
+                type="button"
+                onClick={() => setContractOpen(false)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border text-foreground hover:bg-muted"
+              >
+                {t('licenses.cancel')}
+              </button>
+              <button
+                type="submit"
+                disabled={savingContract}
+                className="tw-btn-primary px-3 py-1.5 text-xs font-semibold rounded-md disabled:opacity-50"
+              >
+                {savingContract ? t('contracts.creating') : t('contracts.create')}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={licenseOpen} onOpenChange={setLicenseOpen}>
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>{t('licenses.dialogTitle')}</DialogTitle>
+            <DialogDescription>{t('licenses.dialogDesc')}</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={createLicense} className="space-y-3">
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('licenses.product')}</span>
+              <select
+                value={form.productId}
+                onChange={(e) => setForm((f) => ({ ...f, productId: e.target.value, tierId: '' }))}
+                className={inputClass}
+                required
+              >
+                <option value="">{t('licenses.selectProduct')}</option>
+                {catalog.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('licenses.plan')}</span>
+              <select
+                value={form.tierId}
+                onChange={(e) => setForm((f) => ({ ...f, tierId: e.target.value }))}
+                className={inputClass}
+                required
+                disabled={!selectedProduct}
+              >
+                <option value="">{t('licenses.selectTier')}</option>
+                {(selectedProduct?.tiers ?? []).map((tier) => (
+                  <option key={tier.id} value={tier.id}>
+                    {planLabel(tier.name)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('licenses.dueDate')}</span>
+              <input
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+                className={inputClass}
+                required
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('licenses.tenantSlug')}</span>
+              <input
+                value={form.tenantSlug}
+                onChange={(e) => setForm((f) => ({ ...f, tenantSlug: e.target.value.toLowerCase() }))}
+                placeholder={t('licenses.slugPlaceholder')}
+                className={inputClass}
+                required
+              />
+            </label>
+            {licenseError && <p className="text-xs text-destructive">{licenseError}</p>}
+            <DialogFooter>
+              <button
+                type="button"
+                onClick={() => setLicenseOpen(false)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border text-foreground hover:bg-muted"
+              >
+                {t('licenses.cancel')}
+              </button>
+              <button
+                type="submit"
+                disabled={savingLicense}
+                className="tw-btn-primary px-3 py-1.5 text-xs font-semibold rounded-md disabled:opacity-50"
+              >
+                {savingLicense ? t('licenses.creating') : t('licenses.create')}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {grace && grace.status !== 'CANCELLED' && (
+        <ExtendGraceDialog
+          open={graceOpen}
+          onOpenChange={setGraceOpen}
+          currentEndsAt={grace.gracePeriodEndsAt}
+          maxDays={MAX_ADMIN_GRACE_DAYS}
+          confirmLabel={t('billing.extendGrace')}
+          onConfirm={async (payload) => {
+            const res = await fetch(`/api/admin/clients/${clientId}/subscription/grace`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) throw new Error(data.error || 'Failed to extend grace.')
+            await load()
+          }}
+        />
+      )}
+
+      {grace?.gracePeriodUsedAt && (
+        <div className={card}>
+          <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+            <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('billing.grace')}</h2>
+          </div>
+          <div className="px-4 py-3 text-xs space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t('billing.lastActivated')}</span>
+              <span className="text-foreground">{new Date(grace.gracePeriodUsedAt).toLocaleDateString(dateLocale(lang))}</span>
+            </div>
+            {grace.gracePeriodEndsAt && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t('billing.expires')}</span>
+                <span className="text-muted-foreground">
+                  {new Date(grace.gracePeriodEndsAt).toLocaleDateString(dateLocale(lang))}
+                  {new Date(grace.gracePeriodEndsAt) > new Date() ? ` ${t('billing.active')}` : ` ${t('billing.expired')}`}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

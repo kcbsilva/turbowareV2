@@ -9,11 +9,10 @@ import {
   LogOut,
   ChevronUp,
   Users,
-  Shield,
   Package,
   Ticket,
   Receipt,
-  UserCog,
+  Settings,
 } from "lucide-react";
 import turbowareLogo from "@/app/assets/turboware-logo.png";
 
@@ -49,22 +48,16 @@ const menuItems = [
     exact: false,
   },
   {
-    href: "/admin/team",
-    label: "Team",
-    icon: <UserCog className="w-3.5 h-3.5" />,
-    exact: false,
-  },
-  {
     href: "/admin/products",
     label: "Products",
     icon: <Package className="w-3.5 h-3.5" />,
     exact: false,
   },
   {
-    href: "/admin/security",
-    label: "Security",
-    icon: <Shield className="w-3.5 h-3.5" />,
-    exact: true,
+    href: "/admin/settings",
+    label: "Settings",
+    icon: <Settings className="w-3.5 h-3.5" />,
+    exact: false,
   },
 ];
 
@@ -122,7 +115,7 @@ export function Taskbar({ windowTitle, minimized, onToggleMinimize }: Props) {
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/admin/login");
+    window.location.assign("/admin/login");
   }
 
   function navigate(href: string) {

@@ -3,7 +3,7 @@
 import { useEffect, useState, type ComponentType, type SVGProps } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import {
   Bell,
   Key,
@@ -12,9 +12,8 @@ import {
   Menu,
   Package,
   Receipt,
-  Shield,
+  Settings,
   Ticket,
-  UserCog,
   Users,
   X,
 } from 'lucide-react'
@@ -34,11 +33,6 @@ const NAV: { href: string; labelKey: MsgKey; icon: IconType; exact: boolean }[] 
   { href: '/admin/products', labelKey: 'nav.products', icon: Package, exact: false },
 ]
 
-const ACCOUNT_NAV: { href: string; labelKey: MsgKey; icon: IconType; exact: boolean }[] = [
-  { href: '/admin/team', labelKey: 'nav.team', icon: UserCog, exact: false },
-  { href: '/admin/security', labelKey: 'nav.security', icon: Shield, exact: true },
-]
-
 function pageTitleKey(pathname: string): MsgKey {
   if (pathname === '/admin') return 'title.dashboard'
   if (pathname === '/admin/clients') return 'title.clients'
@@ -49,6 +43,7 @@ function pageTitleKey(pathname: string): MsgKey {
   if (pathname.startsWith('/admin/clients/')) return 'title.client'
   if (pathname === '/admin/tickets') return 'title.tickets'
   if (pathname === '/admin/invoices') return 'title.invoices'
+  if (pathname.startsWith('/admin/settings')) return 'title.settings'
   if (pathname === '/admin/team') return 'title.team'
   if (pathname === '/admin/products') return 'title.products'
   if (pathname === '/admin/security') return 'title.security'
@@ -69,7 +64,6 @@ interface Me {
 
 export function AdminAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const router = useRouter()
   const { t } = useAdminLang()
   const { theme } = useTheme()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -97,7 +91,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/admin/login')
+    window.location.assign('/admin/login')
   }
 
   const title = t(pageTitleKey(pathname))
@@ -142,25 +136,24 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
               notifs={item.href === '/admin/tickets' ? me?.openTickets : undefined}
             />
           ))}
-          <div className="mx-3 my-1 h-px bg-border" />
-          {ACCOUNT_NAV.map((item) => (
-            <NavOption
-              key={item.href}
-              href={item.href}
-              Icon={item.icon}
-              title={t(item.labelKey)}
-              active={isActive(pathname, item.href, item.exact)}
-            />
-          ))}
         </div>
 
-        {me && (
-          <div className="flex h-14 shrink-0 items-center justify-center border-t border-border" title={me.name || me.email || 'Admin'}>
-            <div className="grid size-8 place-content-center rounded-full bg-muted text-xs font-bold text-foreground">
-              {initials}
+        <div className="shrink-0 border-t border-border">
+          <NavOption
+            href="/admin/settings"
+            Icon={Settings}
+            title={t('nav.settings')}
+            active={pathname.startsWith('/admin/settings')}
+            iconOnly
+          />
+          {me && (
+            <div className="flex h-12 items-center justify-center pb-2" title={me.name || me.email || 'Admin'}>
+              <div className="grid size-8 place-content-center rounded-full bg-muted text-xs font-bold text-foreground">
+                {initials}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </nav>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -214,18 +207,23 @@ function NavOption({
   href,
   active,
   notifs,
+  iconOnly,
 }: {
   Icon: IconType
   title: string
   href: string
   active: boolean
   notifs?: number
+  iconOnly?: boolean
 }) {
   return (
     <Link
       href={href}
       title={title}
-      className={`relative flex flex-col items-center justify-center gap-1 px-1 py-2.5 ${
+      aria-label={title}
+      className={`relative flex flex-col items-center justify-center gap-1 px-1 ${
+        iconOnly ? 'py-3' : 'py-2.5'
+      } ${
         active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/70'
       }`}
     >
@@ -238,7 +236,9 @@ function NavOption({
           </span>
         )}
       </span>
-      <span className="max-w-full truncate text-[10px] font-medium leading-none">{title}</span>
+      {!iconOnly && (
+        <span className="max-w-full truncate text-[10px] font-medium leading-none">{title}</span>
+      )}
     </Link>
   )
 }

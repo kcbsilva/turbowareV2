@@ -1,56 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { parseBody, badRequest } from '@/lib/api'
-import { createClientLicense, listClientLicenses } from '@/lib/client-products'
+import { createContract, listClientContracts } from '@/lib/contracts'
+import { reconcileSubscriptionLicenseSync } from '@/lib/billing'
+import { ensureDefaultCatalog } from '@/lib/product-catalog'
 
 type Params = { params: Promise<{ id: string }> }
 
-// GET /api/admin/clients/[id]/products — assigned licenses only
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
   const client = await prisma.client.findUnique({ where: { id }, select: { id: true } })
   if (!client) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  const payload = await listClientLicenses(id)
+  await ensureDefaultCatalog()
+  try {
+    await reconcileSubscriptionLicenseSync(id)
+  } catch (err) {
+    console.error('[contracts] reconcile failed:', err)
+  }
+  const payload = await listClientContracts(id)
   return NextResponse.json(payload)
 }
 
-// POST /api/admin/clients/[id]/products — issue a new product license
 export async function POST(req: NextRequest, { params }: Params) {
   const { id: clientId } = await params
   const { body, error } = await parseBody<{
-    productId?: string
-    tierId?: string
-    dueDate?: string
-    tenantSlug?: string
-    contractId?: string
+    title?: string
+    startsAt?: string
+    notes?: string
+    templateId?: string
   }>(req)
   if (error) return badRequest()
 
   const client = await prisma.client.findUnique({ where: { id: clientId }, select: { id: true } })
   if (!client) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  if (!body.contractId || !body.productId || !body.tierId || !body.dueDate || !body.tenantSlug) {
-    return NextResponse.json(
-      { error: 'contractId, productId, tierId, dueDate, and tenantSlug are required' },
-      { status: 400 },
-    )
-  }
-
-  const result = await createClientLicense({
+  const result = await createContract({
     clientId,
-    contractId: body.contractId,
-    productId: body.productId,
-    tierId: body.tierId,
-    dueDate: body.dueDate,
-    tenantSlug: body.tenantSlug,
+    title: body.title,
+    startsAt: body.startsAt,
+    notes: body.notes,
+    templateId: body.templateId,
   })
-
   if ('error' in result) {
     return NextResponse.json({ error: result.error }, { status: result.status })
   }
-
-  return NextResponse.json(
-    { ...result.activation, turboisp: result.turboisp ?? null },
-    { status: 201 },
-  )
+  return NextResponse.json(result.contract, { status: 201 })
 }

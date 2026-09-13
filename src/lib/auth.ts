@@ -138,6 +138,16 @@ export function setAdminAuthCookie(res: NextResponse, token: string): void {
   })
 }
 
+export function clearAdminAuthCookie(res: NextResponse): void {
+  res.cookies.set(COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  })
+}
+
 export function forbidden(message = 'Forbidden'): NextResponse {
   return NextResponse.json({ error: message }, { status: 403 })
 }

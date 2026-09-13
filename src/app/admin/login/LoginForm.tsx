@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react'
 import {
@@ -17,7 +16,6 @@ import { AdminLangToggle, useAdminLang } from '@/components/admin/AdminLangProvi
 type Step = 'login' | 'forgot' | 'mfa' | 'newPassword'
 
 export default function LoginForm() {
-  const router = useRouter()
   const { t } = useAdminLang()
   const [step, setStep] = useState<Step>('login')
   const [email, setEmail] = useState('')
@@ -70,7 +68,7 @@ export default function LoginForm() {
       })
       setLoading(false)
       if (res.ok) {
-        router.push('/admin')
+        window.location.assign('/admin')
       } else {
         const data = await res.json().catch(() => ({}))
         setError(data.error || 'Could not update password.')
@@ -86,7 +84,7 @@ export default function LoginForm() {
       })
       setLoading(false)
       if (res.ok) {
-        router.push('/admin')
+        window.location.assign('/admin')
       } else {
         const data = await res.json().catch(() => ({}))
         setError(data.error || 'Invalid verification code.')
@@ -115,7 +113,7 @@ export default function LoginForm() {
         setConfirmPassword('')
         return
       }
-      router.push('/admin')
+      window.location.assign('/admin')
     } else {
       const data = await res.json().catch(() => ({}))
         setError(data.error || t('login.invalid'))
