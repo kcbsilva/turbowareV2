@@ -4,7 +4,11 @@ import { applySubscriptionLicenseSync } from '@/lib/billing'
 import { getPriceByLabel, getTierByLabel, type Region } from '@/lib/pricing'
 import { ensureDefaultCatalog } from '@/lib/product-catalog'
 import { isValidSignupSlug, normalizeSignupSlug } from '@/lib/signup-slug'
+import { defaultCurrencyForCountry, type SignupCountryCode } from '@/lib/signup-countries'
 import { RESERVED_SLUGS } from '@/lib/slug'
+import { generateTemporaryPassword } from '@/lib/temporary-password'
+import { createTurboISPTenant } from '@/lib/turboisp-bootstrap'
+import { isTurboISPTenantSlugTaken } from '@/lib/turboisp-tenant-slug-check'
 
 const VALID_STATUSES = Object.values(ClientProductStatus)
 const VALID_REGIONS: Region[] = ['BR', 'CA', 'US', 'GB']
@@ -130,6 +134,68 @@ async function assertSlugAvailable(clientId: string, slug: string) {
   return null
 }
 
+function countryForRegion(region: Region): SignupCountryCode {
+  if (region === 'BR') return 'BR'
+  if (region === 'CA') return 'CA'
+  return 'US'
+}
+
+async function ensureTurboIspTenant(clientId: string, slug: string): Promise<
+  | { ok: true; provisioned?: { adminUsername: string; staffLoginUrl: string; temporaryPassword: string } }
+  | { ok: false; error: string; status: number }
+> {
+  if (!process.env.TURBOISP_DATABASE_URL?.trim()) {
+    return { ok: false, error: 'TurboISP database is not configured', status: 503 }
+  }
+
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    select: {
+      name: true,
+      email: true,
+      company: true,
+      subscription: { select: { region: true } },
+    },
+  })
+  if (!client) return { ok: false, error: 'Not found', status: 404 }
+
+  const lookup = await isTurboISPTenantSlugTaken(slug)
+  if (!('error' in lookup) && lookup.taken) {
+    return { ok: true }
+  }
+
+  const region: Region = VALID_REGIONS.includes((client.subscription?.region ?? 'BR') as Region)
+    ? ((client.subscription?.region ?? 'BR') as Region)
+    : 'BR'
+  const country = countryForRegion(region)
+  const password = generateTemporaryPassword()
+
+  try {
+    const bootstrap = await createTurboISPTenant({
+      name: client.company?.trim() || client.name,
+      slug,
+      adminUsername: `${slug}.admin`,
+      adminEmail: client.email || `${slug}.admin@${slug}.local`,
+      adminPassword: password,
+      countryCode: country,
+      currency: defaultCurrencyForCountry(country),
+    })
+    return {
+      ok: true,
+      provisioned: {
+        adminUsername: bootstrap.adminUsername,
+        staffLoginUrl: bootstrap.staffLoginUrl,
+        temporaryPassword: password,
+      },
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'TurboISP provisioning failed'
+    if (message.includes('slug already in use')) return { ok: true }
+    console.error('[client-products] TurboISP bootstrap failed:', err)
+    return { ok: false, error: message, status: 502 }
+  }
+}
+
 export async function createClientLicense(opts: {
   clientId: string
   productId: string
@@ -160,6 +226,17 @@ export async function createClientLicense(opts: {
   })
   if (existing && existing.status !== 'CANCELLED') {
     return { error: 'This client already has a license for that product', status: 409 as const }
+  }
+
+  let turboisp: {
+    adminUsername: string
+    staffLoginUrl: string
+    temporaryPassword: string
+  } | undefined
+  if (product.slug === 'turboisp') {
+    const provision = await ensureTurboIspTenant(opts.clientId, parsedSlug.slug)
+    if (!provision.ok) return { error: provision.error, status: provision.status }
+    turboisp = provision.provisioned
   }
 
   const activation = existing
@@ -205,7 +282,7 @@ export async function createClientLicense(opts: {
     })
   }
 
-  return { activation }
+  return { activation, turboisp }
 }
 
 export async function upsertClientProduct(opts: {

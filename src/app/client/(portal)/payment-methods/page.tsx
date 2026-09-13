@@ -5,7 +5,7 @@ import { CreditCard, ExternalLink, CheckCircle, Clock, AlertTriangle, FileText, 
 import { formatBRL } from '@/lib/pricing'
 
 type InvoiceStatus = 'PENDING' | 'PAID' | 'OVERDUE' | 'WAIVED'
-type InvoiceType   = 'INSTALLATION' | 'MONTHLY' | 'PRORATED' | 'GRACE_FEE'
+type InvoiceType   = 'INSTALLATION' | 'MONTHLY' | 'PRORATED' | 'GRACE_FEE' | 'IMPORTATION' | 'CUSTOM'
 type Gateway       = 'ASAAS' | 'STRIPE'
 
 interface Invoice {
@@ -19,6 +19,7 @@ interface Subscription { region: string | null; invoices: Invoice[] }
 const TYPE_LABEL: Record<InvoiceType, string> = {
   INSTALLATION: 'Installation fee', MONTHLY: 'Monthly subscription',
   PRORATED: 'Prorated charge', GRACE_FEE: 'Grace period fee',
+  IMPORTATION: 'Importation fee', CUSTOM: 'Custom charge',
 }
 
 const STATUS_STYLE: Record<InvoiceStatus, { cls: string; icon: React.ElementType; label: string }> = {

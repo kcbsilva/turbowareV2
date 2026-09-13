@@ -47,5 +47,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: result.error }, { status: result.status })
   }
 
-  return NextResponse.json(result.activation, { status: 201 })
+  return NextResponse.json(
+    { ...result.activation, turboisp: result.turboisp ?? null },
+    { status: 201 },
+  )
 }

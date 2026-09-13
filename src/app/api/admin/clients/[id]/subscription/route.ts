@@ -23,22 +23,30 @@ export async function GET(_req: NextRequest, { params }: Params) {
 // PATCH /api/admin/clients/[id]/subscription — update status manually
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params
-  const { body, error } = await parseBody<{ status?: string }>(req)
+  const { body, error } = await parseBody<{ status?: string; paymentPlanAllowed?: boolean }>(req)
   if (error) return badRequest()
-  const { status } = body
+  const { status, paymentPlanAllowed } = body
+
+  if (status === undefined && paymentPlanAllowed === undefined) {
+    return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
+  }
 
   const validStatuses = Object.values(SubscriptionStatus)
-  if (!status || !validStatuses.includes(status as SubscriptionStatus)) {
+  if (status !== undefined && !validStatuses.includes(status as SubscriptionStatus)) {
     return NextResponse.json(
       { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
       { status: 400 },
     )
   }
 
+  if (paymentPlanAllowed !== undefined && typeof paymentPlanAllowed !== 'boolean') {
+    return NextResponse.json({ error: 'paymentPlanAllowed must be a boolean' }, { status: 400 })
+  }
+
   const sub = await prisma.subscription.findUnique({ where: { clientId: id } })
   if (!sub) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  if (!isValidTransition(sub.status, status)) {
+  if (status !== undefined && !isValidTransition(sub.status, status)) {
     return NextResponse.json(
       { error: `Invalid transition: ${sub.status} → ${status}` },
       { status: 400 },
@@ -48,10 +56,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const updated = await prisma.subscription.update({
     where: { id: sub.id },
     data: {
-      status: status as SubscriptionStatus,
-      ...(status === 'SUSPENDED' || status === 'CANCELLED'
-        ? { gracePeriodEndsAt: null }
+      ...(status !== undefined
+        ? {
+            status: status as SubscriptionStatus,
+            ...(status === 'SUSPENDED' || status === 'CANCELLED'
+              ? { gracePeriodEndsAt: null }
+              : {}),
+          }
         : {}),
+      ...(typeof paymentPlanAllowed === 'boolean' ? { paymentPlanAllowed } : {}),
     },
     include: {
       invoices: { orderBy: { createdAt: 'desc' } },
@@ -59,11 +72,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     },
   })
 
-  await applySubscriptionLicenseSync({
-    clientId: updated.clientId,
-    licenseId: updated.licenseId,
-    subscriptionStatus: updated.status,
-  })
+  if (status !== undefined) {
+    await applySubscriptionLicenseSync({
+      clientId: updated.clientId,
+      licenseId: updated.licenseId,
+      subscriptionStatus: updated.status,
+    })
+  }
 
   return NextResponse.json(updated)
 }

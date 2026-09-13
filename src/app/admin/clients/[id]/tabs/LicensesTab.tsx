@@ -82,6 +82,7 @@ export function LicensesTab({ clientId }: Props) {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -174,6 +175,16 @@ export function LicensesTab({ clientId }: Props) {
       return
     }
     setDialogOpen(false)
+    if (data.turboisp?.temporaryPassword && data.turboisp?.adminUsername) {
+      setNotice(
+        t('licenses.createdTenant', {
+          user: data.turboisp.adminUsername,
+          password: data.turboisp.temporaryPassword,
+        }),
+      )
+    } else {
+      setNotice('')
+    }
     await load()
   }
 
@@ -198,6 +209,7 @@ export function LicensesTab({ clientId }: Props) {
         </button>
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
+      {notice && <p className="text-xs text-foreground">{notice}</p>}
 
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         <table className="w-full text-xs">
@@ -227,10 +239,7 @@ export function LicensesTab({ clientId }: Props) {
                 return (
                   <tr key={row.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-base leading-none">{row.product.logoEmoji ?? '📦'}</span>
-                        <p className="font-medium text-foreground">{row.product.name}</p>
-                      </div>
+                      <p className="font-medium text-foreground">{row.product.name}</p>
                     </td>
                     <td className="px-4 py-3 text-foreground">{planLabel(row.tier?.name)}</td>
                     <td className="px-4 py-3 text-foreground">

@@ -18,7 +18,7 @@ import { MAX_CLIENT_GRACE_DAYS } from '@/lib/grace-period'
 
 interface Invoice {
   id: string
-  type: 'INSTALLATION' | 'MONTHLY' | 'PRORATED' | 'GRACE_FEE'
+  type: 'INSTALLATION' | 'MONTHLY' | 'PRORATED' | 'GRACE_FEE' | 'IMPORTATION' | 'CUSTOM'
   amount: number
   status: 'PENDING' | 'PAID' | 'OVERDUE' | 'WAIVED'
   dueDate: string
@@ -74,7 +74,14 @@ function StatusBadge({ status }: { status: Subscription['status'] }) {
 }
 
 function invoiceTypeLabel(type: Invoice['type']) {
-  return { INSTALLATION: 'Installation fee', MONTHLY: 'Monthly subscription', PRORATED: 'Prorated charge', GRACE_FEE: 'Grace period fee' }[type]
+  return {
+    INSTALLATION: 'Installation fee',
+    MONTHLY: 'Monthly subscription',
+    PRORATED: 'Prorated charge',
+    GRACE_FEE: 'Grace period fee',
+    IMPORTATION: 'Importation fee',
+    CUSTOM: 'Custom charge',
+  }[type]
 }
 
 // ── Activation Wizard ─────────────────────────────────────────────────────────

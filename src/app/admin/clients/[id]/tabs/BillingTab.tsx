@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, Fragment } from 'react'
-import { CheckCircle, AlertTriangle, Clock, RefreshCw, Loader2, CreditCard, ExternalLink, Send } from 'lucide-react'
-import { formatBRL, getMonthlyPrice } from '@/lib/pricing'
+import { CheckCircle, AlertTriangle, Clock, RefreshCw, Loader2, CreditCard, ExternalLink, Send, Plus } from 'lucide-react'
+import { formatBRL, getMonthlyPrice, getInstallationFee, type Region } from '@/lib/pricing'
 import { badge } from '@/lib/badges'
 import { ExtendGraceDialog } from '@/components/ExtendGraceDialog'
 import { MAX_ADMIN_GRACE_DAYS } from '@/lib/grace-period'
@@ -10,10 +10,19 @@ import { formatInvoiceNumber, resolveInvoiceDisplayStatus } from '@/lib/invoice-
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
 import { dateLocale } from '@/lib/admin-i18n'
 import type { MsgKey } from '@/lib/admin-i18n'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import type { ChargeType } from '@/lib/charges'
 
 interface Invoice {
   id: string
-  type: 'INSTALLATION' | 'MONTHLY' | 'PRORATED' | 'GRACE_FEE'
+  type: 'INSTALLATION' | 'MONTHLY' | 'PRORATED' | 'GRACE_FEE' | 'IMPORTATION' | 'CUSTOM'
   amount: number
   status: 'PENDING' | 'PAID' | 'OVERDUE' | 'WAIVED'
   dueDate: string
@@ -21,7 +30,7 @@ interface Invoice {
   notes: string | null
   paymentUrl: string | null
   paymentGateway: 'ASAAS' | 'STRIPE' | null
-  externalPaymentId: string | null
+  installmentNo: number | null
   createdAt: string
 }
 
@@ -35,6 +44,8 @@ interface Subscription {
   trialEndsAt: string | null
   gracePeriodUsedAt: string | null
   gracePeriodEndsAt: string | null
+  region: string | null
+  paymentPlanAllowed: boolean
   invoices: Invoice[]
   license: { key: string; status: string; maxSeats: number } | null
 }
@@ -52,6 +63,8 @@ const INVOICE_TYPE_KEY = {
   MONTHLY:      'billing.inv.monthly',
   PRORATED:     'billing.inv.prorated',
   GRACE_FEE:    'billing.inv.grace',
+  IMPORTATION:  'billing.inv.importation',
+  CUSTOM:       'billing.inv.custom',
 } as const satisfies Record<string, MsgKey>
 
 const INVOICE_STATUS_KEY = {
@@ -85,6 +98,19 @@ export function BillingTab({ clientId }: Props) {
   const [paying, setPaying]     = useState<string | null>(null)
   const [sending, setSending]   = useState<string | null>(null)  // `${invoiceId}-asaas` | `${invoiceId}-stripe`
   const [graceOpen, setGraceOpen] = useState(false)
+  const [chargeOpen, setChargeOpen] = useState(false)
+  const [savingCharge, setSavingCharge] = useState(false)
+  const [togglingPlan, setTogglingPlan] = useState(false)
+  const [chargeError, setChargeError] = useState('')
+  const [charge, setCharge] = useState({
+    type: 'INSTALLATION' as ChargeType,
+    amount: '',
+    dueDate: '',
+    notes: '',
+    split: false,
+    installments: '3',
+    intervalDays: '30',
+  })
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -121,6 +147,70 @@ export function BillingTab({ clientId }: Props) {
     } finally {
       setSending(null)
     }
+  }
+
+  function regionOf(s: Subscription): Region {
+    return s.region === 'CA' || s.region === 'US' || s.region === 'GB' ? s.region : 'BR'
+  }
+
+  function openCharge() {
+    if (!sub) return
+    setChargeError('')
+    setCharge({
+      type: 'INSTALLATION',
+      amount: String(getInstallationFee(regionOf(sub))),
+      dueDate: new Date().toISOString().slice(0, 10),
+      notes: '',
+      split: false,
+      installments: '3',
+      intervalDays: '30',
+    })
+    setChargeOpen(true)
+  }
+
+  async function togglePaymentPlan(allowed: boolean) {
+    setTogglingPlan(true)
+    const res = await fetch(`/api/admin/clients/${clientId}/subscription`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentPlanAllowed: allowed }),
+    })
+    if (res.ok) {
+      const next = await res.json()
+      setSub(next)
+    }
+    setTogglingPlan(false)
+  }
+
+  async function createCharge(e: React.FormEvent) {
+    e.preventDefault()
+    setChargeError('')
+    const amount = Number(charge.amount)
+    if (!charge.dueDate || !Number.isFinite(amount) || amount <= 0) {
+      setChargeError(t('billing.chargeError'))
+      return
+    }
+    setSavingCharge(true)
+    const res = await fetch(`/api/admin/clients/${clientId}/subscription/charges`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: charge.type,
+        amount,
+        dueDate: charge.dueDate,
+        notes: charge.notes.trim() || undefined,
+        installments: charge.split ? Number(charge.installments) : 1,
+        intervalDays: charge.split ? Number(charge.intervalDays) : 30,
+      }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setSavingCharge(false)
+    if (!res.ok) {
+      setChargeError(data.error || t('billing.chargeError'))
+      return
+    }
+    setChargeOpen(false)
+    await load()
   }
 
   const monthly = sub ? getMonthlyPrice(sub.seats) : null
@@ -209,14 +299,33 @@ export function BillingTab({ clientId }: Props) {
 
       {/* Invoices */}
       <div className={card}>
-        <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+        <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2">
           <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('billing.invoices')}</h2>
-          {pendingInvs.length > 0 && (
-            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <AlertTriangle className="w-3 h-3 text-destructive" />
-              {t('billing.unpaid', { n: pendingInvs.length })}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {pendingInvs.length > 0 && (
+              <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <AlertTriangle className="w-3 h-3 text-destructive" />
+                {t('billing.unpaid', { n: pendingInvs.length })}
+              </span>
+            )}
+            <label className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={sub.paymentPlanAllowed}
+                disabled={togglingPlan}
+                onChange={(e) => togglePaymentPlan(e.target.checked)}
+              />
+              {t('billing.allowPlan')}
+            </label>
+            <button
+              type="button"
+              onClick={openCharge}
+              className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md"
+              style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+            >
+              <Plus className="w-3 h-3" /> {t('billing.charge')}
+            </button>
+          </div>
         </div>
         {sub.invoices.length === 0 ? (
           <p className="px-4 py-8 text-xs text-muted-foreground text-center">{t('billing.none')}</p>
@@ -243,7 +352,10 @@ export function BillingTab({ clientId }: Props) {
                           <p className="font-mono text-[11px] font-semibold text-foreground">
                             {formatInvoiceNumber(inv.id, inv.createdAt)}
                           </p>
-                          <p className="text-[10px] text-muted-foreground">{t(INVOICE_TYPE_KEY[inv.type])}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {t(INVOICE_TYPE_KEY[inv.type])}
+                            {inv.installmentNo ? ` · ${inv.installmentNo}` : ''}
+                          </p>
                         </td>
                         <td className="px-4 py-3 text-foreground">{sub.product}</td>
                         <td className="px-4 py-3 font-mono text-foreground">{formatBRL(inv.amount)}</td>
@@ -304,6 +416,125 @@ export function BillingTab({ clientId }: Props) {
           </div>
         )}
       </div>
+
+      <Dialog open={chargeOpen} onOpenChange={setChargeOpen}>
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>{t('billing.chargeTitle')}</DialogTitle>
+            <DialogDescription>{t('billing.chargeDesc')}</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={createCharge} className="space-y-3">
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('billing.chargeType')}</span>
+              <select
+                value={charge.type}
+                onChange={(e) => {
+                  const type = e.target.value as ChargeType
+                  setCharge((c) => ({
+                    ...c,
+                    type,
+                    amount: type === 'INSTALLATION' && sub ? String(getInstallationFee(regionOf(sub))) : c.amount,
+                  }))
+                }}
+                className="w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground"
+              >
+                <option value="INSTALLATION">{t('billing.inv.installation')}</option>
+                <option value="IMPORTATION">{t('billing.inv.importation')}</option>
+                <option value="CUSTOM">{t('billing.inv.custom')}</option>
+              </select>
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('billing.amount')}</span>
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={charge.amount}
+                onChange={(e) => setCharge((c) => ({ ...c, amount: e.target.value }))}
+                className="w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground"
+                required
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('billing.dueDate')}</span>
+              <input
+                type="date"
+                value={charge.dueDate}
+                onChange={(e) => setCharge((c) => ({ ...c, dueDate: e.target.value }))}
+                className="w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground"
+                required
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('billing.notes')}</span>
+              <input
+                value={charge.notes}
+                onChange={(e) => setCharge((c) => ({ ...c, notes: e.target.value }))}
+                placeholder={t('billing.notesPlaceholder')}
+                className="w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground"
+              />
+            </label>
+            {sub.paymentPlanAllowed ? (
+              <>
+                <label className="flex items-center gap-2 text-xs text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={charge.split}
+                    onChange={(e) => setCharge((c) => ({ ...c, split: e.target.checked }))}
+                  />
+                  {t('billing.splitPlan')}
+                </label>
+                {charge.split && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="block space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('billing.installments')}</span>
+                      <input
+                        type="number"
+                        min={2}
+                        max={12}
+                        value={charge.installments}
+                        onChange={(e) => setCharge((c) => ({ ...c, installments: e.target.value }))}
+                        className="w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground"
+                      />
+                    </label>
+                    <label className="block space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('billing.intervalDays')}</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={90}
+                        value={charge.intervalDays}
+                        onChange={(e) => setCharge((c) => ({ ...c, intervalDays: e.target.value }))}
+                        className="w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground"
+                      />
+                    </label>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-[10px] text-muted-foreground">{t('billing.planOffHint')}</p>
+            )}
+            {chargeError && <p className="text-xs text-destructive">{chargeError}</p>}
+            <DialogFooter>
+              <button
+                type="button"
+                onClick={() => setChargeOpen(false)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border text-foreground hover:bg-muted"
+              >
+                {t('licenses.cancel')}
+              </button>
+              <button
+                type="submit"
+                disabled={savingCharge}
+                className="px-3 py-1.5 text-xs font-semibold rounded-md disabled:opacity-50"
+                style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+              >
+                {savingCharge ? t('billing.creatingCharge') : t('billing.createCharge')}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <ExtendGraceDialog
         open={graceOpen}
