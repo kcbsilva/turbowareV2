@@ -8,6 +8,7 @@ import { sendVerificationEmail } from '@/lib/email'
 import { requireOwnerSession } from '@/lib/auth'
 import { isMissingMustChangePasswordColumn } from '@/lib/client-password-compat'
 import { deleteTurboISPTenantBySlug } from '@/lib/turboisp-bootstrap'
+import { sanitizeClientContractTerms } from '@/lib/contract-variables'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -20,6 +21,7 @@ const baseClientSelect = {
   company: true,
   cnpj: true,
   internalNotes: true,
+  contractTerms: true,
   createdAt: true,
   updatedAt: true,
   password: true,
@@ -70,9 +72,18 @@ export async function GET(_req: NextRequest, { params }: Params) {
 // PATCH /api/admin/clients/[id] — update fields
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params
-  const { body: parsed, error } = await parseBody<{ name?: string; email?: string; phone?: string; company?: string; cnpj?: string; internalNotes?: string; newPassword?: string }>(req)
+  const { body: parsed, error } = await parseBody<{
+    name?: string
+    email?: string
+    phone?: string
+    company?: string
+    cnpj?: string
+    internalNotes?: string
+    newPassword?: string
+    contractTerms?: unknown
+  }>(req)
   if (error) return badRequest()
-  const { name, email, phone, company, cnpj, internalNotes, newPassword } = parsed
+  const { name, email, phone, company, cnpj, internalNotes, newPassword, contractTerms } = parsed
 
   if (name !== undefined && !name?.trim()) {
     return NextResponse.json({ error: 'name cannot be empty' }, { status: 400 })
@@ -87,7 +98,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   // Detect email change — if email is changing, reset verification
   const existing = await prisma.client.findUnique({
     where: { id },
-    select: { email: true },
+    select: { email: true, contractTerms: true },
   })
 
   const newEmail          = email !== undefined ? email?.trim().toLowerCase() || null : undefined
@@ -104,6 +115,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         ...(company !== undefined ? { company: company?.trim() || null } : {}),
         ...(cnpj !== undefined ? { cnpj: cnpj?.replace(/\D/g, '') || null } : {}),
         ...(internalNotes !== undefined ? { internalNotes: internalNotes?.trim() || null } : {}),
+        ...(contractTerms !== undefined ? {
+          contractTerms: {
+            ...sanitizeClientContractTerms(existing?.contractTerms),
+            ...sanitizeClientContractTerms(contractTerms),
+          },
+        } : {}),
         ...(passwordHash ? { password: passwordHash } : {}),
         ...(emailChanged ? {
           emailVerified:                   false,

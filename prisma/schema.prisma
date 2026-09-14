@@ -22,6 +22,7 @@ model Client {
   emailVerificationTokenExpiresAt DateTime?
   mustChangePassword              Boolean    @default(false)
   internalNotes   String?
+  contractTerms   Json?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   licenses        License[]
@@ -261,6 +262,15 @@ model AdminUser {
 
   @@schema("turboware")
   @@map("admin_users")
+}
+
+model PlatformSettings {
+  id            String   @id @default("default")
+  providerTerms Json?
+  updatedAt     DateTime @updatedAt
+
+  @@schema("turboware")
+  @@map("platform_settings")
 }
 
 model SupportTicket {

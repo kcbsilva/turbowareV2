@@ -1,6 +1,7 @@
 import { ContractStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { contractVariableValues, interpolateContractText, sanitizeContractHtml } from '@/lib/contract-variables'
+import { getProviderTerms } from '@/lib/platform-settings'
 
 export function formatContractNumber(id: string, createdAt?: string | Date | null): string {
   const suffix = id.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase() || 'XXXXXX'
@@ -84,6 +85,7 @@ export async function createContract(opts: {
       phone: true,
       cnpj: true,
       subdomain: true,
+      contractTerms: true,
     },
   })
   if (!client) return { error: 'Not found', status: 404 as const }
@@ -122,8 +124,10 @@ export async function createContract(opts: {
   })
 
   const number = formatContractNumber(created.id, created.createdAt)
+  const providerTerms = await getProviderTerms()
   const values = contractVariableValues({
     client,
+    providerTerms,
     contract: { title, number, startsAt },
   })
   const filledTitle = interpolateContractText(title, values)

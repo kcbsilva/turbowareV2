@@ -3,6 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Edit, Trash2, Check, KeyRound, Mail, Loader2 } from 'lucide-react'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import type { MsgKey } from '@/lib/admin-i18n'
+import {
+  CLIENT_CONTRACT_FIELDS,
+  parseTerms,
+} from '@/lib/contract-variables'
 
 interface Client {
   id: string
@@ -13,6 +19,7 @@ interface Client {
   company: string | null
   cnpj: string | null
   internalNotes: string | null
+  contractTerms?: Record<string, string> | null
   hasPassword?: boolean
   mustChangePassword?: boolean
   createdAt: string
@@ -311,6 +318,8 @@ export function OverviewTab({ client, onUpdated }: Props) {
         </div>
       </div>
 
+      <ContractTermsCard client={client} onUpdated={onUpdated} />
+
       {/* Internal notes */}
       <div className="bg-card border border-border rounded-lg">
         <div className="px-4 py-2.5 border-b border-border">
@@ -375,6 +384,144 @@ export function OverviewTab({ client, onUpdated }: Props) {
         )}
       </div>
       )}
+    </div>
+  )
+}
+
+const TERM_GROUPS = ['party', 'fees', 'sla', 'law'] as const
+
+function ContractTermsCard({
+  client,
+  onUpdated,
+}: {
+  client: Client
+  onUpdated?: (client: Client) => void
+}) {
+  const { t } = useAdminLang()
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [form, setForm] = useState(() => parseTerms(client.contractTerms))
+
+  useEffect(() => {
+    if (editing) return
+    setForm(parseTerms(client.contractTerms))
+  }, [client.contractTerms, editing])
+
+  const inputClass = 'w-full px-3 py-1.5 bg-muted border border-border rounded-md text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring'
+
+  async function save() {
+    setSaving(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/admin/clients/${client.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractTerms: form }),
+      })
+      if (res.ok) {
+        const updated = await res.json().catch(() => null)
+        if (updated) onUpdated?.(updated)
+        setEditing(false)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error || t('profile.contractTermsSaveError'))
+      }
+    } catch {
+      setError(t('profile.contractTermsSaveError'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-lg">
+      <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+        <div>
+          <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">
+            {t('profile.contractTerms')}
+          </h2>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{t('profile.contractTermsHint')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {editing ? (
+            <>
+              <button onClick={save} disabled={saving} className="flex items-center gap-1 text-[10px] text-foreground hover:opacity-80 transition">
+                <Check size={11} /> {saving ? t('templates.saving') : t('templates.save')}
+              </button>
+              <button
+                onClick={() => {
+                  setEditing(false)
+                  setError('')
+                  setForm(parseTerms(client.contractTerms))
+                }}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+              >
+                <X size={11} /> Cancel
+              </button>
+            </>
+          ) : (
+            <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-[10px] text-primary hover:opacity-80">
+              <Edit size={11} /> Edit
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="space-y-4 px-4 py-3">
+        {TERM_GROUPS.map((group) => {
+          const fields = CLIENT_CONTRACT_FIELDS.filter((field) => field.group === group)
+          return (
+            <div key={group}>
+              <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {t(`terms.group.${group}` as MsgKey)}
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {fields.map((field) => {
+                  const value = form[field.key] ?? ''
+                  const display = value
+                    || (field.key === 'customer_legal_name' ? (client.company || client.name) : '')
+                  const colSpan = 'multiline' in field && field.multiline ? 'col-span-2' : ''
+                  return (
+                    <div key={field.key} className={colSpan}>
+                      <label className="mb-1 block text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {t(field.labelKey as MsgKey)}
+                        <span className="ml-1 font-mono normal-case tracking-normal text-muted-foreground/70">
+                          {`{${field.key}}`}
+                        </span>
+                      </label>
+                      {editing ? (
+                        'multiline' in field && field.multiline ? (
+                          <textarea
+                            rows={3}
+                            value={value}
+                            onChange={(e) => setForm((current) => ({ ...current, [field.key]: e.target.value }))}
+                            className={`${inputClass} resize-y`}
+                          />
+                        ) : (
+                          <input
+                            value={value}
+                            onChange={(e) => setForm((current) => ({ ...current, [field.key]: e.target.value }))}
+                            placeholder={field.key === 'customer_legal_name' ? (client.company || client.name || '') : undefined}
+                            className={inputClass}
+                          />
+                        )
+                      ) : (
+                        <p className="text-xs font-medium text-foreground whitespace-pre-wrap">
+                          {display || <span className="font-normal text-muted-foreground/40">—</span>}
+                          {!value && field.key === 'customer_legal_name' && display ? (
+                            <span className="ml-1 font-normal text-muted-foreground/50">{t('profile.contractTermsDefault')}</span>
+                          ) : null}
+                        </p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+        {error && <p className="text-xs text-destructive">{error}</p>}
+      </div>
     </div>
   )
 }

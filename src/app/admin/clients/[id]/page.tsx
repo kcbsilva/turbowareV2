@@ -25,6 +25,7 @@ interface Client {
   company: string | null
   cnpj: string | null
   internalNotes: string | null
+  contractTerms?: Record<string, string> | null
   hasPassword?: boolean
   createdAt: string
   updatedAt: string

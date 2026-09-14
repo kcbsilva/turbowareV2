@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -17,6 +17,8 @@ interface Props {
 
 export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
   const { t } = useAdminLang()
+  const [mode, setMode] = useState<'visual' | 'html'>('visual')
+  const htmlRef = useRef<HTMLTextAreaElement>(null)
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -35,13 +37,44 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
   })
 
   useEffect(() => {
-    if (!editor) return
+    if (!editor || mode !== 'visual') return
     const current = editor.getHTML()
     const next = value || ''
     if (normalizeHtml(current) !== normalizeHtml(next)) {
       editor.commands.setContent(next, { emitUpdate: false })
     }
-  }, [editor, value])
+  }, [editor, value, mode])
+
+  function insertVariable(key: string) {
+    const token = tokenFor(key)
+    if (mode === 'html') {
+      const el = htmlRef.current
+      const current = value || ''
+      if (!el) {
+        onChange(`${current}${token}`)
+        return
+      }
+      const start = el.selectionStart
+      const end = el.selectionEnd
+      const next = `${current.slice(0, start)}${token}${current.slice(end)}`
+      onChange(next)
+      requestAnimationFrame(() => {
+        const pos = start + token.length
+        el.focus()
+        el.setSelectionRange(pos, pos)
+      })
+      return
+    }
+    editor?.chain().focus().insertContent(token).run()
+  }
+
+  function switchMode(next: 'visual' | 'html') {
+    if (next === mode) return
+    if (next === 'visual') {
+      editor?.commands.setContent(value || '', { emitUpdate: false })
+    }
+    setMode(next)
+  }
 
   if (!editor) {
     return <div className="min-h-[220px] rounded-md border border-border bg-muted/40" />
@@ -54,6 +87,7 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
           active={editor.isActive('bold')}
           onClick={() => editor.chain().focus().toggleBold().run()}
           title="Bold"
+          disabled={mode === 'html'}
         >
           <Bold className="h-3.5 w-3.5" />
         </ToolbarButton>
@@ -61,6 +95,7 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
           active={editor.isActive('italic')}
           onClick={() => editor.chain().focus().toggleItalic().run()}
           title="Italic"
+          disabled={mode === 'html'}
         >
           <Italic className="h-3.5 w-3.5" />
         </ToolbarButton>
@@ -68,6 +103,7 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
           active={editor.isActive('bulletList')}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           title="List"
+          disabled={mode === 'html'}
         >
           <List className="h-3.5 w-3.5" />
         </ToolbarButton>
@@ -75,6 +111,7 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
           active={editor.isActive('orderedList')}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           title="Numbered list"
+          disabled={mode === 'html'}
         >
           <ListOrdered className="h-3.5 w-3.5" />
         </ToolbarButton>
@@ -87,14 +124,49 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
             key={variable.key}
             type="button"
             title={t(variable.labelKey as MsgKey)}
-            onClick={() => editor.chain().focus().insertContent(tokenFor(variable.key)).run()}
+            onClick={() => insertVariable(variable.key)}
             className="rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] text-foreground hover:bg-muted"
           >
             {variable.key}
           </button>
         ))}
+        <div className="ml-auto flex items-center rounded-md border border-border bg-card p-0.5">
+          <button
+            type="button"
+            onClick={() => switchMode('visual')}
+            className={`rounded px-2 py-0.5 text-[10px] font-medium ${
+              mode === 'visual' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t('templates.modeVisual')}
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMode('html')}
+            className={`rounded px-2 py-0.5 text-[10px] font-medium ${
+              mode === 'html' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t('templates.modeHtml')}
+          </button>
+        </div>
       </div>
-      <EditorContent editor={editor} />
+      {mode === 'html' && (
+        <p className="border-b border-border bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
+          {t('templates.htmlHint')}
+        </p>
+      )}
+      {mode === 'html' ? (
+        <textarea
+          ref={htmlRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          spellCheck={false}
+          className="min-h-[280px] w-full resize-y bg-background px-3 py-2 font-mono text-xs leading-5 text-foreground focus:outline-none"
+        />
+      ) : (
+        <EditorContent editor={editor} />
+      )}
     </div>
   )
 }
@@ -104,18 +176,27 @@ function ToolbarButton({
   onClick,
   title,
   children,
+  disabled,
 }: {
   active?: boolean
   onClick: () => void
   title: string
   children: React.ReactNode
+  disabled?: boolean
 }) {
   return (
     <button
       type="button"
       title={title}
+      disabled={disabled}
       onClick={onClick}
-      className={`rounded-md p-1.5 ${active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+      className={`rounded-md p-1.5 ${
+        disabled
+          ? 'cursor-not-allowed text-muted-foreground/40'
+          : active
+            ? 'bg-muted text-foreground'
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+      }`}
     >
       {children}
     </button>
