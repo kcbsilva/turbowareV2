@@ -211,13 +211,15 @@ export default function ContractTemplatesPage() {
               />
             </label>
             <div className="flex min-h-0 flex-1 flex-col gap-3 sm:flex-row">
-              <div className="min-h-0 min-w-0 flex-1 space-y-1 overflow-y-auto">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('templates.body')}</span>
-                <ContractBodyEditor
-                  ref={bodyEditorRef}
-                  value={form.body}
-                  onChange={(body) => setForm((f) => ({ ...f, body }))}
-                />
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden">
+                <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">{t('templates.body')}</span>
+                <div className="min-h-0 flex-1">
+                  <ContractBodyEditor
+                    ref={bodyEditorRef}
+                    value={form.body}
+                    onChange={(body) => setForm((f) => ({ ...f, body }))}
+                  />
+                </div>
               </div>
               <div className="h-[min(50vh,420px)] w-full shrink-0 sm:h-auto sm:w-56">
                 <ContractVariableSidebar onInsert={(key) => bodyEditorRef.current?.insertVariable(key)} />

@@ -43,7 +43,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
     content: value || '',
     editorProps: {
       attributes: {
-        class: 'contract-editor-surface min-h-[220px] px-3 py-2 text-sm text-foreground focus:outline-none',
+        class: 'contract-editor-surface min-h-full px-3 py-2 text-sm text-foreground focus:outline-none',
       },
     },
     onUpdate: ({ editor: instance }) => {
@@ -95,12 +95,12 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
   }
 
   if (!editor) {
-    return <div className="min-h-[220px] rounded-md border border-border bg-muted/40" />
+    return <div className="h-full min-h-[220px] rounded-md border border-border bg-muted/40" />
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-border bg-background">
-      <div className="flex flex-wrap items-center gap-1 border-b border-border bg-muted/40 px-2 py-1.5">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-border bg-background">
+      <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border bg-muted/40 px-2 py-1.5">
         <ToolbarButton
           active={editor.isActive('bold')}
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -216,7 +216,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
         </div>
       </div>
       {mode === 'html' && (
-        <p className="border-b border-border bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
+        <p className="shrink-0 border-b border-border bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
           {t('templates.htmlHint')}
         </p>
       )}
@@ -226,10 +226,12 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
           value={value}
           onChange={(e) => onChange(e.target.value)}
           spellCheck={false}
-          className="min-h-[280px] w-full resize-y bg-background px-3 py-2 font-mono text-xs leading-5 text-foreground focus:outline-none"
+          className="min-h-0 w-full flex-1 resize-none bg-background px-3 py-2 font-mono text-xs leading-5 text-foreground focus:outline-none"
         />
       ) : (
-        <EditorContent editor={editor} />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <EditorContent editor={editor} className="min-h-full" />
+        </div>
       )}
     </div>
   )
