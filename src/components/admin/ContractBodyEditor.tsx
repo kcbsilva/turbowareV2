@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Bold, Italic, List, ListOrdered } from 'lucide-react'
+import { Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react'
+import TextAlign from '@tiptap/extension-text-align'
 import type { MsgKey } from '@/lib/admin-i18n'
 import { CONTRACT_VARIABLES, tokenFor } from '@/lib/contract-variables'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
@@ -13,16 +14,30 @@ interface Props {
   value: string
   onChange: (html: string) => void
   placeholder?: string
+  showVariableChips?: boolean
 }
 
-export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
+export type ContractBodyEditorHandle = {
+  insertVariable: (key: string) => void
+}
+
+export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(function ContractBodyEditor(
+  { value, onChange, placeholder, showVariableChips = true },
+  ref,
+) {
   const { t } = useAdminLang()
   const [mode, setMode] = useState<'visual' | 'html'>('visual')
   const htmlRef = useRef<HTMLTextAreaElement>(null)
+  const valueRef = useRef(value)
+  const modeRef = useRef(mode)
+  valueRef.current = value
+  modeRef.current = mode
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
+      TextAlign.configure({ types: ['heading', 'paragraph'], defaultAlignment: 'left' }),
       Placeholder.configure({ placeholder: placeholder ?? t('templates.bodyPlaceholder') }),
     ],
     content: value || '',
@@ -47,10 +62,11 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
 
   function insertVariable(key: string) {
     const token = tokenFor(key)
-    if (mode === 'html') {
+    const useHtml = modeRef.current === 'html' || !editor
+    if (useHtml) {
       const el = htmlRef.current
-      const current = value || ''
-      if (!el) {
+      const current = valueRef.current || ''
+      if (!el || modeRef.current !== 'html') {
         onChange(`${current}${token}`)
         return
       }
@@ -65,8 +81,10 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
       })
       return
     }
-    editor?.chain().focus().insertContent(token).run()
+    editor.chain().focus().insertContent(token).run()
   }
+
+  useImperativeHandle(ref, () => ({ insertVariable }), [editor, onChange])
 
   function switchMode(next: 'visual' | 'html') {
     if (next === mode) return
@@ -100,6 +118,48 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
           <Italic className="h-3.5 w-3.5" />
         </ToolbarButton>
         <ToolbarButton
+          active={editor.isActive('underline')}
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          title="Underline"
+          disabled={mode === 'html'}
+        >
+          <UnderlineIcon className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <span className="mx-1 h-4 w-px bg-border" />
+        <ToolbarButton
+          active={editor.isActive({ textAlign: 'left' })}
+          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          title="Align left"
+          disabled={mode === 'html'}
+        >
+          <AlignLeft className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton
+          active={editor.isActive({ textAlign: 'center' })}
+          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          title="Align center"
+          disabled={mode === 'html'}
+        >
+          <AlignCenter className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton
+          active={editor.isActive({ textAlign: 'right' })}
+          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          title="Align right"
+          disabled={mode === 'html'}
+        >
+          <AlignRight className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton
+          active={editor.isActive({ textAlign: 'justify' })}
+          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+          title="Justify"
+          disabled={mode === 'html'}
+        >
+          <AlignJustify className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <span className="mx-1 h-4 w-px bg-border" />
+        <ToolbarButton
           active={editor.isActive('bulletList')}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           title="List"
@@ -115,21 +175,25 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
         >
           <ListOrdered className="h-3.5 w-3.5" />
         </ToolbarButton>
-        <span className="mx-1 h-4 w-px bg-border" />
-        <span className="px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-          {t('templates.variables')}
-        </span>
-        {CONTRACT_VARIABLES.map((variable) => (
-          <button
-            key={variable.key}
-            type="button"
-            title={t(variable.labelKey as MsgKey)}
-            onClick={() => insertVariable(variable.key)}
-            className="rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] text-foreground hover:bg-muted"
-          >
-            {variable.key}
-          </button>
-        ))}
+        {showVariableChips && (
+          <>
+            <span className="mx-1 h-4 w-px bg-border" />
+            <span className="px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('templates.variables')}
+            </span>
+            {CONTRACT_VARIABLES.map((variable) => (
+              <button
+                key={variable.key}
+                type="button"
+                title={t(variable.labelKey as MsgKey)}
+                onClick={() => insertVariable(variable.key)}
+                className="rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] text-foreground hover:bg-muted"
+              >
+                {variable.key}
+              </button>
+            ))}
+          </>
+        )}
         <div className="ml-auto flex items-center rounded-md border border-border bg-card p-0.5">
           <button
             type="button"
@@ -169,7 +233,7 @@ export function ContractBodyEditor({ value, onChange, placeholder }: Props) {
       )}
     </div>
   )
-}
+})
 
 function ToolbarButton({
   active,

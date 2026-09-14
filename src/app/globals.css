@@ -351,6 +351,11 @@ body {
   margin: 0.4em 0;
 }
 
+.contract-editor-surface u,
+.contract-body u {
+  text-decoration: underline;
+}
+
 .contract-body {
   overflow-wrap: anywhere;
 }

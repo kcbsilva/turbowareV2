@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Clock, FileText, Loader2, Plus } from 'lucide-react'
 import { badge } from '@/lib/badges'
 import { ExtendGraceDialog } from '@/components/ExtendGraceDialog'
@@ -14,7 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
-import { ContractBodyEditor } from '@/components/admin/ContractBodyEditor'
+import { ContractBodyEditor, type ContractBodyEditorHandle } from '@/components/admin/ContractBodyEditor'
+import { ContractVariableSidebar } from '@/components/admin/ContractVariableSidebar'
 import { sanitizeContractHtml } from '@/lib/contract-variables'
 import { dateLocale } from '@/lib/admin-i18n'
 import type { MsgKey } from '@/lib/admin-i18n'
@@ -126,6 +127,7 @@ export function ContractsTab({ clientId }: Props) {
   const [contractError, setContractError] = useState('')
   const [templates, setTemplates] = useState<{ id: string; name: string; title: string; notes: string | null; body: string | null }[]>([])
   const [contractForm, setContractForm] = useState({ templateId: '', title: '', startsAt: '', notes: '', body: '' })
+  const bodyEditorRef = useRef<ContractBodyEditorHandle>(null)
 
   const [licenseOpen, setLicenseOpen] = useState(false)
   const [licenseContractId, setLicenseContractId] = useState('')
@@ -464,74 +466,80 @@ export function ContractsTab({ clientId }: Props) {
       )}
 
       <Dialog open={contractOpen} onOpenChange={setContractOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl" showCloseButton>
+        <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-5xl" showCloseButton>
           <DialogHeader>
             <DialogTitle>{t('contracts.dialogTitle')}</DialogTitle>
             <DialogDescription>{t('contracts.dialogDesc')}</DialogDescription>
           </DialogHeader>
-          <form onSubmit={createContract} className="space-y-3">
-            {templates.length > 0 && (
-              <label className="block space-y-1">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.template')}</span>
-                <select
-                  value={contractForm.templateId}
-                  onChange={(e) => {
-                    const templateId = e.target.value
-                    const tpl = templates.find((row) => row.id === templateId)
-                    setContractForm((f) => ({
-                      ...f,
-                      templateId,
-                      title: tpl?.title ?? (templateId ? f.title : f.title),
-                      notes: tpl ? (tpl.notes ?? '') : f.notes,
-                      body: tpl ? (tpl.body ?? '') : f.body,
-                    }))
-                  }}
-                  className={inputClass}
-                >
-                  <option value="">{t('contracts.templateNone')}</option>
-                  {templates.map((tpl) => (
-                    <option key={tpl.id} value={tpl.id}>
-                      {tpl.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <label className="block space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.title')}</span>
-              <input
-                value={contractForm.title}
-                onChange={(e) => setContractForm((f) => ({ ...f, title: e.target.value }))}
-                placeholder={t('contracts.titlePlaceholder')}
-                className={inputClass}
-                required={!contractForm.templateId}
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.startsAt')}</span>
-              <input
-                type="date"
-                value={contractForm.startsAt}
-                onChange={(e) => setContractForm((f) => ({ ...f, startsAt: e.target.value }))}
-                className={inputClass}
-                required
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.notes')}</span>
-              <input
-                value={contractForm.notes}
-                onChange={(e) => setContractForm((f) => ({ ...f, notes: e.target.value }))}
-                className={inputClass}
-              />
-            </label>
-            <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.body')}</span>
-              <p className="text-[11px] text-muted-foreground">{t('templates.varHint')}</p>
-              <ContractBodyEditor
-                value={contractForm.body}
-                onChange={(body) => setContractForm((f) => ({ ...f, body }))}
-              />
+          <form onSubmit={createContract} className="flex min-h-0 flex-1 flex-col gap-3">
+            <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_240px]">
+              <div className="min-h-0 space-y-3 overflow-y-auto pr-1">
+                {templates.length > 0 && (
+                  <label className="block space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.template')}</span>
+                    <select
+                      value={contractForm.templateId}
+                      onChange={(e) => {
+                        const templateId = e.target.value
+                        const tpl = templates.find((row) => row.id === templateId)
+                        setContractForm((f) => ({
+                          ...f,
+                          templateId,
+                          title: tpl?.title ?? (templateId ? f.title : f.title),
+                          notes: tpl ? (tpl.notes ?? '') : f.notes,
+                          body: tpl ? (tpl.body ?? '') : f.body,
+                        }))
+                      }}
+                      className={inputClass}
+                    >
+                      <option value="">{t('contracts.templateNone')}</option>
+                      {templates.map((tpl) => (
+                        <option key={tpl.id} value={tpl.id}>
+                          {tpl.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <label className="block space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.title')}</span>
+                  <input
+                    value={contractForm.title}
+                    onChange={(e) => setContractForm((f) => ({ ...f, title: e.target.value }))}
+                    placeholder={t('contracts.titlePlaceholder')}
+                    className={inputClass}
+                    required={!contractForm.templateId}
+                  />
+                </label>
+                <label className="block space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.startsAt')}</span>
+                  <input
+                    type="date"
+                    value={contractForm.startsAt}
+                    onChange={(e) => setContractForm((f) => ({ ...f, startsAt: e.target.value }))}
+                    className={inputClass}
+                    required
+                  />
+                </label>
+                <label className="block space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.notes')}</span>
+                  <input
+                    value={contractForm.notes}
+                    onChange={(e) => setContractForm((f) => ({ ...f, notes: e.target.value }))}
+                    className={inputClass}
+                  />
+                </label>
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('contracts.body')}</span>
+                  <ContractBodyEditor
+                    ref={bodyEditorRef}
+                    showVariableChips={false}
+                    value={contractForm.body}
+                    onChange={(body) => setContractForm((f) => ({ ...f, body }))}
+                  />
+                </div>
+              </div>
+              <ContractVariableSidebar onInsert={(key) => bodyEditorRef.current?.insertVariable(key)} />
             </div>
             {contractError && <p className="text-xs text-destructive">{contractError}</p>}
             <DialogFooter>
