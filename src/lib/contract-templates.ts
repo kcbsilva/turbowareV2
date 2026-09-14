@@ -37,13 +37,13 @@ export async function listContractTemplates() {
 
 export async function createContractTemplate(opts: {
   name: string
-  title: string
+  title?: string
   notes?: string
   body?: string
 }) {
   const name = opts.name.trim()
-  const title = opts.title.trim()
-  if (!name || !title) return { error: 'Name and contract title are required', status: 400 as const }
+  if (!name) return { error: 'Name is required', status: 400 as const }
+  const title = opts.title?.trim() || name
 
   const template = await prisma.contractTemplate.create({
     data: {
@@ -64,8 +64,8 @@ export async function updateContractTemplate(
   if (!existing) return { error: 'Not found', status: 404 as const }
 
   const name = opts.name !== undefined ? opts.name.trim() : existing.name
-  const title = opts.title !== undefined ? opts.title.trim() : existing.title
-  if (!name || !title) return { error: 'Name and contract title are required', status: 400 as const }
+  const title = opts.title !== undefined ? (opts.title.trim() || name) : existing.title
+  if (!name) return { error: 'Name is required', status: 400 as const }
 
   const template = await prisma.contractTemplate.update({
     where: { id },

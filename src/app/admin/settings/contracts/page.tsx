@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FileText, Loader2, Plus, Pencil, Trash2 } from 'lucide-react'
 import {
   Dialog,
@@ -10,7 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { ContractBodyEditor } from '@/components/admin/ContractBodyEditor'
+import { ContractBodyEditor, type ContractBodyEditorHandle } from '@/components/admin/ContractBodyEditor'
+import { ContractVariableSidebar } from '@/components/admin/ContractVariableSidebar'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
 
 interface Template {
@@ -24,15 +25,19 @@ interface Template {
 const inputClass =
   'w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring'
 
+const editorDialogClass =
+  'h-[min(90vh,820px)] w-[min(calc(100%-2rem),72rem)] max-w-none overflow-hidden sm:max-w-[72rem]'
+
 export default function ContractTemplatesPage() {
   const { t } = useAdminLang()
+  const bodyEditorRef = useRef<ContractBodyEditorHandle>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [form, setForm] = useState({ name: '', title: '', notes: '', body: '' })
+  const [form, setForm] = useState({ name: '', body: '' })
   const [formError, setFormError] = useState('')
   const [busyId, setBusyId] = useState<string | null>(null)
 
@@ -55,14 +60,14 @@ export default function ContractTemplatesPage() {
 
   function openNew() {
     setEditingId(null)
-    setForm({ name: '', title: '', notes: '', body: '' })
+    setForm({ name: '', body: '' })
     setFormError('')
     setOpen(true)
   }
 
   function openEdit(row: Template) {
     setEditingId(row.id)
-    setForm({ name: row.name, title: row.title, notes: row.notes ?? '', body: row.body ?? '' })
+    setForm({ name: row.name, body: row.body ?? '' })
     setFormError('')
     setOpen(true)
   }
@@ -70,7 +75,7 @@ export default function ContractTemplatesPage() {
   async function save(e: React.FormEvent) {
     e.preventDefault()
     setFormError('')
-    if (!form.name.trim() || !form.title.trim()) {
+    if (!form.name.trim()) {
       setFormError(t('templates.required'))
       return
     }
@@ -82,8 +87,7 @@ export default function ContractTemplatesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name.trim(),
-          title: form.title.trim(),
-          notes: form.notes.trim() || null,
+          title: form.name.trim(),
           body: form.body,
         }),
       },
@@ -151,7 +155,6 @@ export default function ContractTemplatesPage() {
             <thead>
               <tr className="border-b border-border text-left text-[10px] uppercase tracking-wider text-muted-foreground">
                 <th className="px-4 py-2.5 font-medium">{t('templates.name')}</th>
-                <th className="px-4 py-2.5 font-medium">{t('templates.title')}</th>
                 <th className="px-4 py-2.5 font-medium">{t('templates.body')}</th>
                 <th className="px-4 py-2.5 font-medium" />
               </tr>
@@ -160,7 +163,6 @@ export default function ContractTemplatesPage() {
               {templates.map((row) => (
                 <tr key={row.id} className="hover:bg-muted/30">
                   <td className="px-4 py-3 font-medium text-foreground">{row.name}</td>
-                  <td className="px-4 py-3 text-foreground">{row.title}</td>
                   <td className="max-w-xs truncate px-4 py-3 text-muted-foreground">
                     {row.body ? t('templates.hasBody') : '—'}
                   </td>
@@ -193,13 +195,13 @@ export default function ContractTemplatesPage() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl" showCloseButton>
+        <DialogContent className={editorDialogClass} showCloseButton>
           <DialogHeader>
             <DialogTitle>{editingId ? t('templates.edit') : t('templates.new')}</DialogTitle>
             <DialogDescription>{t('templates.dialogDesc')}</DialogDescription>
           </DialogHeader>
-          <form onSubmit={save} className="space-y-3">
-            <label className="block space-y-1">
+          <form onSubmit={save} className="flex min-h-0 flex-1 flex-col gap-3">
+            <label className="block shrink-0 space-y-1">
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('templates.name')}</span>
               <input
                 value={form.name}
@@ -208,31 +210,18 @@ export default function ContractTemplatesPage() {
                 required
               />
             </label>
-            <label className="block space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('templates.title')}</span>
-              <input
-                value={form.title}
-                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className={inputClass}
-                required
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('templates.notes')}</span>
-              <textarea
-                value={form.notes}
-                onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                rows={2}
-                className={inputClass}
-              />
-            </label>
-            <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('templates.body')}</span>
-              <p className="text-[11px] text-muted-foreground">{t('templates.varHint')}</p>
-              <ContractBodyEditor
-                value={form.body}
-                onChange={(body) => setForm((f) => ({ ...f, body }))}
-              />
+            <div className="flex min-h-0 flex-1 flex-col gap-3 sm:flex-row">
+              <div className="min-h-0 min-w-0 flex-1 space-y-1 overflow-y-auto">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('templates.body')}</span>
+                <ContractBodyEditor
+                  ref={bodyEditorRef}
+                  value={form.body}
+                  onChange={(body) => setForm((f) => ({ ...f, body }))}
+                />
+              </div>
+              <div className="h-[min(50vh,420px)] w-full shrink-0 sm:h-auto sm:w-56">
+                <ContractVariableSidebar onInsert={(key) => bodyEditorRef.current?.insertVariable(key)} />
+              </div>
             </div>
             {formError && <p className="text-xs text-destructive">{formError}</p>}
             <DialogFooter>

@@ -22,7 +22,7 @@ export type ContractBodyEditorHandle = {
 }
 
 export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(function ContractBodyEditor(
-  { value, onChange, placeholder, showVariableChips = true },
+  { value, onChange, placeholder, showVariableChips = false },
   ref,
 ) {
   const { t } = useAdminLang()

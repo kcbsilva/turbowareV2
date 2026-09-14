@@ -48,7 +48,7 @@ export function ContractVariableSidebar({ onInsert }: Props) {
   const { t } = useAdminLang()
 
   return (
-    <aside className="flex min-h-0 flex-col rounded-md border border-border bg-muted/30">
+    <aside className="flex h-full min-h-0 flex-col rounded-md border border-border bg-muted/30">
       <div className="shrink-0 border-b border-border px-3 py-2">
         <h3 className="text-[10px] font-semibold uppercase tracking-wider text-foreground">
           {t('templates.variables')}
