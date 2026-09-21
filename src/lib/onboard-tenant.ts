@@ -179,33 +179,30 @@ export async function onboardTenant(input: OnboardTenantInput): Promise<OnboardT
     }
   }
 
-  if (input.provisionTurboISP) {
-    if (!slug) {
-      warnings.push('TurboISP provisioning skipped — subdomain is required')
-    } else if (!process.env.TURBOISP_DATABASE_URL) {
-      warnings.push('TurboISP provisioning skipped — TURBOISP_DATABASE_URL is not set')
-    } else {
-      try {
-        const bootstrap = await createTurboISPTenant({
-          name: input.company?.trim() || name,
-          slug,
-          adminUsername: STARTER_STAFF_USERNAME,
-          adminEmail: email || `${STARTER_STAFF_USERNAME}@${slug}.local`,
-          adminPassword: STARTER_STAFF_PASSWORD,
-          countryCode: countryForRegion(region),
-          currency: defaultCurrencyForCountry(countryForRegion(region)),
-        })
-        result.turboisp = {
-          slug: bootstrap.slug,
-          staffLoginUrl: bootstrap.staffLoginUrl,
-          adminUsername: bootstrap.adminUsername,
-          adminPassword: STARTER_STAFF_PASSWORD,
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'TurboISP provisioning failed'
-        console.error('[onboard-tenant] TurboISP bootstrap failed:', err)
-        warnings.push(message)
+  if (slug) {
+    if (!process.env.TURBOISP_DATABASE_URL?.trim()) {
+      throw new Error('TurboISP database is not configured (TURBOISP_DATABASE_URL)')
+    }
+    try {
+      const bootstrap = await createTurboISPTenant({
+        name: input.company?.trim() || name,
+        slug,
+        adminUsername: STARTER_STAFF_USERNAME,
+        adminEmail: email || `${STARTER_STAFF_USERNAME}@${slug}.local`,
+        adminPassword: STARTER_STAFF_PASSWORD,
+        countryCode: countryForRegion(region),
+        currency: defaultCurrencyForCountry(countryForRegion(region)),
+      })
+      result.turboisp = {
+        slug: bootstrap.slug,
+        staffLoginUrl: bootstrap.staffLoginUrl,
+        adminUsername: bootstrap.adminUsername,
+        adminPassword: STARTER_STAFF_PASSWORD,
       }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'TurboISP provisioning failed'
+      console.error('[onboard-tenant] TurboISP bootstrap failed:', err)
+      throw new Error(message)
     }
   }
 

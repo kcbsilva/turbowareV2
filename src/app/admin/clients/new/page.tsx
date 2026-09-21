@@ -35,7 +35,6 @@ export default function NewClientPage() {
     subscriberTier: '',
     createLicense: true,
     createPortalAccess: true,
-    provisionTurboISP: false,
     trialDays: 14,
   })
 
@@ -54,9 +53,9 @@ export default function NewClientPage() {
       setStep(2)
       return
     }
-    if (form.provisionTurboISP && !parsedSlug.slug) {
+    if (!parsedSlug.slug) {
       setLoading(false)
-      setError('Subdomain is required to provision a TurboISP tenant')
+      setError('Subdomain is required to create a TurboISP tenant')
       setStep(2)
       return
     }
@@ -69,13 +68,12 @@ export default function NewClientPage() {
         phone: form.phone || undefined,
         company: form.company || undefined,
         notes: form.notes || undefined,
-        subdomain: form.subdomain || undefined,
+        subdomain: parsedSlug.slug,
         region: form.region,
         subscriberTier: form.subscriberTier || undefined,
         createLicense: form.createLicense,
         createSubscription: Boolean(form.subscriberTier) || form.createLicense,
         createPortalAccess: form.createPortalAccess,
-        provisionTurboISP: form.provisionTurboISP,
         trialDays: form.trialDays,
       }),
     })
@@ -207,7 +205,9 @@ export default function NewClientPage() {
         {step === 2 && (
           <>
             <div>
-              <label className="block text-xs font-medium text-foreground mb-1.5">Subdomain / slug</label>
+              <label className="block text-xs font-medium text-foreground mb-1.5">
+                Subdomain / slug <span className="text-destructive">*</span>
+              </label>
               <input
                 value={form.subdomain}
                 onChange={(e) => handle('subdomain', e.target.value.toLowerCase())}
@@ -215,18 +215,14 @@ export default function NewClientPage() {
                 className={inputClass}
               />
               <p className="text-[10px] text-muted-foreground mt-1">
-                Optional unless you provision TurboISP. Use 3+ lowercase letters, numbers, or hyphens
-                (e.g. <span className="font-mono">northnet</span>). Reserved: www, api, admin, app, portal,
-                billing, support, turboisp, turboware, mail, smtp, ftp, dev, staging, beta.
+                Required. Creates the TurboISP tenant at this slug with staff login admin / admin.
+                Use 3+ lowercase letters, numbers, or hyphens (e.g. <span className="font-mono">northnet</span>).
+                Reserved: www, api, admin, app, portal, billing, support, turboisp, turboware, mail, smtp, ftp, dev, staging, beta.
               </p>
             </div>
             <label className="flex items-center gap-2 text-xs text-foreground">
               <input type="checkbox" checked={form.createPortalAccess} onChange={(e) => handle('createPortalAccess', e.target.checked)} />
               Create client-portal login (temp password, must change on first login)
-            </label>
-            <label className="flex items-center gap-2 text-xs text-foreground">
-              <input type="checkbox" checked={form.provisionTurboISP} onChange={(e) => handle('provisionTurboISP', e.target.checked)} />
-              Provision TurboISP tenant (requires subdomain + TURBOISP_DATABASE_URL). Staff login starts as admin / admin.
             </label>
           </>
         )}
