@@ -20,7 +20,7 @@ export default function NewClientPage() {
     licenseKey?: string
     temporaryPassword?: string
     emailed?: boolean
-    turboisp?: { slug: string; staffLoginUrl: string; adminUsername: string }
+    turboisp?: { slug: string; staffLoginUrl: string; adminUsername: string; adminPassword?: string }
     warnings: string[]
   } | null>(null)
 
@@ -122,8 +122,13 @@ export default function NewClientPage() {
           )}
           {result.turboisp && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">TurboISP tenant</p>
-              <p className="text-foreground mt-0.5">{result.turboisp.adminUsername} · {result.turboisp.slug}</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">TurboISP staff login</p>
+              <p className="font-mono text-foreground mt-0.5">
+                {result.turboisp.adminUsername} / {result.turboisp.adminPassword ?? 'admin'}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Change this after first login. Tenant slug: {result.turboisp.slug}
+              </p>
               <a href={result.turboisp.staffLoginUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                 {result.turboisp.staffLoginUrl}
               </a>
@@ -221,7 +226,7 @@ export default function NewClientPage() {
             </label>
             <label className="flex items-center gap-2 text-xs text-foreground">
               <input type="checkbox" checked={form.provisionTurboISP} onChange={(e) => handle('provisionTurboISP', e.target.checked)} />
-              Provision TurboISP tenant (requires subdomain + TURBOISP_DATABASE_URL)
+              Provision TurboISP tenant (requires subdomain + TURBOISP_DATABASE_URL). Staff login starts as admin / admin.
             </label>
           </>
         )}

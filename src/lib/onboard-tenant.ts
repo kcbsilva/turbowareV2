@@ -6,7 +6,7 @@ import { sendTemporaryPasswordEmail } from '@/lib/email'
 import { getPriceByLabel, getTierByLabel, type Region } from '@/lib/pricing'
 import { parseSignupSlug } from '@/lib/signup-slug'
 import { defaultCurrencyForCountry, type SignupCountryCode } from '@/lib/signup-countries'
-import { createTurboISPTenant } from '@/lib/turboisp-bootstrap'
+import { createTurboISPTenant, STARTER_STAFF_PASSWORD, STARTER_STAFF_USERNAME } from '@/lib/turboisp-bootstrap'
 
 const VALID_REGIONS: Region[] = ['BR', 'CA', 'US', 'GB']
 
@@ -33,7 +33,7 @@ export type OnboardTenantResult = {
   licenseKey?: string
   temporaryPassword?: string
   emailed?: boolean
-  turboisp?: { slug: string; staffLoginUrl: string; adminUsername: string }
+  turboisp?: { slug: string; staffLoginUrl: string; adminUsername: string; adminPassword: string }
   warnings: string[]
 }
 
@@ -185,14 +185,13 @@ export async function onboardTenant(input: OnboardTenantInput): Promise<OnboardT
     } else if (!process.env.TURBOISP_DATABASE_URL) {
       warnings.push('TurboISP provisioning skipped — TURBOISP_DATABASE_URL is not set')
     } else {
-      const password = temporaryPassword || generateTemporaryPassword()
       try {
         const bootstrap = await createTurboISPTenant({
           name: input.company?.trim() || name,
           slug,
-          adminUsername: `${slug}.admin`,
-          adminEmail: email || `${slug}.admin@${slug}.local`,
-          adminPassword: password,
+          adminUsername: STARTER_STAFF_USERNAME,
+          adminEmail: email || `${STARTER_STAFF_USERNAME}@${slug}.local`,
+          adminPassword: STARTER_STAFF_PASSWORD,
           countryCode: countryForRegion(region),
           currency: defaultCurrencyForCountry(countryForRegion(region)),
         })
@@ -200,8 +199,8 @@ export async function onboardTenant(input: OnboardTenantInput): Promise<OnboardT
           slug: bootstrap.slug,
           staffLoginUrl: bootstrap.staffLoginUrl,
           adminUsername: bootstrap.adminUsername,
+          adminPassword: STARTER_STAFF_PASSWORD,
         }
-        if (!result.temporaryPassword) result.temporaryPassword = password
       } catch (err) {
         const message = err instanceof Error ? err.message : 'TurboISP provisioning failed'
         console.error('[onboard-tenant] TurboISP bootstrap failed:', err)

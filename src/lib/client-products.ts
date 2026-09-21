@@ -5,8 +5,7 @@ import { getPriceByLabel, getTierByLabel, type Region } from '@/lib/pricing'
 import { ensureDefaultCatalog } from '@/lib/product-catalog'
 import { parseSignupSlug } from '@/lib/signup-slug'
 import { defaultCurrencyForCountry, type SignupCountryCode } from '@/lib/signup-countries'
-import { generateTemporaryPassword } from '@/lib/temporary-password'
-import { createTurboISPTenant } from '@/lib/turboisp-bootstrap'
+import { createTurboISPTenant, STARTER_STAFF_PASSWORD, STARTER_STAFF_USERNAME } from '@/lib/turboisp-bootstrap'
 import { isTurboISPTenantSlugTaken } from '@/lib/turboisp-tenant-slug-check'
 
 const VALID_STATUSES = Object.values(ClientProductStatus)
@@ -160,15 +159,13 @@ async function ensureTurboIspTenant(clientId: string, slug: string): Promise<
     ? ((client.subscription?.region ?? 'BR') as Region)
     : 'BR'
   const country = countryForRegion(region)
-  const password = generateTemporaryPassword()
-
   try {
     const bootstrap = await createTurboISPTenant({
       name: client.company?.trim() || client.name,
       slug,
-      adminUsername: `${slug}.admin`,
-      adminEmail: client.email || `${slug}.admin@${slug}.local`,
-      adminPassword: password,
+      adminUsername: STARTER_STAFF_USERNAME,
+      adminEmail: client.email || `${STARTER_STAFF_USERNAME}@${slug}.local`,
+      adminPassword: STARTER_STAFF_PASSWORD,
       countryCode: country,
       currency: defaultCurrencyForCountry(country),
     })
@@ -177,7 +174,7 @@ async function ensureTurboIspTenant(clientId: string, slug: string): Promise<
       provisioned: {
         adminUsername: bootstrap.adminUsername,
         staffLoginUrl: bootstrap.staffLoginUrl,
-        temporaryPassword: password,
+        temporaryPassword: STARTER_STAFF_PASSWORD,
       },
     }
   } catch (err) {

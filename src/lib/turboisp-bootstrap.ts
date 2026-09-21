@@ -4,6 +4,10 @@ import type { PoolClient } from 'pg'
 import { getTurboISPPool } from '@/lib/turboisp-db'
 import { isValidSignupSlug, normalizeSignupSlug, staffLoginUrl } from '@/lib/signup-slug'
 
+/** Default worktop login created with every new TurboISP tenant. */
+export const STARTER_STAFF_USERNAME = 'admin'
+export const STARTER_STAFF_PASSWORD = 'admin'
+
 export type TurboISPBootstrapInput = {
   name: string
   slug: string
@@ -45,8 +49,8 @@ async function bootstrapInTransaction(
   if (!name) throw new Error('company name required')
   if (!isValidSignupSlug(slug)) throw new Error('invalid slug')
 
-  let adminUser = in_.adminUsername.trim()
-  if (!adminUser) adminUser = `${slug}.admin`
+  let adminUser = in_.adminUsername.trim() || STARTER_STAFF_USERNAME
+  const adminPassword = in_.adminPassword.trim() || STARTER_STAFF_PASSWORD
 
   let adminEmail = in_.adminEmail.trim()
   if (!adminEmail) adminEmail = `${adminUser}@${slug}.local`
@@ -60,7 +64,7 @@ async function bootstrapInTransaction(
   )
   if (taken.rows[0]?.exists) throw new Error('slug already in use')
 
-  const hash = await bcrypt.hash(in_.adminPassword, 10)
+  const hash = await bcrypt.hash(adminPassword, 10)
   const tenantId = randomUUID()
 
   await client.query(
