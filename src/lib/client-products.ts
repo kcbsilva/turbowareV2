@@ -3,9 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { reconcileSubscriptionLicenseSync } from '@/lib/billing'
 import { getPriceByLabel, getTierByLabel, type Region } from '@/lib/pricing'
 import { ensureDefaultCatalog } from '@/lib/product-catalog'
-import { isValidSignupSlug, normalizeSignupSlug } from '@/lib/signup-slug'
+import { parseSignupSlug } from '@/lib/signup-slug'
 import { defaultCurrencyForCountry, type SignupCountryCode } from '@/lib/signup-countries'
-import { RESERVED_SLUGS } from '@/lib/slug'
 import { generateTemporaryPassword } from '@/lib/temporary-password'
 import { createTurboISPTenant } from '@/lib/turboisp-bootstrap'
 import { isTurboISPTenantSlugTaken } from '@/lib/turboisp-tenant-slug-check'
@@ -70,12 +69,10 @@ function parseDueDate(raw: string): Date | null {
 }
 
 function parseTenantSlug(raw: string): { slug: string } | { error: string } {
-  const slug = normalizeSignupSlug(raw)
-  if (!slug) return { error: 'Tenant slug is required' }
-  if (RESERVED_SLUGS.has(slug) || !isValidSignupSlug(slug)) {
-    return { error: 'Invalid tenant slug' }
-  }
-  return { slug }
+  const parsed = parseSignupSlug(raw)
+  if ('error' in parsed) return parsed
+  if (!parsed.slug) return { error: 'Tenant slug is required' }
+  return { slug: parsed.slug }
 }
 
 async function syncTurboIspSubscription(opts: {

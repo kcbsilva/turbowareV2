@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { PRICING_TIERS, REGION_LABELS, CURRENCY_SYMBOL, type Region } from '@/lib/pricing'
+import { parseSignupSlug } from '@/lib/signup-slug'
 
 type Step = 1 | 2 | 3
 
@@ -46,6 +47,19 @@ export default function NewClientPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    const parsedSlug = parseSignupSlug(form.subdomain)
+    if ('error' in parsedSlug) {
+      setLoading(false)
+      setError(parsedSlug.error)
+      setStep(2)
+      return
+    }
+    if (form.provisionTurboISP && !parsedSlug.slug) {
+      setLoading(false)
+      setError('Subdomain is required to provision a TurboISP tenant')
+      setStep(2)
+      return
+    }
     const res = await fetch('/api/admin/clients', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -189,8 +203,17 @@ export default function NewClientPage() {
           <>
             <div>
               <label className="block text-xs font-medium text-foreground mb-1.5">Subdomain / slug</label>
-              <input value={form.subdomain} onChange={(e) => handle('subdomain', e.target.value.toLowerCase())} placeholder="acme" className={inputClass} />
-              <p className="text-[10px] text-muted-foreground mt-1">Optional. Used as TurboISP tenant slug when provisioning.</p>
+              <input
+                value={form.subdomain}
+                onChange={(e) => handle('subdomain', e.target.value.toLowerCase())}
+                placeholder="acme"
+                className={inputClass}
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Optional unless you provision TurboISP. Use 3+ lowercase letters, numbers, or hyphens
+                (e.g. <span className="font-mono">northnet</span>). Reserved: www, api, admin, app, portal,
+                billing, support, turboisp, turboware, mail, smtp, ftp, dev, staging, beta.
+              </p>
             </div>
             <label className="flex items-center gap-2 text-xs text-foreground">
               <input type="checkbox" checked={form.createPortalAccess} onChange={(e) => handle('createPortalAccess', e.target.checked)} />

@@ -4,10 +4,9 @@ import { generateLicenseKey } from '@/lib/license'
 import { generateTemporaryPassword } from '@/lib/temporary-password'
 import { sendTemporaryPasswordEmail } from '@/lib/email'
 import { getPriceByLabel, getTierByLabel, type Region } from '@/lib/pricing'
-import { isValidSignupSlug, normalizeSignupSlug } from '@/lib/signup-slug'
+import { parseSignupSlug } from '@/lib/signup-slug'
 import { defaultCurrencyForCountry, type SignupCountryCode } from '@/lib/signup-countries'
 import { createTurboISPTenant } from '@/lib/turboisp-bootstrap'
-import { normalizeSlug, RESERVED_SLUGS } from '@/lib/slug'
 
 const VALID_REGIONS: Region[] = ['BR', 'CA', 'US', 'GB']
 
@@ -58,10 +57,10 @@ export async function onboardTenant(input: OnboardTenantInput): Promise<OnboardT
 
   let slug: string | null = null
   if (input.subdomain?.trim()) {
-    slug = normalizeSignupSlug(input.subdomain) || normalizeSlug(input.subdomain)
-    if (!isValidSignupSlug(slug) || RESERVED_SLUGS.has(slug)) {
-      throw new Error('Invalid or reserved subdomain')
-    }
+    const parsed = parseSignupSlug(input.subdomain)
+    if ('error' in parsed) throw new Error(parsed.error)
+    if (!parsed.slug) throw new Error('Subdomain must use letters or numbers (a–z, 0–9)')
+    slug = parsed.slug
     const taken = await prisma.client.findFirst({
       where: { subdomain: slug },
       select: { id: true },
