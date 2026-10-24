@@ -202,7 +202,7 @@ Maintenance runs before the admin and client auth checks. A bypass does not skip
 
 ### One-time Vercel setup
 
-Team `kcbsilvas-projects`, project `turboware-v2`. There is no store connected yet.
+Team `kcbsilvas-projects`, project `turboware-v2`. Create the store if this project does not already have one connected.
 
 1. In the Vercel dashboard for that team, open **Storage** → **Create** → **Global Config**. Name it `turboware`. Older screens still say Edge Config; it is the same product, and `vercel edge-config` is an alias of the commands below.
 2. Connect the store to project **turboware-v2** for Production, Preview, and Development. Connecting writes `GLOBAL_CONFIG` on the project. Do not copy that connection string into git.
