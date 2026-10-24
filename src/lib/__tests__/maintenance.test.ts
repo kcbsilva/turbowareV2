@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createClient } from '@vercel/global-config'
 import { NextRequest } from 'next/server'
-import { middleware } from '@/middleware'
+import { config, middleware } from '@/middleware'
 import {
   MAINTENANCE_BYPASS_MAX_AGE_SECONDS,
   MAINTENANCE_COOKIE,
@@ -112,7 +112,11 @@ describe('maintenance parsing and bypass rules', () => {
     expect(isExemptPath('/api/webhooks/stripe')).toBe(false)
     expect(isExemptPath('/api/webhooks/asaas')).toBe(false)
     expect(isExemptPath('/api/foo.png')).toBe(false)
+    expect(isExemptPath('/api/admin/licenses/ck.png')).toBe(false)
+    expect(isExemptPath('/wiki/Foo.PNG')).toBe(false)
+    expect(isExemptPath('/admin/clients/ck.PNG')).toBe(false)
     expect(isExemptPath('/site')).toBe(false)
+    expect(config.matcher).toEqual(['/((?!_next/static|_next/image).*)'])
   })
 
   it('renders Portuguese first, English second, and escapes operator text', () => {
@@ -342,6 +346,30 @@ describe('middleware maintenance gate', () => {
       },
     }))
     expect(spoofed.status).toBe(503)
+  })
+
+  it('keeps auth and maintenance on routes that only look like static files', async () => {
+    installConfig({ enabled: false })
+    process.env.GLOBAL_CONFIG = CONNECTION
+
+    const adminApi = await middleware(request('/api/admin/licenses/ck.png'))
+    expect(adminApi.status).toBe(401)
+
+    const adminPage = await middleware(request('/admin/clients/ck.PNG'))
+    expect(adminPage.status).toBe(307)
+    expect(adminPage.headers.get('location')).toContain('/admin/login')
+
+    const clientApi = await middleware(request('/api/client/me.png'))
+    expect(clientApi.status).toBe(401)
+
+    enableMaintenance()
+    const wiki = await middleware(request('/wiki/guide.PNG'))
+    expect(wiki.status).toBe(503)
+    expect(await wiki.text()).toContain('Em manutenção')
+
+    const invoice = await middleware(request('/api/admin/invoices/ck.png', { method: 'DELETE' }))
+    expect(invoice.status).toBe(503)
+    expect((await invoice.json()).error).toBe('maintenance')
   })
 
   it('runs before auth while the flag is on, and leaves auth in place while it is off', async () => {

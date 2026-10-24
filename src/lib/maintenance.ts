@@ -40,9 +40,10 @@ type HeaderSource = { get(name: string): string | null }
  *
  * - `/_next/*` and `/_vercel/*`: framework and platform internals. Blocking
  *   them breaks assets for anyone using the bypass cookie.
- * - Favicon and image/font files: the browser chrome, and public files such
- *   as `/slides/*`. The maintenance document inlines its own logo, and these
- *   files do not touch the database.
+ * - The favicon files and `/slides/*`: the only public binary assets. The
+ *   maintenance document inlines its own logo. Paths are matched exactly,
+ *   not by file extension, so `/api/admin/licenses/<id>.png` and
+ *   `/wiki/article.PNG` still go through this middleware.
  *
  * Not exempt, on purpose: `/api/cron/billing`, `/api/webhooks/stripe`, and
  * `/api/webhooks/asaas`. All three write billing rows. During a database
@@ -51,11 +52,11 @@ type HeaderSource = { get(name: string): string | null }
  */
 export function isExemptPath(pathname: string): boolean {
   if (pathname.startsWith('/_next/') || pathname.startsWith('/_vercel/')) return true
+  if (pathname.startsWith('/slides/')) return true
   if (pathname === '/favicon.ico' || pathname === '/favicon.svg') return true
   if (pathname === '/favicon-16.png' || pathname === '/favicon-32.png') return true
   if (pathname === '/apple-touch-icon.png') return true
-  if (pathname === '/api' || pathname.startsWith('/api/')) return false
-  return /\.(?:svg|png|jpe?g|gif|webp|ico|woff2?)$/i.test(pathname)
+  return false
 }
 
 export function isApiPath(pathname: string): boolean {

@@ -245,7 +245,7 @@ Leaving `message` and `eta` off the object is fine. `"enabled": false` is what o
 | Request | During maintenance |
 |---|---|
 | `/_next/static`, `/_next/image`, `/_next/*`, `/_vercel/*` | Served. These are framework and platform files. Blocking them breaks the bypass session. |
-| `/favicon.ico`, `/favicon.svg`, `/favicon-16.png`, `/favicon-32.png`, `/apple-touch-icon.png`, and other `.svg` `.png` `.jpg` `.jpeg` `.gif` `.webp` `.ico` `.woff` `.woff2` files outside `/api` | Served. Browser icons and public files such as `/slides/*`. The maintenance document inlines the Turboware mark, so it does not depend on them. |
+| `/favicon.ico`, `/favicon.svg`, `/favicon-16.png`, `/favicon-32.png`, `/apple-touch-icon.png`, `/slides/*` | Served. These are the public icon and slide files. The maintenance document inlines the Turboware mark. Other paths that merely end in an image extension, including `/api/admin/licenses/<id>.png` and `/wiki/<slug>.png`, still go through middleware so auth and maintenance both apply. |
 | `/api/cron/billing` | **503 JSON.** The cron writes invoices and subscription state. A failed run is safer mid-migration; Vercel Cron tries again on the next 08:00 UTC schedule. |
 | `/api/webhooks/stripe`, `/api/webhooks/asaas` | **503 JSON.** Both mark invoices paid. Stripe and Asaas retry 503s, which is safer than writing payments while the database is moving. |
 | Every other page and `/api/*` route | Maintenance response. License validate/activate included, so product clients get a controlled outage instead of a partial database error. |

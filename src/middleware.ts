@@ -83,8 +83,10 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // All pages and API routes. Static files are skipped here and again in
-    // isExemptPath, so a maintenance response never blocks its own assets.
-    '/((?!_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)',
+    // Next's own files only. Do not skip by extension: an id like
+    // /api/admin/licenses/<id>.png is a real route, and those handlers
+    // rely on this middleware for auth. Favicons and /slides/* are allowed
+    // through inside isExemptPath.
+    '/((?!_next/static|_next/image).*)',
   ],
 }
