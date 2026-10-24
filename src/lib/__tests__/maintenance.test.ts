@@ -19,7 +19,7 @@ vi.mock('@vercel/global-config', () => ({
   createClient: vi.fn(),
 }))
 
-const ENV_KEYS = ['GLOBAL_CONFIG', 'EDGE_CONFIG', 'MAINTENANCE_BYPASS_TOKEN', 'NODE_ENV'] as const
+const ENV_KEYS = ['GLOBAL_CONFIG', 'EDGE_CONFIG', 'MAINTENANCE_BYPASS_TOKEN'] as const
 const originalEnv = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]])) as Record<
   (typeof ENV_KEYS)[number],
   string | undefined
@@ -171,6 +171,7 @@ describe('middleware maintenance gate', () => {
   let errorSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
+    vi.unstubAllEnvs()
     restoreEnv()
     delete process.env.GLOBAL_CONFIG
     delete process.env.EDGE_CONFIG
@@ -313,7 +314,7 @@ describe('middleware maintenance gate', () => {
   })
 
   it('marks the bypass cookie Secure in production', async () => {
-    process.env.NODE_ENV = 'production'
+    vi.stubEnv('NODE_ENV', 'production')
     process.env.MAINTENANCE_BYPASS_TOKEN = 's3cret'
     const response = await middleware(request('/?bypass=s3cret'))
     expect(response.headers.get('set-cookie')).toContain('Secure')
