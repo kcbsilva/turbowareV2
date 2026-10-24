@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { COOKIE_NAME, CLIENT_COOKIE_NAME, getJwtSecret, isAdminPortalRole } from '@/lib/auth'
 import { isSameSiteRequest } from '@/lib/csrf'
+import { maintenanceGate } from '@/lib/maintenance'
 
 export async function middleware(req: NextRequest) {
+  // Maintenance is checked first. A missing or unreadable flag fails open,
+  // and a bypass still falls through into the auth rules below.
+  const maintenance = await maintenanceGate(req)
+  if (maintenance) return maintenance
+
   const { pathname } = req.nextUrl
 
   // ── Admin routes ────────────────────────────────────────────────────────────
@@ -77,9 +83,10 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/admin/:path*',
-    '/api/admin/:path*',
-    '/client/:path*',
-    '/api/client/:path*',
+    // Next's own files only. Do not skip by extension: an id like
+    // /api/admin/licenses/<id>.png is a real route, and those handlers
+    // rely on this middleware for auth. Favicons and /slides/* are allowed
+    // through inside isExemptPath.
+    '/((?!_next/static|_next/image).*)',
   ],
 }

@@ -171,6 +171,84 @@ Protected by JWT middleware (`/admin/*`).
 | `CRON_SECRET` | Bearer token for `/api/cron/billing` (required in production; Vercel injects it) |
 | `ASAAS_API_KEY` | Asaas payments + webhook `asaas-access-token` |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe Checkout + webhook signature |
+| `GLOBAL_CONFIG` | Global Config connection string. Vercel injects this when the store is connected to the project. Legacy name `EDGE_CONFIG` is also read. If neither is set, maintenance mode stays off. |
+| `MAINTENANCE_BYPASS_TOKEN` | Optional secret for `?bypass=` during maintenance. Set it once; changing it needs a redeploy. Use `openssl rand -hex 32`. |
+
+---
+
+## Maintenance mode
+
+Kevin can turn maintenance on for a database cutover and turn it off again without another deploy. Middleware reads the Global Config key `maintenance` on each request (Vercel’s current name for Edge Config). The value is:
+
+```json
+{
+  "enabled": true,
+  "message": "Migração do banco de dados em andamento.",
+  "eta": "hoje às 18h (horário de Brasília)",
+  "allowIps": ["203.0.113.10"]
+}
+```
+
+`enabled` has to be a boolean. `message`, `eta`, and `allowIps` are optional. A missing store, a missing key, a value that is not that shape, or a failed read all **fail open**: the site keeps serving. The flag is never allowed to take the site down just because it could not be read.
+
+`@vercel/global-config` is used instead of `@vercel/edge-config`. Connecting a store in the current Vercel dashboard writes `GLOBAL_CONFIG`. The new SDK reads that variable and falls back to legacy `EDGE_CONFIG`. The old package only reads `EDGE_CONFIG`, so a newly connected store would leave maintenance stuck off.
+
+While `enabled` is `true`:
+
+- Page requests get the branded maintenance document, HTTP 503, `Retry-After`, and `Cache-Control: no-store`. Copy is Portuguese first, with English underneath. `message` is shown as written. An ISO-8601 `eta` is shown in Brasília time; any other string is shown as written. `Retry-After` is the seconds until an ISO `eta` (between 60 and 86400), or 3600 when `eta` is missing or not a timestamp.
+- `/api/*` gets JSON 503: `{ "error": "maintenance", "message": string | null, "eta": string | null }`.
+
+Maintenance runs before the admin and client auth checks. A bypass does not skip login.
+
+### One-time Vercel setup
+
+Team `kcbsilvas-projects`, project `turboware-v2`. Create the store if this project does not already have one connected.
+
+1. In the Vercel dashboard for that team, open **Storage** → **Create** → **Global Config**. Name it `turboware`. Older screens still say Edge Config; it is the same product, and `vercel edge-config` is an alias of the commands below.
+2. Connect the store to project **turboware-v2** for Production, Preview, and Development. Connecting writes `GLOBAL_CONFIG` on the project. Do not copy that connection string into git.
+3. In the project’s **Settings → Environment Variables**, add `MAINTENANCE_BYPASS_TOKEN` for the same environments (`openssl rand -hex 32`).
+4. Redeploy **once** so those variables are present at runtime. After this deploy, flipping the flag does not need a deploy.
+5. Seed the key in the off position (skip `add` if the dashboard create already made the store, and use the `update` command with `"enabled": false` instead):
+
+```bash
+vercel global-config add turboware --scope kcbsilvas-projects \
+  --items '{"maintenance":{"enabled":false}}'
+```
+
+### Turn it on
+
+Dashboard: **Storage → turboware → maintenance → edit the JSON → Save**.
+
+Or, from a machine logged into the team:
+
+```bash
+vercel global-config update turboware --scope kcbsilvas-projects --patch '{"items":[{"operation":"upsert","key":"maintenance","value":{"enabled":true,"message":"Migração do banco de dados em andamento.","eta":"hoje às 18h (horário de Brasília)"}}]}'
+```
+
+The update propagates to the edge without a deployment. Give it a few seconds, then hard-refresh.
+
+### Turn it off
+
+```bash
+vercel global-config update turboware --scope kcbsilvas-projects --patch '{"items":[{"operation":"upsert","key":"maintenance","value":{"enabled":false}}]}'
+```
+
+Leaving `message` and `eta` off the object is fine. `"enabled": false` is what opens the site.
+
+### Bypass, so the real site can be checked during the window
+
+- **IP allow list.** `allowIps` is exact addresses (no CIDR). Middleware compares them to `x-vercel-forwarded-for` (the client IP Vercel sets), then `x-real-ip`, then the first `x-forwarded-for` hop. Edit the same Global Config item to add or remove an IP; that also needs no redeploy.
+- **Bypass cookie.** Open any page as `https://<domain>/?bypass=<MAINTENANCE_BYPASS_TOKEN>`. On GET/HEAD, middleware sets an HttpOnly cookie `tw_maintenance_bypass` for 12 hours and redirects to the same URL without the query. Later browser requests, including `/api/*`, send the cookie. A POST that includes a matching `?bypass=` is allowed for that request only and does not set the cookie. Auth still applies. The token has to already be deployed; rotating it is an env change, not how maintenance is toggled. The token appears in that first request URL, so prefer the hex secret above and do not share the link.
+
+### What keeps working, and what is deliberately stopped
+
+| Request | During maintenance |
+|---|---|
+| `/_next/static`, `/_next/image`, `/_next/*`, `/_vercel/*` | Served. These are framework and platform files. Blocking them breaks the bypass session. |
+| `/favicon.ico`, `/favicon.svg`, `/favicon-16.png`, `/favicon-32.png`, `/apple-touch-icon.png`, `/slides/*` | Served. These are the public icon and slide files. The maintenance document inlines the Turboware mark. Other paths that merely end in an image extension, including `/api/admin/licenses/<id>.png` and `/wiki/<slug>.png`, still go through middleware so auth and maintenance both apply. |
+| `/api/cron/billing` | **503 JSON.** The cron writes invoices and subscription state. A failed run is safer mid-migration; Vercel Cron tries again on the next 08:00 UTC schedule. |
+| `/api/webhooks/stripe`, `/api/webhooks/asaas` | **503 JSON.** Both mark invoices paid. Stripe and Asaas retry 503s, which is safer than writing payments while the database is moving. |
+| Every other page and `/api/*` route | Maintenance response. License validate/activate included, so product clients get a controlled outage instead of a partial database error. |
 
 ---
 
@@ -196,7 +274,7 @@ npm run dev
 ├── prisma/
 │   └── schema.prisma                          # Database schema (License, Activation, Client, Subscription, Invoice)
 ├── src/
-│   ├── middleware.ts                           # JWT auth guard for /admin/* and /api/admin/*
+│   ├── middleware.ts                           # Maintenance mode, then JWT auth for /admin and /client
 │   ├── lib/
 │   │   ├── auth.ts                            # JWT sign/verify helpers
 │   │   ├── license.ts                         # Key generation, status resolution, usability check
