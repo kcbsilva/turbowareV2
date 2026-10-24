@@ -23,6 +23,7 @@
     "@tiptap/react": "^3.31.3",
     "@tiptap/starter-kit": "^3.31.3",
     "@types/pg": "^8.20.0",
+    "@vercel/global-config": "^1.5.1",
     "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
