@@ -259,10 +259,6 @@ export default function SitePage() {
                 </div>
 
                 <footer className="w-full pr-38 pt-4 text-right text-[11px] uppercase tracking-[0.28em] text-white/40 sm:pr-56">
-                  <a href="/termos" className="hover:text-white/70">Termos</a>
-                  <span className="mx-2">·</span>
-                  <a href="/privacidade" className="hover:text-white/70">Privacidade</a>
-                  <span className="mx-2">·</span>
                   {new Date().getFullYear()} - Turboware
                 </footer>
               </div>
