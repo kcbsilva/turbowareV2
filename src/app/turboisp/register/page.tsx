@@ -33,6 +33,11 @@ export default function RegisterPage() {
           >
             Back to TurboISP
           </Link>
+          <p className="mt-8 text-sm text-slate-500">
+            <Link href="/termos" className="hover:underline">Termos de Uso</Link>
+            {' · '}
+            <Link href="/privacidade" className="hover:underline">Política de Privacidade</Link>
+          </p>
         </div>
       </main>
     </div>

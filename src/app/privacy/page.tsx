@@ -1,0 +1,18 @@
+import type { Metadata } from 'next'
+import { LegalDoc } from '@/app/_legal/_components/LegalDoc'
+import { privacyEn } from '@/app/_legal/content'
+
+export const metadata: Metadata = { title: 'Privacy Policy' }
+
+export default function Page() {
+  return (
+    <LegalDoc
+      title="Privacy Policy"
+      updated="Last updated: October 24, 2026"
+      sections={privacyEn}
+      altHref="/privacidade"
+      altLabel="Português"
+      links={[{ href: '/terms', label: 'Terms of Use' }, { href: '/privacy', label: 'Privacy Policy' }]}
+    />
+  )
+}
