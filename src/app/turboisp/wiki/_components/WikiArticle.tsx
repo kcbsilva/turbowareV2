@@ -24,7 +24,7 @@ import {
   type Block,
 } from '../_content'
 import { useWikiLang } from './WikiLang'
-import { turbowareTitle, useDocumentTitle } from '@/lib/document-title'
+import { turbowareTitle, useDocumentTitle, useMetaDescription } from '@/lib/document-title'
 
 function PathTrail({ trail }: { trail: Block & { type: 'path' } }) {
   const { lang } = useWikiLang()
@@ -141,6 +141,7 @@ export function WikiArticle({ slug }: { slug: string }) {
   const { lang } = useWikiLang()
   const article = getArticle(slug)
   useDocumentTitle(turbowareTitle(article ? pick(lang, article.title) : pick(lang, wikiCopy.brand)))
+  useMetaDescription(article ? pick(lang, article.summary) : pick(lang, wikiCopy.indexDescription))
   if (!article) return null
 
   const category = CATEGORIES.find((c) => c.id === article.category)

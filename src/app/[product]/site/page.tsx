@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ProjectSitePage } from "@/components/ProjectSitePage";
+import { requestSiteLang } from "@/lib/request-site-lang";
 import {
   PRODUCT_SITES,
   PRODUCT_SITE_SLUGS,
@@ -25,9 +26,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {};
   }
 
+  const lang = await requestSiteLang();
+
   return {
     title: product.name,
-    description: product.heroSubtitle,
+    description: product.heroSubtitle[lang],
   };
 }
 
@@ -39,5 +42,5 @@ export default async function ProductSiteRoute({ params }: PageProps) {
     notFound();
   }
 
-  return <ProjectSitePage product={product} />;
+  return <ProjectSitePage slug={slug} />;
 }

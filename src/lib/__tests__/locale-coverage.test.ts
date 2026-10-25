@@ -14,6 +14,9 @@ import { adminEs } from '../admin-i18n-es'
 import { adminFr } from '../admin-i18n-fr'
 import { clientLocales } from '../client-i18n'
 import { API_ERROR_EXACT, apiErrorLocales, translateApiError } from '../api-errors'
+import { ROOT_DESCRIPTION, matchSiteLang } from '../locale-copy'
+import { PICKER_PROJECTS, pickerChrome, productChrome } from '../portfolio-copy'
+import { PRODUCT_SITES } from '../project-site-content'
 
 const SITE_LANGS = ['en', 'pt', 'fr', 'es'] as const
 const FR_SPACE_BEFORE_PUNCT = / [?:;!]/
@@ -161,5 +164,31 @@ describe('locale coverage', () => {
     )
     expect(billing).not.toMatch(/25\/10\/2026/)
     expect(billing).toMatch(/2026/)
+    expect(translateApiError('Invalid status. Must be one of: TRIAL, ACTIVE', 'fr-CA')).toContain('TRIAL')
+    expect(translateApiError('Invalid transition: TRIAL → ACTIVE', 'es')).toContain('ACTIVE')
+    expect(translateApiError('Invoice cannot be paid — current status: PAID', 'pt-BR')).toContain('PAID')
+    expect(translateApiError('"admin" is reserved. Try a company name like acme or northnet.', 'fr-CA')).toContain('admin')
+    expect(translateApiError('Subscription is not active (status: TRIAL)', 'es')).toContain('TRIAL')
+    expect(translateApiError('Nome e sobrenome são obrigatórios.', 'en')).toMatch(/name/i)
+    expect(translateApiError('public signup is disabled', 'pt-BR')).toMatch(/cadastro/i)
+  })
+
+  it('keeps the portfolio, product pages, and root description aligned', () => {
+    const problems: string[] = []
+    walkI18n(ROOT_DESCRIPTION, 'root', problems)
+    walkI18n(PICKER_PROJECTS, 'picker', problems)
+    walkI18n(pickerChrome, 'pickerChrome', problems)
+    walkI18n(productChrome, 'productChrome', problems)
+    walkI18n(PRODUCT_SITES, 'products', problems)
+    expect(problems).toEqual([])
+    expect(ROOT_DESCRIPTION.pt).not.toMatch(/não pode parar/i)
+    expect(ROOT_DESCRIPTION.pt).toMatch(/faturamento/)
+    expect(ROOT_DESCRIPTION.fr).toMatch(/facturation/)
+    expect(ROOT_DESCRIPTION.es).toMatch(/facturación/)
+    expect(matchSiteLang(null)).toBe('pt')
+    expect(matchSiteLang('en-US,en;q=0.9,pt;q=0.4')).toBe('en')
+    expect(matchSiteLang('fr-CA,fr;q=0.8,en;q=0.5')).toBe('fr')
+    expect(matchSiteLang('es-419,es;q=0.9')).toBe('es')
+    expect(matchSiteLang('pt-BR,pt;q=0.9')).toBe('pt')
   })
 })

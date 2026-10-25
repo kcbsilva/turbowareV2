@@ -1,9 +1,17 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CheckCircle, Zap } from "lucide-react";
 
 import turbowareLogo from "@/app/assets/turboware-logo.png";
-import type { ProductSiteContent } from "@/lib/project-site-content";
+import { pick, type Lang } from "@/app/turboisp/site/_components/constants";
+import { useSiteLang } from "@/app/turboisp/site/_components/site-lang";
+import { SiteLangSelect } from "@/components/SiteLangSelect";
+import { turbowareTitle, useDocumentTitle, useMetaDescription } from "@/lib/document-title";
+import { textOf } from "@/lib/locale-copy";
+import { productChrome } from "@/lib/portfolio-copy";
+import { PRODUCT_SITES } from "@/lib/project-site-content";
 
 function hexToRgba(hex: string, alpha: number) {
   const normalized = hex.replace("#", "");
@@ -23,16 +31,29 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+function fill(template: string, name: string) {
+  return template.replaceAll("{name}", name);
+}
+
 type Props = {
-  product: ProductSiteContent;
+  slug: string;
 };
 
-export function ProjectSitePage({ product }: Props) {
+export function ProjectSitePage({ slug }: Props) {
+  const product = PRODUCT_SITES[slug];
+  const { lang, setLang } = useSiteLang();
+  const copy = (value: Parameters<typeof pick>[0]) => pick(value, lang as Lang);
+
+  useDocumentTitle(turbowareTitle(product?.name ?? "Turboware"));
+  useMetaDescription(product ? copy(product.heroSubtitle) : "");
+
+  if (!product) return null;
+
   const accent = product.accent;
   const accentSoft = hexToRgba(accent, 0.12);
   const accentBorder = hexToRgba(accent, 0.24);
   const accentStrong = hexToRgba(accent, 0.18);
-  const primaryLabel = product.comingSoon ? "Coming soon" : "Explore the platform";
+  const primaryLabel = product.comingSoon ? copy(productChrome.comingSoon) : copy(productChrome.explore);
 
   return (
     <div
@@ -55,7 +76,7 @@ export function ProjectSitePage({ product }: Props) {
           borderColor: "rgba(0,0,0,0.08)",
         }}
       >
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6">
           <div className="flex items-center gap-4">
             <Image
               src={turbowareLogo}
@@ -69,7 +90,7 @@ export function ProjectSitePage({ product }: Props) {
                 className="text-[10px] font-semibold uppercase tracking-[0.28em]"
                 style={{ color: "rgba(10,20,40,0.38)" }}
               >
-                {product.category}
+                {copy(product.categoryLabel)}
               </p>
               <p className="text-sm font-semibold" style={{ color: "#0a1428" }}>
                 {product.name}
@@ -82,13 +103,13 @@ export function ProjectSitePage({ product }: Props) {
             style={{ color: "rgba(10,20,40,0.52)" }}
           >
             <a href="#platform" className="transition hover:text-[#0a1428]">
-              Platform
+              {copy(productChrome.platform)}
             </a>
             <a href="#advantages" className="transition hover:text-[#0a1428]">
-              Why it matters
+              {copy(productChrome.why)}
             </a>
             <a href="#impact" className="transition hover:text-[#0a1428]">
-              Impact
+              {copy(productChrome.impact)}
             </a>
           </nav>
 
@@ -98,8 +119,9 @@ export function ProjectSitePage({ product }: Props) {
               className="hidden text-xs transition sm:inline"
               style={{ color: "rgba(10,20,40,0.45)" }}
             >
-              All products
+              {copy(productChrome.allProducts)}
             </Link>
+            <SiteLangSelect lang={lang} setLang={setLang} label={copy(productChrome.language)} />
             {product.comingSoon ? (
               <span
                 className="rounded-md px-4 py-2 text-xs font-semibold"
@@ -109,7 +131,7 @@ export function ProjectSitePage({ product }: Props) {
                   color: accent,
                 }}
               >
-                Coming soon
+                {copy(productChrome.comingSoon)}
               </span>
             ) : (
               <Link
@@ -117,7 +139,7 @@ export function ProjectSitePage({ product }: Props) {
                 className="rounded-md px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90"
                 style={{ backgroundColor: accent }}
               >
-                Platform access
+                {copy(productChrome.access)}
               </Link>
             )}
           </div>
@@ -137,21 +159,21 @@ export function ProjectSitePage({ product }: Props) {
             className="h-1.5 w-1.5 rounded-full animate-pulse"
             style={{ backgroundColor: accent }}
           />
-          {product.badge}
+          {copy(product.badge)}
         </div>
 
         <h1
           className="mb-6 text-5xl font-black leading-[1.08] tracking-tight md:text-6xl"
           style={{ color: "#0a1428" }}
         >
-          {product.heroTitle}
+          {copy(product.heroTitle)}
         </h1>
 
         <p
           className="mx-auto mb-10 max-w-3xl text-base leading-relaxed"
           style={{ color: "rgba(10,20,40,0.55)" }}
         >
-          {product.heroSubtitle}
+          {copy(product.heroSubtitle)}
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
@@ -167,7 +189,7 @@ export function ProjectSitePage({ product }: Props) {
             className="flex items-center gap-2 rounded-lg border px-6 py-3 text-sm font-medium transition hover:bg-black/5"
             style={{ borderColor: "rgba(0,0,0,0.12)", color: "rgba(10,20,40,0.6)" }}
           >
-            Back to products <BookOpen className="h-4 w-4" />
+            {copy(productChrome.back)} <BookOpen className="h-4 w-4" />
           </Link>
         </div>
 
@@ -175,10 +197,10 @@ export function ProjectSitePage({ product }: Props) {
           className="mt-14 flex flex-wrap items-center justify-center gap-6 text-[10px] uppercase tracking-widest"
           style={{ color: "rgba(10,20,40,0.34)" }}
         >
-          {product.trustBadges.map((badge) => (
-            <span key={badge} className="flex items-center gap-1.5">
+          {product.trustBadges.map((badge, index) => (
+            <span key={index} className="flex items-center gap-1.5">
               <CheckCircle className="h-3 w-3" style={{ color: accent }} />
-              {badge}
+              {copy(badge)}
             </span>
           ))}
         </div>
@@ -189,13 +211,13 @@ export function ProjectSitePage({ product }: Props) {
           className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border shadow-sm md:grid-cols-4"
           style={{ backgroundColor: "rgba(0,0,0,0.07)", borderColor: "rgba(0,0,0,0.07)" }}
         >
-          {product.stats.map((stat) => (
-            <div key={stat.label} className="px-6 py-7 text-center" style={{ backgroundColor: "#fff" }}>
+          {product.stats.map((stat, index) => (
+            <div key={index} className="px-6 py-7 text-center" style={{ backgroundColor: "#fff" }}>
               <p className="mb-1 text-3xl font-black" style={{ color: accent }}>
-                {stat.value}
+                {textOf(lang, stat.value)}
               </p>
               <p className="text-[11px]" style={{ color: "rgba(10,20,40,0.45)" }}>
-                {stat.label}
+                {copy(stat.label)}
               </p>
             </div>
           ))}
@@ -208,17 +230,17 @@ export function ProjectSitePage({ product }: Props) {
             className="mb-3 text-[10px] font-semibold uppercase tracking-widest"
             style={{ color: accent }}
           >
-            Platform
+            {copy(productChrome.platform)}
           </p>
           <h2 className="text-3xl font-bold" style={{ color: "#0a1428" }}>
-            Core building blocks for {product.name}
+            {fill(copy(productChrome.blocks), product.name)}
           </h2>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {product.modules.map(({ icon: Icon, title, description }) => (
+          {product.modules.map(({ icon: Icon, title, description }, index) => (
             <div
-              key={title}
+              key={index}
               className="rounded-xl border bg-white p-5"
               style={{ borderColor: "rgba(0,0,0,0.07)" }}
             >
@@ -229,10 +251,10 @@ export function ProjectSitePage({ product }: Props) {
                 <Icon className="h-4 w-4" style={{ color: accent }} />
               </div>
               <h3 className="mb-1.5 text-sm font-semibold" style={{ color: "#0a1428" }}>
-                {title}
+                {copy(title)}
               </h3>
               <p className="text-xs leading-relaxed" style={{ color: "rgba(10,20,40,0.45)" }}>
-                {description}
+                {copy(description)}
               </p>
             </div>
           ))}
@@ -245,17 +267,17 @@ export function ProjectSitePage({ product }: Props) {
             className="mb-3 text-[10px] font-semibold uppercase tracking-widest"
             style={{ color: accent }}
           >
-            Why it matters
+            {copy(productChrome.why)}
           </p>
           <h2 className="text-3xl font-bold" style={{ color: "#0a1428" }}>
-            Value created beyond the feature checklist
+            {copy(productChrome.beyond)}
           </h2>
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {product.values.map(({ icon: Icon, title, description }) => (
+          {product.values.map(({ icon: Icon, title, description }, index) => (
             <div
-              key={title}
+              key={index}
               className="flex gap-4 rounded-xl border bg-white p-6"
               style={{ borderColor: "rgba(0,0,0,0.07)" }}
             >
@@ -267,10 +289,10 @@ export function ProjectSitePage({ product }: Props) {
               </div>
               <div>
                 <h3 className="mb-1.5 text-sm font-semibold" style={{ color: "#0a1428" }}>
-                  {title}
+                  {copy(title)}
                 </h3>
                 <p className="text-xs leading-relaxed" style={{ color: "rgba(10,20,40,0.45)" }}>
-                  {description}
+                  {copy(description)}
                 </p>
               </div>
             </div>
@@ -284,25 +306,25 @@ export function ProjectSitePage({ product }: Props) {
             className="mb-3 text-[10px] font-semibold uppercase tracking-widest"
             style={{ color: accent }}
           >
-            {product.metricsLabel}
+            {copy(product.metricsLabel)}
           </p>
           <h2 className="text-3xl font-bold" style={{ color: "#0a1428" }}>
-            {product.metricsTitle}
+            {copy(product.metricsTitle)}
           </h2>
         </div>
 
         <div className="flex flex-wrap justify-center gap-4">
-          {product.metrics.map((metric) => (
+          {product.metrics.map((metric, index) => (
             <div
-              key={metric.label}
+              key={index}
               className="w-64 rounded-xl border bg-white p-6 text-center"
               style={{ borderColor: "rgba(0,0,0,0.07)" }}
             >
               <p className="mb-2 text-4xl font-black" style={{ color: "#0a1428" }}>
-                {metric.value}
+                {textOf(lang, metric.value)}
               </p>
               <p className="text-[11px] leading-snug" style={{ color: "rgba(10,20,40,0.45)" }}>
-                {metric.label}
+                {copy(metric.label)}
               </p>
             </div>
           ))}
@@ -322,9 +344,9 @@ export function ProjectSitePage({ product }: Props) {
           >
             <Zap className="h-6 w-6" style={{ color: "#ffffff" }} />
           </div>
-          <h2 className="mb-3 text-3xl font-bold text-white">{product.ctaTitle}</h2>
+          <h2 className="mb-3 text-3xl font-bold text-white">{copy(product.ctaTitle)}</h2>
           <p className="mx-auto mb-8 max-w-2xl text-sm" style={{ color: "rgba(255,255,255,0.74)" }}>
-            {product.ctaDescription}
+            {copy(product.ctaDescription)}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
@@ -332,14 +354,14 @@ export function ProjectSitePage({ product }: Props) {
               className="inline-flex items-center gap-2 rounded-lg bg-white px-8 py-3 text-sm font-semibold transition hover:opacity-90"
               style={{ color: "#0a1428" }}
             >
-              Explore the Turboware portfolio <ArrowRight className="h-4 w-4" />
+              {copy(productChrome.portfolio)} <ArrowRight className="h-4 w-4" />
             </Link>
             {product.comingSoon ? (
               <span
                 className="inline-flex items-center gap-2 rounded-lg border px-8 py-3 text-sm font-semibold text-white"
                 style={{ borderColor: "rgba(255,255,255,0.22)" }}
               >
-                Coming soon
+                {copy(productChrome.comingSoon)}
               </span>
             ) : (
               <Link
@@ -347,7 +369,7 @@ export function ProjectSitePage({ product }: Props) {
                 className="inline-flex items-center gap-2 rounded-lg border px-8 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
                 style={{ borderColor: "rgba(255,255,255,0.22)" }}
               >
-                Platform access
+                {copy(productChrome.access)}
               </Link>
             )}
           </div>
@@ -369,21 +391,21 @@ export function ProjectSitePage({ product }: Props) {
               height={48}
               className="h-10 w-auto"
             />
-            <p className="max-w-md text-[11px] leading-relaxed">{product.footerNote}</p>
+            <p className="max-w-md text-[11px] leading-relaxed">{copy(product.footerNote)}</p>
           </div>
 
           <div className="flex items-center gap-6 text-[11px]">
             <a href="#platform" className="transition hover:text-white/70">
-              Platform
+              {copy(productChrome.platform)}
             </a>
             <a href="#advantages" className="transition hover:text-white/70">
-              Why it matters
+              {copy(productChrome.why)}
             </a>
             <a href="#impact" className="transition hover:text-white/70">
-              Impact
+              {copy(productChrome.impact)}
             </a>
             <Link href="/site" className="transition hover:text-white/70">
-              All products
+              {copy(productChrome.allProducts)}
             </Link>
           </div>
         </div>

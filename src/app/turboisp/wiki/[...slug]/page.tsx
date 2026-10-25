@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import { articleSlugs, getArticle } from '../_content'
+import { requestSiteLang } from '@/lib/request-site-lang'
+import { articleSlugs, getArticle, wikiCopy } from '../_content'
 import { WikiArticle } from '../_components/WikiArticle'
 import { WikiNotFound } from '../_components/WikiNotFound'
 
@@ -14,10 +15,11 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   const article = getArticle(slug.join('/'))
-  if (!article) return { title: 'Wiki' }
+  const lang = await requestSiteLang()
+  if (!article) return { title: 'Wiki', description: wikiCopy.indexDescription[lang] }
   return {
     title: 'Wiki',
-    description: article.summary.en,
+    description: article.summary[lang],
   }
 }
 
