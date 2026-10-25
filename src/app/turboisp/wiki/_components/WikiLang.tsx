@@ -41,6 +41,10 @@ export function WikiProviders({ children }: { children: ReactNode }) {
     if (saved && LANGS.some((item) => item.code === saved)) setLangState(saved as Lang)
   }, [])
 
+  useEffect(() => {
+    document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang === 'fr' ? 'fr-CA' : lang === 'es' ? 'es' : 'en'
+  }, [lang])
+
   const setLang = useCallback((next: Lang) => {
     setLangState(next)
     window.localStorage.setItem(STORAGE_KEY, next)

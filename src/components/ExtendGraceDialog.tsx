@@ -19,13 +19,37 @@ import {
 
 type Mode = 'days' | 'until'
 
+export type GraceDialogLabels = {
+  title: string
+  description: string
+  extraDays: string
+  calendarDate: string
+  accessUntil: string
+  range: string
+  accessThrough: string
+  day: string
+  days: string
+  cancel: string
+  saving: string
+  failed: string
+  confirm: string
+}
+
+function fill(template: string, vars: Record<string, string | number>) {
+  let out = template
+  for (const [name, value] of Object.entries(vars)) out = out.replaceAll(`{${name}}`, String(value))
+  return out
+}
+
 export function ExtendGraceDialog({
   open,
   onOpenChange,
   currentEndsAt,
   maxDays,
   feeHint,
-  confirmLabel = 'Extend grace',
+  labels,
+  dateLocale,
+  formatError,
   onConfirm,
 }: {
   open: boolean
@@ -33,7 +57,9 @@ export function ExtendGraceDialog({
   currentEndsAt?: string | null
   maxDays: number
   feeHint?: string
-  confirmLabel?: string
+  labels: GraceDialogLabels
+  dateLocale?: string
+  formatError?: (message: string) => string
   onConfirm: (payload: { days?: number; until?: string }) => Promise<void>
 }) {
   const [mode, setMode] = useState<Mode>('days')
@@ -64,10 +90,14 @@ export function ExtendGraceDialog({
     })
   }, [mode, days, until, currentEndsAt, maxDays])
 
+  function showError(message: string) {
+    return formatError ? formatError(message) : message
+  }
+
   async function submit() {
     setError('')
     if (!preview.ok) {
-      setError(preview.error)
+      setError(showError(preview.error))
       return
     }
     setSaving(true)
@@ -75,7 +105,7 @@ export function ExtendGraceDialog({
       await onConfirm(mode === 'until' ? { until } : { days: Number(days) })
       onOpenChange(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to extend grace.')
+      setError(err instanceof Error ? err.message : labels.failed)
     } finally {
       setSaving(false)
     }
@@ -95,22 +125,25 @@ export function ExtendGraceDialog({
     </button>
   )
 
+  const unit = preview.ok ? (preview.days === 1 ? labels.day : labels.days) : labels.days
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" showCloseButton>
         <DialogHeader>
-          <DialogTitle>Extend grace</DialogTitle>
-          <DialogDescription>
-            Give this account more TurboISP access time — extra days from now, or a date on the calendar.
-          </DialogDescription>
+          <DialogTitle>{labels.title}</DialogTitle>
+          <DialogDescription>{labels.description}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex rounded-lg bg-muted p-1">{tab('days', 'Extra days')}{tab('until', 'Calendar date')}</div>
+        <div className="flex rounded-lg bg-muted p-1">
+          {tab('days', labels.extraDays)}
+          {tab('until', labels.calendarDate)}
+        </div>
 
         {mode === 'days' ? (
           <label className="block space-y-1.5">
             <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              <Clock className="h-3 w-3" /> Extra days
+              <Clock className="h-3 w-3" /> {labels.extraDays}
             </span>
             <input
               type="number"
@@ -120,12 +153,12 @@ export function ExtendGraceDialog({
               onChange={(e) => setDays(e.target.value)}
               className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary"
             />
-            <p className="text-[11px] text-muted-foreground">Between {MIN_GRACE_DAYS} and {maxDays} days.</p>
+            <p className="text-[11px] text-muted-foreground">{fill(labels.range, { min: MIN_GRACE_DAYS, max: maxDays })}</p>
           </label>
         ) : (
           <label className="block space-y-1.5">
             <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              <CalendarDays className="h-3 w-3" /> Access until
+              <CalendarDays className="h-3 w-3" /> {labels.accessUntil}
             </span>
             <input
               type="date"
@@ -140,17 +173,17 @@ export function ExtendGraceDialog({
 
         {preview.ok ? (
           <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-foreground">
-            Access through{' '}
+            {labels.accessThrough}{' '}
             <strong>
-              {preview.endsAt.toLocaleString(undefined, {
+              {preview.endsAt.toLocaleString(dateLocale, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
               })}
             </strong>
-            {' '}({preview.days} day{preview.days === 1 ? '' : 's'}).
+            {` (${preview.days} ${unit}).`}
           </p>
         ) : (
-          <p className="text-xs text-destructive">{preview.error}</p>
+          <p className="text-xs text-destructive">{showError(preview.error)}</p>
         )}
 
         {feeHint && <p className="text-[11px] text-muted-foreground">{feeHint}</p>}
@@ -162,7 +195,7 @@ export function ExtendGraceDialog({
             onClick={() => onOpenChange(false)}
             className="h-9 rounded-md border border-border px-3 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
-            Cancel
+            {labels.cancel}
           </button>
           <button
             type="button"
@@ -171,7 +204,7 @@ export function ExtendGraceDialog({
             className="h-9 rounded-md px-3 text-xs font-semibold disabled:opacity-50"
             style={{ backgroundColor: '#fff', color: '#000' }}
           >
-            {saving ? 'Saving…' : confirmLabel}
+            {saving ? labels.saving : labels.confirm}
           </button>
         </DialogFooter>
       </DialogContent>

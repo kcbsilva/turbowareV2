@@ -12,6 +12,8 @@ import { turboIspTermsAndConditionsEs } from '@/app/turboisp/register/terms-and-
 import { ARTICLES, CATEGORIES, JOBS, wikiCopy } from '@/app/turboisp/wiki/_content'
 import { adminEs } from '../admin-i18n-es'
 import { adminFr } from '../admin-i18n-fr'
+import { clientLocales } from '../client-i18n'
+import { API_ERROR_EXACT, apiErrorLocales, translateApiError } from '../api-errors'
 
 const SITE_LANGS = ['en', 'pt', 'fr', 'es'] as const
 const FR_SPACE_BEFORE_PUNCT = / [?:;!]/
@@ -37,8 +39,8 @@ function assertBundle(
       expect(placeholders(value), `${name} ${code} ${key} placeholders`).toEqual(
         placeholders(locales[codes[0]!]![key]!),
       )
-      if (code === 'fr') {
-        expect(value, `${name} fr ${key} space before punctuation`).not.toMatch(FR_SPACE_BEFORE_PUNCT)
+      if (code === 'fr' || code === 'fr-CA') {
+        expect(value, `${name} ${code} ${key} space before punctuation`).not.toMatch(FR_SPACE_BEFORE_PUNCT)
       }
     }
   }
@@ -136,5 +138,28 @@ describe('locale coverage', () => {
       es: adminEs,
     }
     assertBundle('admin', core, ['en', 'pt-BR', 'fr', 'es'])
+  })
+
+  it('keeps the client portal aligned in en, pt-BR, fr-CA, and es', () => {
+    assertBundle('client', clientLocales, ['en', 'pt-BR', 'fr-CA', 'es'])
+  })
+
+  it('maps user-facing API errors in all four languages', () => {
+    assertBundle('api-errors', apiErrorLocales, ['en', 'pt-BR', 'fr-CA', 'es'])
+    for (const [server, key] of Object.entries(API_ERROR_EXACT)) {
+      expect(apiErrorLocales.en[key], server).toBeTruthy()
+      expect(translateApiError(server, 'fr-CA'), server).not.toBe(server)
+      expect(translateApiError(server, 'es'), server).not.toBe(server)
+    }
+    expect(translateApiError('Por favor, verifique seu e-mail antes de fazer login.', 'en')).toMatch(/email/i)
+    expect(translateApiError('Grace cannot extend more than 14 days.', 'pt-BR')).toContain('14')
+    expect(translateApiError('Enter between 1 and 14 extra days.', 'fr-CA')).toMatch(/1/)
+    expect(translateApiError('Seat limit reached (40/40).', 'es')).toContain('40')
+    const billing = translateApiError(
+      'Billing date can only be changed every 3 months. Available on 25/10/2026.',
+      'en',
+    )
+    expect(billing).not.toMatch(/25\/10\/2026/)
+    expect(billing).toMatch(/2026/)
   })
 })

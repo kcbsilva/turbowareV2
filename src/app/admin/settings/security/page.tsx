@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import { Shield, ShieldCheck, Loader2 } from 'lucide-react'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 
 export default function SecurityPage() {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const [mfaEnabled, setMfaEnabled] = useState(false)
   const [loading, setLoading] = useState(true)
   const [setup, setSetup] = useState<{ otpauthUrl: string; secret: string } | null>(null)
@@ -35,7 +36,7 @@ export default function SecurityPage() {
       setSetup(await res.json())
       setCode('')
     } else {
-      flash((await res.json().catch(() => ({}))).error || t('security.setupFailed'), false)
+      flash(explainApiError((await res.json().catch(() => ({}))).error, lang) || t('security.setupFailed'), false)
     }
   }
 
@@ -54,7 +55,7 @@ export default function SecurityPage() {
       setCode('')
       flash(t('security.enabled'))
     } else {
-      flash((await res.json().catch(() => ({}))).error || t('security.invalidCode'), false)
+      flash(explainApiError((await res.json().catch(() => ({}))).error, lang) || t('security.invalidCode'), false)
     }
   }
 
@@ -74,7 +75,7 @@ export default function SecurityPage() {
       setDisableCode('')
       flash(t('security.disabled'))
     } else {
-      flash((await res.json().catch(() => ({}))).error || t('security.disableFailed'), false)
+      flash(explainApiError((await res.json().catch(() => ({}))).error, lang) || t('security.disableFailed'), false)
     }
   }
 

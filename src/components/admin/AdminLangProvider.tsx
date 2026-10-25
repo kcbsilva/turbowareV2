@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { usePathname } from 'next/navigation'
 import {
   ADMIN_LANGS,
   parseAdminLang,
@@ -16,6 +17,7 @@ import {
   type AdminLang,
   type MsgKey,
 } from '@/lib/admin-i18n'
+import { turbowareTitle, useDocumentTitle } from '@/lib/document-title'
 import { cn } from '@/lib/utils'
 
 const STORAGE_KEY = 'turboware-admin-lang'
@@ -27,6 +29,32 @@ type AdminLangValue = {
 }
 
 const AdminLangContext = createContext<AdminLangValue | null>(null)
+
+function adminTitleKey(pathname: string): MsgKey {
+  if (pathname.startsWith('/admin/login')) return 'login.submit'
+  if (pathname.startsWith('/admin/reset-password')) return 'login.resetTitle'
+  if (pathname.startsWith('/admin/clients/new')) return 'title.clientsNew'
+  if (/^\/admin\/clients\/[^/]+/.test(pathname)) return 'title.client'
+  if (pathname.startsWith('/admin/clients')) return 'title.clients'
+  if (pathname.startsWith('/admin/licenses/new')) return 'licenses.new'
+  if (/^\/admin\/licenses\/[^/]+/.test(pathname)) return 'title.license'
+  if (pathname.startsWith('/admin/licenses')) return 'title.licenses'
+  if (pathname.startsWith('/admin/tickets')) return 'title.tickets'
+  if (pathname.startsWith('/admin/invoices')) return 'title.invoices'
+  if (pathname.startsWith('/admin/products')) return 'title.products'
+  if (pathname.startsWith('/admin/team') || pathname.startsWith('/admin/settings/team')) return 'title.team'
+  if (pathname.startsWith('/admin/security') || pathname.startsWith('/admin/settings/security')) return 'title.security'
+  if (pathname.startsWith('/admin/settings')) return 'title.settings'
+  if (pathname === '/admin') return 'title.dashboard'
+  return 'title.admin'
+}
+
+function AdminDocumentTitle() {
+  const pathname = usePathname()
+  const { t } = useAdminLang()
+  useDocumentTitle(turbowareTitle(t(adminTitleKey(pathname))))
+  return null
+}
 
 export function AdminLangProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<AdminLang>('pt-BR')
@@ -50,7 +78,12 @@ export function AdminLangProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t])
-  return <AdminLangContext.Provider value={value}>{children}</AdminLangContext.Provider>
+  return (
+    <AdminLangContext.Provider value={value}>
+      <AdminDocumentTitle />
+      {children}
+    </AdminLangContext.Provider>
+  )
 }
 
 export function useAdminLang() {

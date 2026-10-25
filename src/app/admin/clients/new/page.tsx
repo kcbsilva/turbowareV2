@@ -7,6 +7,7 @@ import { PRICING_TIERS, CURRENCY_SYMBOL, type Region } from '@/lib/pricing'
 import { isValidSignupSlug, normalizeSignupSlug, parseSignupSlug } from '@/lib/signup-slug'
 import { RESERVED_SLUGS } from '@/lib/slug'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 import { dateLocale, type MsgKey } from '@/lib/admin-i18n'
 
 type Step = 1 | 2 | 3
@@ -100,7 +101,7 @@ export default function NewClientPage() {
     const data = await res.json().catch(() => ({}))
     setLoading(false)
     if (!res.ok) {
-      setError(data.error || t('setup.createError'))
+      setError(explainApiError(data.error, lang) || t('setup.createError'))
       return
     }
     setResult(data)

@@ -347,6 +347,24 @@ const rows = {
   'editor.list': ['List', 'Lista', 'Liste', 'Lista'],
   'editor.numbered': ['Numbered list', 'Lista numerada', 'Liste numérotée', 'Lista numerada'],
   'shell.brand': ['Turboware', 'Turboware', 'Turboware', 'Turboware'],
+
+  'grace.title': ['Extend grace', 'Estender carência', 'Prolonger le délai', 'Ampliar el plazo'],
+  'grace.description': [
+    'Give this account more TurboISP access — extra days from now, or a date on the calendar.',
+    'Dá mais tempo de acesso ao TurboISP — dias a mais a partir de agora, ou uma data no calendário.',
+    'Accorde plus de temps d’accès à TurboISP — des jours de plus dès maintenant, ou une date au calendrier.',
+    'Da más tiempo de acceso a TurboISP — días extra desde ahora, o una fecha en el calendario.',
+  ],
+  'grace.extraDays': ['Extra days', 'Dias a mais', 'Jours supplémentaires', 'Días extra'],
+  'grace.calendar': ['Calendar date', 'Data no calendário', 'Date au calendrier', 'Fecha en el calendario'],
+  'grace.accessUntil': ['Access until', 'Acesso até', 'Accès jusqu’au', 'Acceso hasta'],
+  'grace.range': ['Between {min} and {max} days.', 'Entre {min} e {max} dias.', 'Entre {min} et {max} jours.', 'Entre {min} y {max} días.'],
+  'grace.accessThrough': ['Access through', 'Acesso até', 'Accès jusqu’au', 'Acceso hasta'],
+  'grace.day': ['day', 'dia', 'jour', 'día'],
+  'grace.days': ['days', 'dias', 'jours', 'días'],
+  'grace.cancel': ['Cancel', 'Cancelar', 'Annuler', 'Cancelar'],
+  'grace.saving': ['Saving…', 'Salvando…', 'Enregistrement…', 'Guardando…'],
+  'grace.failed': ['Could not extend grace.', 'Não foi possível estender a carência.', 'Impossible de prolonger le délai.', 'No se pudo ampliar el plazo.'],
 } as const
 
 type UiKey = keyof typeof rows

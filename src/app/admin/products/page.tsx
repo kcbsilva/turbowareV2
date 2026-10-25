@@ -9,6 +9,7 @@ import {
 } from '@/lib/pricing'
 import { Package, CheckCircle, ChevronDown } from 'lucide-react'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 import { dateLocale, type MsgKey } from '@/lib/admin-i18n'
 
 type RegionTab = Region
@@ -92,7 +93,7 @@ export default function ProductsPage() {
         fetchClients()
       } else {
         const err = await res.json()
-        setSaveMsg({ type: 'err', text: err.error || t('products.applyError') })
+        setSaveMsg({ type: 'err', text: explainApiError(err.error, lang) || t('products.applyError') })
       }
     } catch {
       setSaveMsg({ type: 'err', text: t('products.networkError') })

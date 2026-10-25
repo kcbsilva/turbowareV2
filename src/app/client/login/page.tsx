@@ -12,52 +12,19 @@ import {
   loginLabelClass,
   loginLinkClass,
 } from '@/components/TurboAuthShell'
+import { ClientLangToggle, useClientLang } from '@/components/client/ClientLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 import { cn } from '@/lib/utils'
 import { formatLoginIdentifierInput } from '@/lib/client-login'
 
-type Lang = 'en' | 'pt-BR'
-
-const COPY: Record<Lang, {
-  title: string
-  subtitle: string
-  identifier: string
-  password: string
-  submit: string
-  submitting: string
-  noAccount: string
-  requestAccess: string
-}> = {
-  'pt-BR': {
-    title: 'Entrar no TurboISP',
-    subtitle: 'Acesse licenças, faturas e suporte da sua operação.',
-    identifier: 'E-mail ou CNPJ',
-    password: 'Senha',
-    submit: 'Entrar',
-    submitting: 'Entrando…',
-    noAccount: 'Ainda não tem uma conta?',
-    requestAccess: 'Solicitar acesso',
-  },
-  en: {
-    title: 'Sign in to TurboISP',
-    subtitle: 'Manage licenses, invoices, and support for your ISP.',
-    identifier: 'Email or business number',
-    password: 'Password',
-    submit: 'Sign in',
-    submitting: 'Signing in…',
-    noAccount: "Don't have an account?",
-    requestAccess: 'Request access',
-  },
-}
-
 export default function ClientLoginPage() {
   const router = useRouter()
-  const [lang, setLang] = useState<Lang>('pt-BR')
+  const { lang, t } = useClientLang()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const t = COPY[lang]
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -76,39 +43,25 @@ export default function ClientLoginPage() {
       router.push('/client/dashboard')
     } else {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || (lang === 'pt-BR' ? 'E-mail, CNPJ ou senha inválidos.' : 'Invalid email, business number, or password.'))
+      setError(explainApiError(data.error, lang) || t('login.invalid'))
     }
   }
 
   return (
     <TurboAuthShell
-      title={t.title}
-      subtitle={t.subtitle}
-      ipLabel={lang === 'pt-BR' ? 'Seu IP' : 'Your IP'}
+      title={t('login.title')}
+      subtitle={t('login.subtitle')}
+      ipLabel={t('login.ip')}
       headerExtra={
         <div className="mb-4 flex justify-end">
-          <div className="flex overflow-hidden rounded-md border border-white/10" role="group" aria-label="Language">
-            {(['pt-BR', 'en'] as const).map((code) => (
-              <button
-                key={code}
-                type="button"
-                onClick={() => setLang(code)}
-                className={cn(
-                  'px-2.5 py-1 text-[10px] font-bold transition-colors',
-                  lang === code ? 'bg-white text-black' : 'text-neutral-500 hover:text-neutral-200',
-                )}
-              >
-                {code === 'pt-BR' ? 'PT-BR' : 'EN'}
-              </button>
-            ))}
-          </div>
+          <ClientLangToggle />
         </div>
       }
       footer={
         <>
-          {t.noAccount}{' '}
+          {t('login.noAccount')}{' '}
           <a href={turboispSignupUrl()} className={loginLinkClass}>
-            {t.requestAccess}
+            {t('login.requestAccess')}
           </a>
         </>
       }
@@ -125,7 +78,7 @@ export default function ClientLoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <fieldset disabled={loading} className="space-y-4">
           <div>
-            <label htmlFor="client-identifier" className={loginLabelClass}>{t.identifier}</label>
+            <label htmlFor="client-identifier" className={loginLabelClass}>{t('login.identifier')}</label>
             <input
               id="client-identifier"
               type="text"
@@ -133,14 +86,14 @@ export default function ClientLoginPage() {
               value={identifier}
               onChange={(e) => setIdentifier(formatLoginIdentifierInput(e.target.value))}
               className={loginInputClass}
-              placeholder={lang === 'pt-BR' ? 'email@empresa.com ou 00.000.000/0000-00' : 'you@company.com or business number'}
+              placeholder={t('login.placeholder')}
               required
               autoFocus
             />
           </div>
 
           <div>
-            <label htmlFor="client-password" className={loginLabelClass}>{t.password}</label>
+            <label htmlFor="client-password" className={loginLabelClass}>{t('login.password')}</label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
               <input
@@ -157,7 +110,7 @@ export default function ClientLoginPage() {
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-neutral-500 hover:text-white transition-colors"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -166,7 +119,7 @@ export default function ClientLoginPage() {
 
           <button type="submit" disabled={loading} className={loginBtnClass}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {loading ? t.submitting : t.submit}
+            {loading ? t('login.submitting') : t('login.submit')}
           </button>
         </fieldset>
       </form>

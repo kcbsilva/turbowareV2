@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Loader2, UserPlus, Users, Shield } from 'lucide-react'
 import { badge } from '@/lib/badges'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 import type { MsgKey } from '@/lib/admin-i18n'
 
 type Role = 'owner' | 'admin' | 'support' | 'helper'
@@ -40,7 +41,7 @@ const ROLE_KEY: Record<string, MsgKey> = {
 }
 
 export default function TeamPage() {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const [users, setUsers] = useState<TeamUser[]>([])
   const [current, setCurrent] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
@@ -76,7 +77,7 @@ export default function TeamPage() {
     const data = await res.json().catch(() => ({}))
     setCreating(false)
     if (!res.ok) {
-      setError(data.error || t('team.createError'))
+      setError(explainApiError(data.error, lang) || t('team.createError'))
       return
     }
     setForm({ name: '', email: '', role: 'support' })
@@ -98,7 +99,7 @@ export default function TeamPage() {
     setBusyId(null)
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || t('team.updateError'))
+      setError(explainApiError(data.error, lang) || t('team.updateError'))
       return
     }
     await load()

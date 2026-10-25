@@ -17,6 +17,10 @@ export function useSiteLang() {
     if (isLang(saved)) setLangState(saved)
   }, [])
 
+  useEffect(() => {
+    document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang === 'fr' ? 'fr-CA' : lang === 'es' ? 'es' : 'en'
+  }, [lang])
+
   function setLang(next: Lang) {
     setLangState(next)
     window.localStorage.setItem(SITE_LANG_KEY, next)

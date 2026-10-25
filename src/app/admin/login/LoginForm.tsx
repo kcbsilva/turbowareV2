@@ -12,11 +12,12 @@ import {
 } from '@/components/TurboAuthShell'
 import { cn } from '@/lib/utils'
 import { AdminLangToggle, useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 
 type Step = 'login' | 'forgot' | 'mfa' | 'newPassword'
 
 export default function LoginForm() {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const [step, setStep] = useState<Step>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -45,7 +46,7 @@ export default function LoginForm() {
         setForgotSent(true)
       } else {
         const data = await res.json().catch(() => ({}))
-        setError(data.error || t('login.resetSendError'))
+        setError(explainApiError(data.error, lang) || t('login.resetSendError'))
       }
       return
     }
@@ -71,7 +72,7 @@ export default function LoginForm() {
         window.location.assign('/admin')
       } else {
         const data = await res.json().catch(() => ({}))
-        setError(data.error || t('login.updateError'))
+        setError(explainApiError(data.error, lang) || t('login.updateError'))
       }
       return
     }
@@ -87,7 +88,7 @@ export default function LoginForm() {
         window.location.assign('/admin')
       } else {
         const data = await res.json().catch(() => ({}))
-        setError(data.error || t('login.mfaInvalid'))
+        setError(explainApiError(data.error, lang) || t('login.mfaInvalid'))
       }
       return
     }
@@ -116,7 +117,7 @@ export default function LoginForm() {
       window.location.assign('/admin')
     } else {
       const data = await res.json().catch(() => ({}))
-        setError(data.error || t('login.invalid'))
+        setError(explainApiError(data.error, lang) || t('login.invalid'))
     }
   }
 

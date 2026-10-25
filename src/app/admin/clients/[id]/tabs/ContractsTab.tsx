@@ -18,6 +18,7 @@ import { ContractBodyEditor, type ContractBodyEditorHandle } from '@/components/
 import { ContractVariableSidebar } from '@/components/admin/ContractVariableSidebar'
 import { sanitizeContractHtml } from '@/lib/contract-variables'
 import { dateLocale } from '@/lib/admin-i18n'
+import { explainApiError } from '@/lib/api-errors'
 import type { MsgKey } from '@/lib/admin-i18n'
 import {
   DropdownMenu,
@@ -220,7 +221,7 @@ export function ContractsTab({ clientId }: Props) {
     })
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || t('licenses.updateError'))
+      setError(explainApiError(data.error, lang) || t('licenses.updateError'))
     } else {
       await load()
     }
@@ -249,7 +250,7 @@ export function ContractsTab({ clientId }: Props) {
     const data = await res.json().catch(() => ({}))
     setSavingContract(false)
     if (!res.ok) {
-      setContractError(data.error || t('contracts.createError'))
+      setContractError(explainApiError(data.error, lang) || t('contracts.createError'))
       return
     }
     setContractOpen(false)
@@ -278,7 +279,7 @@ export function ContractsTab({ clientId }: Props) {
     const data = await res.json().catch(() => ({}))
     setSavingLicense(false)
     if (!res.ok) {
-      setLicenseError(data.error || t('licenses.createError'))
+      setLicenseError(explainApiError(data.error, lang) || t('licenses.createError'))
       return
     }
     setLicenseOpen(false)
@@ -652,7 +653,23 @@ export function ContractsTab({ clientId }: Props) {
           onOpenChange={setGraceOpen}
           currentEndsAt={grace.gracePeriodEndsAt}
           maxDays={MAX_ADMIN_GRACE_DAYS}
-          confirmLabel={t('billing.extendGrace')}
+          dateLocale={dateLocale(lang)}
+          formatError={(message) => explainApiError(message, lang)}
+          labels={{
+            title: t('grace.title'),
+            description: t('grace.description'),
+            extraDays: t('grace.extraDays'),
+            calendarDate: t('grace.calendar'),
+            accessUntil: t('grace.accessUntil'),
+            range: t('grace.range'),
+            accessThrough: t('grace.accessThrough'),
+            day: t('grace.day'),
+            days: t('grace.days'),
+            cancel: t('grace.cancel'),
+            saving: t('grace.saving'),
+            failed: t('grace.failed'),
+            confirm: t('billing.extendGrace'),
+          }}
           onConfirm={async (payload) => {
             const res = await fetch(`/api/admin/clients/${clientId}/subscription/grace`, {
               method: 'POST',
@@ -660,7 +677,7 @@ export function ContractsTab({ clientId }: Props) {
               body: JSON.stringify(payload),
             })
             const data = await res.json().catch(() => ({}))
-            if (!res.ok) throw new Error(data.error || t('lic.extendGraceError'))
+            if (!res.ok) throw new Error(explainApiError(data.error, lang) || t('lic.extendGraceError'))
             await load()
           }}
         />

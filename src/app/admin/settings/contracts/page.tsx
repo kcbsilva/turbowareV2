@@ -13,6 +13,7 @@ import {
 import { ContractBodyEditor, type ContractBodyEditorHandle } from '@/components/admin/ContractBodyEditor'
 import { ContractVariableSidebar } from '@/components/admin/ContractVariableSidebar'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 
 interface Template {
   id: string
@@ -29,7 +30,7 @@ const editorDialogClass =
   'h-[min(90vh,820px)] w-[min(calc(100%-2rem),72rem)] max-w-none overflow-hidden sm:max-w-[72rem]'
 
 export default function ContractTemplatesPage() {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const bodyEditorRef = useRef<ContractBodyEditorHandle>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,7 +96,7 @@ export default function ContractTemplatesPage() {
     const data = await res.json().catch(() => ({}))
     setSaving(false)
     if (!res.ok) {
-      setFormError(data.error || t('templates.saveError'))
+      setFormError(explainApiError(data.error, lang) || t('templates.saveError'))
       return
     }
     setOpen(false)
@@ -109,7 +110,7 @@ export default function ContractTemplatesPage() {
     setBusyId(null)
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || t('templates.saveError'))
+      setError(explainApiError(data.error, lang) || t('templates.saveError'))
       return
     }
     await load()

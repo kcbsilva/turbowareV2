@@ -14,6 +14,7 @@ import {
 import { LANGS, pick, type Lang } from "../site/_components/constants";
 import { useSiteLang } from "../site/_components/site-lang";
 import { NUMBER_LOCALE, pricingCopy } from "./copy";
+import { turbowareTitle, useDocumentTitle } from "@/lib/document-title";
 
 const REGION_KEYS: { code: Region; flag: string; label: keyof typeof pricingCopy }[] = [
   { code: "BR", flag: "🇧🇷", label: "regionBR" },
@@ -30,6 +31,7 @@ export default function PricingPage() {
   const [region, setRegion] = useState<Region>("BR");
   const { lang, setLang } = useSiteLang();
   const s = (key: keyof typeof pricingCopy) => pick(pricingCopy[key], lang);
+  useDocumentTitle(turbowareTitle(s("navPricing")));
 
   const installFee = INSTALLATION_FEES[region];
   const sym = CURRENCY_SYMBOL[region];

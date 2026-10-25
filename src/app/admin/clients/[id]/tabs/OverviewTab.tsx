@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Edit, Trash2, Check, KeyRound, Mail, Loader2 } from 'lucide-react'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 import { dateLocale, type MsgKey } from '@/lib/admin-i18n'
 import {
   CLIENT_CONTRACT_FIELDS,
@@ -113,7 +114,7 @@ export function OverviewTab({ client, onUpdated }: Props) {
       setEditing(false)
     } else {
       const d = await res.json().catch(() => ({}))
-      setError(d.error || t('overview.saveFailed'))
+      setError(explainApiError(d.error, lang) || t('overview.saveFailed'))
     }
   }
 
@@ -129,7 +130,7 @@ export function OverviewTab({ client, onUpdated }: Props) {
       router.refresh()
     } else {
       const data = await res.json().catch(() => ({}))
-      setPasswordMsg({ text: data.error || t('overview.tempFailed'), ok: false })
+      setPasswordMsg({ text: explainApiError(data.error, lang) || t('overview.tempFailed'), ok: false })
     }
   }
 
@@ -144,7 +145,7 @@ export function OverviewTab({ client, onUpdated }: Props) {
         return
       }
       const data = (await res.json().catch(() => ({}))) as { error?: string; detail?: string }
-      const msg = [data.error, data.detail].filter(Boolean).join(' — ') || t('overview.deleteFailed')
+      const msg = [data.error, data.detail].filter(Boolean).map((part) => explainApiError(part, lang)).join(' — ') || t('overview.deleteFailed')
       setDeleteError(msg)
       setConfirmDelete(true)
     } catch {
@@ -169,7 +170,7 @@ export function OverviewTab({ client, onUpdated }: Props) {
       setVerificationMsg({ text: t('overview.verifySent'), ok: true })
     } else {
       const data = await res.json().catch(() => ({}))
-      setVerificationMsg({ text: data.error || t('overview.verifyFailed'), ok: false })
+      setVerificationMsg({ text: explainApiError(data.error, lang) || t('overview.verifyFailed'), ok: false })
     }
   }
 
@@ -398,7 +399,7 @@ function ContractTermsCard({
   client: Client
   onUpdated?: (client: Client) => void
 }) {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -426,7 +427,7 @@ function ContractTermsCard({
         setEditing(false)
       } else {
         const data = await res.json().catch(() => ({}))
-        setError(data.error || t('profile.contractTermsSaveError'))
+        setError(explainApiError(data.error, lang) || t('profile.contractTermsSaveError'))
       }
     } catch {
       setError(t('profile.contractTermsSaveError'))

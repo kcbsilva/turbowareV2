@@ -3,9 +3,10 @@
 import { FormEvent, useState } from 'react'
 import Link from 'next/link'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 
 export function ResetPasswordForm({ token }: { token: string }) {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [message, setMessage] = useState('')
@@ -29,7 +30,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
     setSaving(false)
 
     if (!response.ok) {
-      setMessage(data.error ?? t('login.resetFailed'))
+      setMessage(explainApiError(data.error, lang) || t('login.resetFailed'))
       return
     }
     setMessage(t('login.passwordUpdated'))

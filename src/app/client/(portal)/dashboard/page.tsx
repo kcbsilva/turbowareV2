@@ -9,12 +9,13 @@ import {
 import {
   getMonthlyPrice,
   canChangeBillingDate, canActivateGrace,
-  formatBRL, BILLING_DATE_LOCK_MONTHS
+  formatBRL
 } from '@/lib/pricing'
-import { ExtendGraceDialog } from '@/components/ExtendGraceDialog'
+import { ExtendGraceDialog, type GraceDialogLabels } from '@/components/ExtendGraceDialog'
 import { MAX_CLIENT_GRACE_DAYS } from '@/lib/grace-period'
-
-// ── Types ─────────────────────────────────────────────────────────────────────
+import { useClientLang } from '@/components/client/ClientLangProvider'
+import { clientDateLocale, clientSpan, type ClientMsgKey } from '@/lib/client-i18n'
+import { explainApiError } from '@/lib/api-errors'
 
 interface Invoice {
   id: string
@@ -50,41 +51,61 @@ interface ClientProfile {
   mustChangePassword: boolean
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function daysUntil(date: string | null): number {
   if (!date) return 0
   return Math.max(0, Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000))
 }
 
+const STATUS_CLS: Record<Subscription['status'], string> = {
+  TRIAL: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  PENDING_PAYMENT: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+  ACTIVE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  SUSPENDED: 'bg-red-500/10 text-red-400 border-red-500/20',
+  CANCELLED: 'bg-muted/50 text-muted-foreground border-border',
+}
+
 function StatusBadge({ status }: { status: Subscription['status'] }) {
-  const map = {
-    TRIAL:           { label: 'Trial',            cls: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-    PENDING_PAYMENT: { label: 'Awaiting Payment',  cls: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
-    ACTIVE:          { label: 'Active',            cls: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-    SUSPENDED:       { label: 'Suspended',         cls: 'bg-red-500/10 text-red-400 border-red-500/20' },
-    CANCELLED:       { label: 'Cancelled',         cls: 'bg-muted/50 text-muted-foreground border-border' },
-  }
-  const { label, cls } = map[status]
+  const { t } = useClientLang()
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-semibold ${cls}`}>
-      {label}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-semibold ${STATUS_CLS[status]}`}>
+      {t(`status.${status}` as ClientMsgKey)}
     </span>
   )
 }
 
-function invoiceTypeLabel(type: Invoice['type']) {
+function useDates() {
+  const { lang, t } = useClientLang()
+  const locale = clientDateLocale(lang)
   return {
-    INSTALLATION: 'Installation fee',
-    MONTHLY: 'Monthly subscription',
-    PRORATED: 'Prorated charge',
-    GRACE_FEE: 'Grace period fee',
-    IMPORTATION: 'Importation fee',
-    CUSTOM: 'Custom charge',
-  }[type]
+    lang,
+    t,
+    locale,
+    day(iso: string | null | undefined) {
+      return iso ? new Date(iso).toLocaleDateString(locale) : '—'
+    },
+    stamp(iso: string) {
+      return new Date(iso).toLocaleString(locale)
+    },
+  }
 }
 
-// ── Activation Wizard ─────────────────────────────────────────────────────────
+function graceCopy(t: (key: ClientMsgKey, vars?: Record<string, string | number>) => string): GraceDialogLabels {
+  return {
+    title: t('grace.title'),
+    description: t('grace.description'),
+    extraDays: t('grace.extraDays'),
+    calendarDate: t('grace.calendar'),
+    accessUntil: t('grace.accessUntil'),
+    range: t('grace.range'),
+    accessThrough: t('grace.accessThrough'),
+    day: t('grace.day'),
+    days: t('grace.days'),
+    cancel: t('grace.cancel'),
+    saving: t('grace.saving'),
+    failed: t('grace.failed'),
+    confirm: t('dash.graceConfirm'),
+  }
+}
 
 interface ActivationResult {
   clientName: string
@@ -104,15 +125,15 @@ interface ActivationResult {
 }
 
 function ActivationWizard({ onActivated }: { onActivated: () => void }) {
-  const [cnpj, setCnpj]         = useState<string | null>(null)
+  const { lang, t, locale, day, stamp } = useDates()
+  const [cnpj, setCnpj] = useState<string | null>(null)
   const [clientName, setClientName] = useState<string | null>(null)
   const [password, setPassword] = useState('')
-  const [loading, setLoading]   = useState(false)
+  const [loading, setLoading] = useState(false)
   const [fetchingProfile, setFetchingProfile] = useState(true)
-  const [error, setError]       = useState('')
-  const [result, setResult]     = useState<ActivationResult | null>(null)
+  const [error, setError] = useState('')
+  const [result, setResult] = useState<ActivationResult | null>(null)
 
-  // Load the authenticated client's CNPJ from the session
   useEffect(() => {
     fetch('/api/client/me')
       .then((r) => r.json())
@@ -129,9 +150,6 @@ function ActivationWizard({ onActivated }: { onActivated: () => void }) {
     setLoading(true)
     setError('')
 
-    // Generate a stable hardware ID for this browser session.
-    // In a real TurboISP desktop install this would be a real machine fingerprint;
-    // here we use a UUID stored in sessionStorage so each browser tab is unique.
     let hardwareId = sessionStorage.getItem('turboisp_hwid')
     if (!hardwareId) {
       hardwareId = crypto.randomUUID()
@@ -149,21 +167,20 @@ function ActivationWizard({ onActivated }: { onActivated: () => void }) {
     if (res.ok) {
       const data = await res.json()
       setResult(data)
-      onActivated() // refresh parent — subscription may now be visible
+      onActivated()
     } else {
       const d = await res.json().catch(() => ({}))
-      setError(d.message || 'Activation failed.')
+      setError(explainApiError(d.message || d.error, lang) || t('activate.failed'))
     }
   }
 
   const inputCls = 'w-full px-3 py-2.5 rounded-lg text-sm bg-muted border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring'
 
-  // ── Success state ──────────────────────────────────────────────────────────
   if (result) {
-    const statusLabels: Record<string, string> = {
-      ACTIVE: 'Active', TRIAL: 'Trial', PENDING_PAYMENT: 'Pending Payment',
-      SUSPENDED: 'Suspended', CANCELLED: 'Cancelled',
-    }
+    const statusKey = `status.${result.plan.status}` as ClientMsgKey
+    const statusLabel = statusKey.startsWith('status.') && ['ACTIVE', 'TRIAL', 'PENDING_PAYMENT', 'SUSPENDED', 'CANCELLED'].includes(result.plan.status)
+      ? t(statusKey)
+      : result.plan.status
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] px-6 py-12">
         <div className="w-full max-w-md space-y-5">
@@ -172,42 +189,42 @@ function ActivationWizard({ onActivated }: { onActivated: () => void }) {
               <ShieldCheck className="w-6 h-6 text-emerald-400" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-foreground">TurboISP Activated</h1>
-              <p className="text-xs text-muted-foreground mt-1">This installation is now linked to <strong className="text-foreground">{result.clientName}</strong>.</p>
+              <h1 className="text-lg font-bold text-foreground">{t('activate.successTitle')}</h1>
+              <p className="text-xs text-muted-foreground mt-1">{t('activate.successBody', { name: result.clientName })}</p>
             </div>
           </div>
 
           <div className="bg-card border border-border rounded-lg divide-y divide-border text-xs">
             <div className="flex justify-between px-4 py-2.5">
-              <span className="text-muted-foreground">Plan tier</span>
-              <span className="font-medium text-foreground">{result.plan.subscriberTier} subscribers</span>
+              <span className="text-muted-foreground">{t('activate.planTier')}</span>
+              <span className="font-medium text-foreground">{t('activate.subscribers', { tier: result.plan.subscriberTier })}</span>
             </div>
             <div className="flex justify-between px-4 py-2.5">
-              <span className="text-muted-foreground">Status</span>
-              <span className="font-medium text-foreground">{statusLabels[result.plan.status] ?? result.plan.status}</span>
+              <span className="text-muted-foreground">{t('common.status')}</span>
+              <span className="font-medium text-foreground">{statusLabel}</span>
             </div>
             <div className="flex justify-between px-4 py-2.5">
-              <span className="text-muted-foreground">Max subscribers</span>
-              <span className="font-medium text-foreground">{result.permissions.maxSubscribers.toLocaleString()}</span>
+              <span className="text-muted-foreground">{t('activate.maxSubscribers')}</span>
+              <span className="font-medium text-foreground">{result.permissions.maxSubscribers.toLocaleString(locale)}</span>
             </div>
             <div className="flex justify-between px-4 py-2.5">
-              <span className="text-muted-foreground">Region</span>
+              <span className="text-muted-foreground">{t('common.region')}</span>
               <span className="font-medium text-foreground">{result.plan.region}</span>
             </div>
             {result.plan.monthlyAmount !== null && (
               <div className="flex justify-between px-4 py-2.5">
-                <span className="text-muted-foreground">Monthly</span>
-                <span className="font-medium text-white">{formatBRL(result.plan.monthlyAmount!)}</span>
+                <span className="text-muted-foreground">{t('common.monthly')}</span>
+                <span className="font-medium text-white">{formatBRL(result.plan.monthlyAmount)}{t('common.perMonth')}</span>
               </div>
             )}
             {result.plan.trialEndsAt && (
               <div className="flex justify-between px-4 py-2.5">
-                <span className="text-muted-foreground">Trial ends</span>
-                <span className="font-medium text-blue-400">{new Date(result.plan.trialEndsAt).toLocaleDateString('pt-BR')}</span>
+                <span className="text-muted-foreground">{t('activate.trialEnds')}</span>
+                <span className="font-medium text-blue-400">{day(result.plan.trialEndsAt)}</span>
               </div>
             )}
             <div className="px-4 py-2.5">
-              <p className="text-[10px] text-muted-foreground mb-1.5">Modules</p>
+              <p className="text-[10px] text-muted-foreground mb-1.5">{t('common.modules')}</p>
               <div className="flex flex-wrap gap-1">
                 {result.permissions.modules.map((m) => (
                   <span key={m} className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] text-muted-foreground capitalize">{m}</span>
@@ -217,46 +234,35 @@ function ActivationWizard({ onActivated }: { onActivated: () => void }) {
           </div>
 
           <p className="text-[10px] text-center text-muted-foreground/50">
-            Activated at {new Date(result.activatedAt).toLocaleString('pt-BR')}
+            {t('activate.activatedAt', { date: stamp(result.activatedAt) })}
           </p>
         </div>
       </div>
     )
   }
 
-  // ── Main wizard ────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] px-6 py-12">
       <div className="w-full max-w-md space-y-6">
-
-        {/* Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-2" style={{ backgroundColor: '#fff' }}>
             <span className="text-base font-black" style={{ color: '#000' }}>T</span>
           </div>
-          <h1 className="text-lg font-bold text-foreground">Activate TurboISP</h1>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Your TurboISP installation will use the credentials you used to log into this portal.
-            No license key is required.
-          </p>
+          <h1 className="text-lg font-bold text-foreground">{t('activate.title')}</h1>
+          <p className="text-xs text-muted-foreground leading-relaxed">{t('activate.lead')}</p>
         </div>
 
-        {/* Info notice */}
         <div className="flex gap-2.5 p-3 rounded-lg bg-blue-500/5 border border-blue-500/15">
           <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-          <p className="text-xs text-blue-300/80 leading-relaxed">
-            TurboISP will authenticate using your CNPJ and password on startup.
-            Keep your portal password safe — changing it will require re-activation.
-          </p>
+          <p className="text-xs text-blue-300/80 leading-relaxed">{t('activate.notice')}</p>
         </div>
 
-        {/* CNPJ display */}
         <div>
-          <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Your CNPJ</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{t('activate.cnpj')}</label>
           {fetchingProfile ? (
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted border border-border">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Loading…</span>
+              <span className="text-sm text-muted-foreground">{t('common.loading')}</span>
             </div>
           ) : (
             <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-muted border border-border">
@@ -270,20 +276,17 @@ function ActivationWizard({ onActivated }: { onActivated: () => void }) {
           )}
         </div>
 
-        {/* Password confirmation */}
         <div>
-          <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Confirm your password</label>
+          <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{t('activate.password')}</label>
           <input
             type="password"
             className={inputCls}
-            placeholder="Enter your portal password"
+            placeholder={t('activate.passwordPlaceholder')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleActivate() }}
           />
-          <p className="text-[10px] text-muted-foreground mt-1">
-            Used once to verify your identity. TurboISP stores this securely on the machine.
-          </p>
+          <p className="text-[10px] text-muted-foreground mt-1">{t('activate.passwordHint')}</p>
         </div>
 
         {error && (
@@ -299,31 +302,31 @@ function ActivationWizard({ onActivated }: { onActivated: () => void }) {
           style={{ backgroundColor: '#fff', color: '#000' }}
         >
           {loading
-            ? <><Loader2 className="w-4 h-4 animate-spin" /> Activating…</>
-            : <><ShieldCheck className="w-4 h-4" /> Activate TurboISP</>}
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('activate.submitting')}</>
+            : <><ShieldCheck className="w-4 h-4" /> {t('activate.submit')}</>}
         </button>
       </div>
     </div>
   )
 }
 
-// ── Subscription Dashboard ────────────────────────────────────────────────────
-
 function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefresh: () => void }) {
+  const { lang, t, locale, day } = useDates()
   const [graceOpen, setGraceOpen] = useState(false)
   const [changingDate, setChangingDate] = useState(false)
-  const [newDate, setNewDate]           = useState<number | ''>('')
-  const [dateLoading, setDateLoading]   = useState(false)
-  const [dateError, setDateError]       = useState('')
+  const [newDate, setNewDate] = useState<number | ''>('')
+  const [dateLoading, setDateLoading] = useState(false)
+  const [dateError, setDateError] = useState('')
 
-  const monthly      = getMonthlyPrice(sub.seats)
-  const trialDays    = daysUntil(sub.trialEndsAt)
-  const graceDays    = daysUntil(sub.gracePeriodEndsAt)
-  const pendingInvs  = sub.invoices.filter((i) => i.status === 'PENDING')
-  const paidInvs     = sub.invoices.filter((i) => i.status === 'PAID')
-  const dateCheck    = canChangeBillingDate(sub.billingDateChangedAt ? new Date(sub.billingDateChangedAt) : null)
-  const graceOk      = canActivateGrace(sub.gracePeriodUsedAt ? new Date(sub.gracePeriodUsedAt) : null)
-  const graceActive  = sub.gracePeriodEndsAt && new Date(sub.gracePeriodEndsAt) > new Date()
+  const monthly = getMonthlyPrice(sub.seats)
+  const trialDays = daysUntil(sub.trialEndsAt)
+  const graceDays = daysUntil(sub.gracePeriodEndsAt)
+  const pendingInvs = sub.invoices.filter((i) => i.status === 'PENDING')
+  const paidInvs = sub.invoices.filter((i) => i.status === 'PAID')
+  const dateCheck = canChangeBillingDate(sub.billingDateChangedAt ? new Date(sub.billingDateChangedAt) : null)
+  const graceOk = canActivateGrace(sub.gracePeriodUsedAt ? new Date(sub.gracePeriodUsedAt) : null)
+  const graceActive = sub.gracePeriodEndsAt && new Date(sub.gracePeriodEndsAt) > new Date()
+  const priceLabel = monthly ? `${formatBRL(monthly)}${t('common.perMonth')}` : t('common.enterprise')
 
   async function changeDate() {
     if (!newDate) return
@@ -334,16 +337,16 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
     })
     setDateLoading(false)
     if (res.ok) { setChangingDate(false); setNewDate(''); onRefresh() }
-    else { const d = await res.json().catch(() => ({})); setDateError(d.error || 'Failed.') }
+    else {
+      const d = await res.json().catch(() => ({}))
+      setDateError(explainApiError(d.error, lang) || t('common.failed'))
+    }
   }
 
   const card = 'bg-card border border-border rounded-lg'
-  const ord  = (n: number) => n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-4">
-
-      {/* Header card */}
       <div className={`${card} p-4`}>
         <div className="flex items-start justify-between">
           <div>
@@ -352,49 +355,43 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
               <StatusBadge status={sub.status} />
             </div>
             <p className="text-xs text-muted-foreground">
-              {sub.seats.toLocaleString()} users &middot; {monthly ? `${formatBRL(monthly)}/mo` : 'Enterprise'}
+              {t('dash.seats', { n: sub.seats.toLocaleString(locale), price: priceLabel })}
             </p>
             {sub.license && (
               <p className="text-[10px] text-muted-foreground/50 font-mono mt-0.5">{sub.license.key}</p>
             )}
           </div>
-          <button onClick={onRefresh} className="text-muted-foreground hover:text-foreground transition p-1" title="Refresh">
+          <button onClick={onRefresh} className="text-muted-foreground hover:text-foreground transition p-1" title={t('common.refresh')}>
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Trial bar */}
         {sub.status === 'TRIAL' && sub.trialEndsAt && (
           <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-md bg-blue-500/10 border border-blue-500/20">
             <Clock className="w-4 h-4 text-blue-400 shrink-0" />
             <p className="text-xs text-blue-300">
-              Trial active — <strong>{trialDays} day{trialDays !== 1 ? 's' : ''} remaining</strong>.
-              First payment due on {new Date(sub.trialEndsAt).toLocaleDateString('pt-BR')}.
+              {t('dash.trial', { span: clientSpan(lang, trialDays), date: day(sub.trialEndsAt) })}
             </p>
           </div>
         )}
 
-        {/* Grace period bar */}
         {graceActive && (
           <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-md bg-yellow-500/10 border border-yellow-500/20">
             <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0" />
             <p className="text-xs text-yellow-300">
-              Grace period active — <strong>{graceDays} day{graceDays !== 1 ? 's' : ''} remaining</strong>. Settle invoices to avoid re-suspension.
+              {t('dash.grace', { span: clientSpan(lang, graceDays) })}
             </p>
           </div>
         )}
       </div>
 
-      {/* Suspended + grace period */}
       {sub.status === 'SUSPENDED' && (
         <div className={`${card} border-red-500/20 p-4`}>
           <div className="flex items-center gap-2 mb-3">
             <XCircle className="w-4 h-4 text-red-400" />
-            <h3 className="text-sm font-semibold text-foreground">Subscription Suspended</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t('dash.suspendedTitle')}</h3>
           </div>
-          <p className="text-xs text-muted-foreground mb-4">
-            Access suspended due to outstanding balance. Pay your invoices below, or extend grace for extra days.
-          </p>
+          <p className="text-xs text-muted-foreground mb-4">{t('dash.suspendedBody')}</p>
 
           {graceOk ? (
             <>
@@ -404,15 +401,17 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
                 className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md border border-white/20 text-white hover:bg-white/10 transition"
               >
                 <Clock className="w-3.5 h-3.5" />
-                Extend Grace <span className="text-muted-foreground font-normal">(+R$5,00 on next bill)</span>
+                {t('dash.extend')} <span className="text-muted-foreground font-normal">{t('dash.extendFee')}</span>
               </button>
               <ExtendGraceDialog
                 open={graceOpen}
                 onOpenChange={setGraceOpen}
                 currentEndsAt={sub.gracePeriodEndsAt}
                 maxDays={MAX_CLIENT_GRACE_DAYS}
-                feeHint="Adds a R$5,00 fee to the next bill. Once per calendar month."
-                confirmLabel="Confirm grace"
+                feeHint={t('dash.graceHint')}
+                labels={graceCopy(t)}
+                dateLocale={locale}
+                formatError={(message) => explainApiError(message, lang)}
                 onConfirm={async (payload) => {
                   const res = await fetch('/api/client/subscription/grace', {
                     method: 'POST',
@@ -420,7 +419,7 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
                     body: JSON.stringify(payload),
                   })
                   const data = await res.json().catch(() => ({}))
-                  if (!res.ok) throw new Error(data.error || 'Failed.')
+                  if (!res.ok) throw new Error(explainApiError(data.error, lang) || t('dash.graceFailed'))
                   onRefresh()
                 }}
               />
@@ -428,23 +427,22 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
           ) : (
             <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
               <AlertTriangle className="w-3 h-3 text-yellow-500/70" />
-              Grace period already used this month. Resets on the 1st of next month.
+              {t('dash.graceUsed')}
             </p>
           )}
         </div>
       )}
 
-      {/* Billing date card */}
       <div className={card}>
         <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
-            <h3 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Billing</h3>
+            <h3 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('dash.billing')}</h3>
           </div>
           {sub.status === 'ACTIVE' && !changingDate && (
             dateCheck.allowed
-              ? <button onClick={() => setChangingDate(true)} className="text-[10px] text-primary hover:opacity-80">Change date</button>
-              : <span className="text-[10px] text-muted-foreground/50">Locked until {dateCheck.availableOn?.toLocaleDateString('pt-BR')}</span>
+              ? <button onClick={() => setChangingDate(true)} className="text-[10px] text-primary hover:opacity-80">{t('dash.changeDate')}</button>
+              : <span className="text-[10px] text-muted-foreground/50">{t('dash.lockedUntil', { date: dateCheck.availableOn ? day(dateCheck.availableOn.toISOString()) : '—' })}</span>
           )}
         </div>
         <div className="px-4 py-3">
@@ -452,22 +450,22 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
             <div className="space-y-3">
               <select value={newDate} onChange={(e) => setNewDate(e.target.value ? Number(e.target.value) : '')}
                 className="w-full px-3 py-2 rounded-md text-sm bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="">Select new billing day…</option>
-                {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>Day {d}</option>)}
+                <option value="">{t('dash.selectDay')}</option>
+                {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{t('dash.dayN', { n: d })}</option>)}
               </select>
               {dateError && <p className="text-xs text-destructive">{dateError}</p>}
               <div className="flex gap-2">
-                <button onClick={() => { setChangingDate(false); setDateError('') }} className="flex-1 py-1.5 text-xs border border-border rounded-md text-muted-foreground hover:text-foreground transition">Cancel</button>
+                <button onClick={() => { setChangingDate(false); setDateError('') }} className="flex-1 py-1.5 text-xs border border-border rounded-md text-muted-foreground hover:text-foreground transition">{t('common.cancel')}</button>
                 <button onClick={changeDate} disabled={dateLoading || !newDate} className="flex-1 py-1.5 text-xs font-semibold rounded-md hover:opacity-90 disabled:opacity-40 transition" style={{ backgroundColor: '#fff', color: '#000' }}>
-                  {dateLoading ? 'Saving…' : 'Confirm'}
+                  {dateLoading ? t('common.saving') : t('common.confirm')}
                 </button>
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-foreground">Day {sub.billingDate} of each month ({ord(sub.billingDate)})</p>
-                {monthly && <p className="text-[10px] text-muted-foreground mt-0.5">Next charge: {formatBRL(monthly)} on the {ord(sub.billingDate)}</p>}
+                <p className="text-xs font-medium text-foreground">{t('dash.billingDayEn', { n: sub.billingDate })}</p>
+                {monthly && <p className="text-[10px] text-muted-foreground mt-0.5">{t('dash.nextCharge', { price: formatBRL(monthly), n: sub.billingDate })}</p>}
               </div>
               <Users className="w-4 h-4 text-muted-foreground/30" />
             </div>
@@ -475,23 +473,22 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
         </div>
       </div>
 
-      {/* Pending invoices */}
       {pendingInvs.length > 0 && (
         <div className={`${card} border-yellow-500/20`}>
           <div className="px-4 py-2.5 border-b border-yellow-500/20 flex items-center gap-2">
             <AlertTriangle className="w-3.5 h-3.5 text-yellow-400" />
-            <h3 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Awaiting Payment</h3>
+            <h3 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('dash.awaiting')}</h3>
           </div>
           <div className="divide-y divide-border">
             {pendingInvs.map((inv) => (
               <div key={inv.id} className="px-4 py-3 flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-foreground">{invoiceTypeLabel(inv.type)}</p>
+                  <p className="text-xs font-medium text-foreground">{t(`invoice.${inv.type}` as ClientMsgKey)}</p>
                   {inv.notes && <p className="text-[10px] text-muted-foreground/70 mt-0.5">{inv.notes}</p>}
-                  <p className="text-[10px] text-muted-foreground">Due: {new Date(inv.dueDate).toLocaleDateString('pt-BR')}</p>
+                  <p className="text-[10px] text-muted-foreground">{t('dash.due', { date: day(inv.dueDate) })}</p>
                   {inv.paymentGateway && (
                     <p className="text-[10px] text-muted-foreground/50 mt-0.5">
-                      via {inv.paymentGateway === 'ASAAS' ? 'Pix / Boleto / Cartão' : 'Stripe'}
+                      {inv.paymentGateway === 'ASAAS' ? t('dash.viaPix') : t('dash.viaStripe')}
                     </p>
                   )}
                 </div>
@@ -506,7 +503,7 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
                       style={{ backgroundColor: '#fff', color: '#000' }}
                     >
                       <ExternalLink className="w-3 h-3" />
-                      Pagar agora
+                      {t('dash.payNow')}
                     </a>
                   )}
                 </div>
@@ -514,25 +511,24 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
             ))}
             {pendingInvs.every((i) => !i.paymentUrl) && (
               <div className="px-4 py-3 bg-yellow-500/5 text-center">
-                <p className="text-[10px] text-muted-foreground">Contact your administrator to receive a payment link.</p>
+                <p className="text-[10px] text-muted-foreground">{t('dash.contactAdmin')}</p>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Payment history */}
       {paidInvs.length > 0 && (
         <div className={card}>
           <div className="px-4 py-2.5 border-b border-border">
-            <h3 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Payment History</h3>
+            <h3 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('dash.history')}</h3>
           </div>
           <div className="divide-y divide-border">
             {paidInvs.map((inv) => (
               <div key={inv.id} className="px-4 py-3 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-medium text-foreground">{invoiceTypeLabel(inv.type)}</p>
-                  <p className="text-[10px] text-muted-foreground">Paid {inv.paidAt ? new Date(inv.paidAt).toLocaleDateString('pt-BR') : '—'}</p>
+                  <p className="text-xs font-medium text-foreground">{t(`invoice.${inv.type}` as ClientMsgKey)}</p>
+                  <p className="text-[10px] text-muted-foreground">{t('dash.paidOn', { date: inv.paidAt ? day(inv.paidAt) : '—' })}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-mono text-foreground">{formatBRL(inv.amount)}</span>
@@ -547,10 +543,9 @@ function SubscriptionDashboard({ sub, onRefresh }: { sub: Subscription; onRefres
   )
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
-
 export default function DashboardPage() {
-  const [sub, setSub]     = useState<Subscription | null | undefined>(undefined)
+  const { lang, t } = useClientLang()
+  const [sub, setSub] = useState<Subscription | null | undefined>(undefined)
   const [profile, setProfile] = useState<ClientProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [passwordModal, setPasswordModal] = useState({ open: false, saving: false, error: '', success: '' })
@@ -576,12 +571,12 @@ export default function DashboardPage() {
 
   async function changePassword() {
     if (!passwordForm.newPassword.trim() || passwordForm.newPassword.length < 8) {
-      setPasswordModal((prev) => ({ ...prev, error: 'Password must be at least 8 characters.', success: '' }))
+      setPasswordModal((prev) => ({ ...prev, error: t('password.tooShort'), success: '' }))
       return
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordModal((prev) => ({ ...prev, error: 'Passwords do not match.', success: '' }))
+      setPasswordModal((prev) => ({ ...prev, error: t('password.mismatch'), success: '' }))
       return
     }
 
@@ -602,7 +597,7 @@ export default function DashboardPage() {
       setPasswordModal((prev) => ({
         ...prev,
         saving: false,
-        error: data.error || 'Failed to update password.',
+        error: explainApiError(data.error, lang) || t('password.failed'),
         success: '',
       }))
     }
@@ -624,39 +619,37 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" />
           <div className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-foreground">Change your password</h2>
-            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              Your administrator reset your portal password. Set a new password before continuing.
-            </p>
+            <h2 className="text-lg font-bold text-foreground">{t('password.title')}</h2>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{t('password.lead')}</p>
             {profile?.email && (
               <p className="mt-1 text-[10px] text-muted-foreground/70">
-                Temporary password sent to {profile.email}
+                {t('password.sentTo', { email: profile.email })}
               </p>
             )}
 
             <div className="mt-5 space-y-3">
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                  New password
+                  {t('password.new')}
                 </label>
                 <input
                   type="password"
                   value={passwordForm.newPassword}
                   onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
                   className="w-full px-3 py-2.5 rounded-lg text-sm bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Minimum 8 characters"
+                  placeholder={t('password.minPlaceholder')}
                 />
               </div>
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Confirm password
+                  {t('password.confirm')}
                 </label>
                 <input
                   type="password"
                   value={passwordForm.confirmPassword}
                   onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                   className="w-full px-3 py-2.5 rounded-lg text-sm bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Repeat your new password"
+                  placeholder={t('password.repeatPlaceholder')}
                 />
               </div>
             </div>
@@ -674,7 +667,7 @@ export default function DashboardPage() {
               className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
               style={{ backgroundColor: '#fff', color: '#000' }}
             >
-              {passwordModal.saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : 'Update password'}
+              {passwordModal.saving ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('common.saving')}</> : t('password.update')}
             </button>
           </div>
         </div>

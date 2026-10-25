@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 
 type Client = { id: string; name: string; company: string | null }
 
@@ -15,7 +16,7 @@ export function NewLicenseForm({
   defaultClientId: string
 }) {
   const router = useRouter()
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const [form, setForm] = useState({
     product: '',
     notes: '',
@@ -54,7 +55,7 @@ export function NewLicenseForm({
       router.push(`/admin/licenses/${data.id}`)
     } else {
       const data = await res.json()
-      setError(data.error || t('lic.createError'))
+      setError(explainApiError(data.error, lang) || t('lic.createError'))
     }
   }
 

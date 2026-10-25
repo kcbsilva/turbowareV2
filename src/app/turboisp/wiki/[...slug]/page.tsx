@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const article = getArticle(slug.join('/'))
   if (!article) return { title: 'Wiki' }
   return {
-    title: article.title.en,
+    title: 'Wiki',
     description: article.summary.en,
   }
 }

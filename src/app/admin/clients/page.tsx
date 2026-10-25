@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Users, Key, ShieldOff, UserPlus, X, RefreshCw } from 'lucide-react'
 import { badge } from '@/lib/badges'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 import { dateLocale } from '@/lib/admin-i18n'
 
 type StatusFilter = 'all' | 'with-licenses' | 'no-licenses'
@@ -72,7 +73,7 @@ export default function ClientsPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setSyncMsg(data.error || t('clients.syncFailed'))
+        setSyncMsg(explainApiError(data.error, lang) || t('clients.syncFailed'))
         return
       }
       const parts: string[] = []
