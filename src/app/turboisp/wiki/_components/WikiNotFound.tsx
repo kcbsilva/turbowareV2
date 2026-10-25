@@ -14,10 +14,11 @@ import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { pick, wikiCopy } from '../_content'
 import { useWikiLang } from './WikiLang'
-import { turbowareTitle, useDocumentTitle } from '@/lib/document-title'
+import { turbowareTitle, useDocumentTitle, useMetaDescription } from '@/lib/document-title'
 
 export function WikiNotFound() {
   const { lang } = useWikiLang()
+  useMetaDescription(pick(lang, wikiCopy.indexDescription))
   useDocumentTitle(turbowareTitle(pick(lang, {
     en: 'Guide not found',
     pt: 'Guia não encontrado',
