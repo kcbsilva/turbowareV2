@@ -10,9 +10,13 @@ export const LANGS: { code: Lang; label: string }[] = [
 export const ISP_CYAN = '#1AABF0'
 export const ISP_NAVY = '#0a1428'
 
-export function pick<T extends Partial<Record<Lang, string>> & Record<'en', string>>(
-  map: T,
-  lang: Lang,
-): string {
-  return map[lang] || map.en
+export function pick(map: Record<Lang, string>, lang: Lang): string {
+  return map[lang]
+}
+
+export const NUMBER_LOCALE: Record<Lang, string> = {
+  en: 'en-US',
+  pt: 'pt-BR',
+  fr: 'fr-CA',
+  es: 'es-419',
 }

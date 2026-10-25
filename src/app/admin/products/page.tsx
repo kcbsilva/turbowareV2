@@ -5,18 +5,19 @@ import {
   PRICING_TIERS,
   INSTALLATION_FEES,
   CURRENCY_SYMBOL,
-  REGION_LABELS,
   type Region,
 } from '@/lib/pricing'
 import { Package, CheckCircle, ChevronDown } from 'lucide-react'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { dateLocale, type MsgKey } from '@/lib/admin-i18n'
 
 type RegionTab = Region
 
-const REGIONS: { code: RegionTab; label: string; flag: string }[] = [
-  { code: 'BR', label: 'Brasil',        flag: '🇧🇷' },
-  { code: 'CA', label: 'Canada',        flag: '🇨🇦' },
-  { code: 'US', label: 'United States', flag: '🇺🇸' },
-  { code: 'GB', label: 'England',       flag: '🇬🇧' },
+const REGIONS: { code: RegionTab; flag: string }[] = [
+  { code: 'BR', flag: '🇧🇷' },
+  { code: 'CA', flag: '🇨🇦' },
+  { code: 'US', flag: '🇺🇸' },
+  { code: 'GB', flag: '🇬🇧' },
 ]
 
 interface ClientOption {
@@ -30,13 +31,20 @@ interface ClientOption {
   } | null
 }
 
-function fmt(amount: number | 'inquire', region: Region): string {
-  if (amount === 'inquire') return 'Inquire'
+function fmt(amount: number | 'inquire', region: Region, locale: string, inquire: string): string {
+  if (amount === 'inquire') return inquire
   const sym = CURRENCY_SYMBOL[region]
-  return `${sym}\u00A0${amount.toLocaleString('en-US')}`
+  return `${sym}\u00A0${amount.toLocaleString(locale)}`
+}
+
+function regionKey(code: string): MsgKey {
+  if (code === 'BR' || code === 'CA' || code === 'US' || code === 'GB') return `region.${code}`
+  return 'common.region'
 }
 
 export default function ProductsPage() {
+  const { t, lang } = useAdminLang()
+  const locale = dateLocale(lang)
   const [tableRegion, setTableRegion]   = useState<RegionTab>('BR')
   const [clients, setClients]           = useState<ClientOption[]>([])
   const [loadingClients, setLoadingClients] = useState(true)
@@ -80,21 +88,21 @@ export default function ProductsPage() {
         body: JSON.stringify({ subscriberTier: selectedTier, region: formRegion }),
       })
       if (res.ok) {
-        setSaveMsg({ type: 'ok', text: 'Plan applied successfully.' })
+        setSaveMsg({ type: 'ok', text: t('products.applyOk') })
         fetchClients()
       } else {
         const err = await res.json()
-        setSaveMsg({ type: 'err', text: err.error || 'Failed to apply plan.' })
+        setSaveMsg({ type: 'err', text: err.error || t('products.applyError') })
       }
     } catch {
-      setSaveMsg({ type: 'err', text: 'Network error.' })
+      setSaveMsg({ type: 'err', text: t('products.networkError') })
     } finally {
       setSaving(false)
     }
   }
 
   const selectedPricePreview = selectedTier
-    ? PRICING_TIERS.find((t) => t.label === selectedTier)?.prices[formRegion]
+    ? PRICING_TIERS.find((tier) => tier.label === selectedTier)?.prices[formRegion]
     : null
 
   return (
@@ -105,9 +113,9 @@ export default function ProductsPage() {
           <Package className="w-4 h-4 text-foreground" />
         </div>
         <div>
-          <h1 className="text-base font-bold text-foreground">Products & Pricing</h1>
+          <h1 className="text-base font-bold text-foreground">{t('products.title')}</h1>
           <p className="text-[11px] text-muted-foreground">
-            Product = TurboISP — dual-cap packages (clients + map items)
+            {t('products.lead')}
           </p>
         </div>
       </div>
@@ -116,11 +124,11 @@ export default function ProductsPage() {
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-border flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-foreground">
-            TurboISP Packages
+            {t('products.packages')}
           </h2>
           {/* Region tabs */}
           <div className="flex items-center gap-1">
-            {REGIONS.map(({ code, label, flag }) => (
+            {REGIONS.map(({ code, flag }) => (
               <button
                 key={code}
                 onClick={() => setTableRegion(code)}
@@ -131,7 +139,7 @@ export default function ProductsPage() {
                 }`}
               >
                 <span>{flag}</span>
-                <span className="hidden sm:inline">{label}</span>
+                <span className="hidden sm:inline">{t(regionKey(code))}</span>
               </button>
             ))}
           </div>
@@ -139,9 +147,9 @@ export default function ProductsPage() {
 
         {/* Installation fee */}
         <div className="px-4 py-3 flex items-center justify-between border-b border-border bg-muted/50">
-          <span className="text-xs text-muted-foreground font-medium">One-time Installation</span>
+          <span className="text-xs text-muted-foreground font-medium">{t('products.install')}</span>
           <span className="text-sm font-bold text-foreground">
-            {CURRENCY_SYMBOL[tableRegion]}&nbsp;{INSTALLATION_FEES[tableRegion].toLocaleString('en-US')}
+            {CURRENCY_SYMBOL[tableRegion]}&nbsp;{INSTALLATION_FEES[tableRegion].toLocaleString(locale)}
           </span>
         </div>
 
@@ -149,11 +157,11 @@ export default function ProductsPage() {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
-              <th className="px-4 py-2.5 font-medium">Package</th>
-              <th className="px-4 py-2.5 font-medium text-right">Clients</th>
-              <th className="px-4 py-2.5 font-medium text-right">Map items</th>
+              <th className="px-4 py-2.5 font-medium">{t('products.package')}</th>
+              <th className="px-4 py-2.5 font-medium text-right">{t('products.clients')}</th>
+              <th className="px-4 py-2.5 font-medium text-right">{t('products.mapItems')}</th>
               <th className="px-4 py-2.5 font-medium text-right">
-                {REGION_LABELS[tableRegion]} ({CURRENCY_SYMBOL[tableRegion]}) / month
+                {t('products.perMonth', { region: t(regionKey(tableRegion)), symbol: CURRENCY_SYMBOL[tableRegion] })}
               </th>
             </tr>
           </thead>
@@ -164,19 +172,19 @@ export default function ProductsPage() {
               return (
                 <tr key={tier.label} className="hover:bg-muted/30 transition">
                   <td className="px-4 py-2.5 text-foreground font-medium">
-                    {isLast ? 'Enterprise' : `Tier ${tier.label}`}
+                    {isLast ? t('billing.enterprise') : t('products.tier', { label: tier.label })}
                   </td>
                   <td className="px-4 py-2.5 text-right text-foreground tabular-nums">
-                    {tier.maxSeats == null ? '12,000+' : tier.maxSeats.toLocaleString('en-US')}
+                    {tier.maxSeats == null ? `${(12000).toLocaleString(locale)}+` : tier.maxSeats.toLocaleString(locale)}
                   </td>
                   <td className="px-4 py-2.5 text-right text-foreground tabular-nums">
-                    {tier.maxMapItems == null ? 'Inquire' : tier.maxMapItems.toLocaleString('en-US')}
+                    {tier.maxMapItems == null ? t('products.inquire') : tier.maxMapItems.toLocaleString(locale)}
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     {price === 'inquire' ? (
-                      <span className="text-primary font-semibold">Inquire</span>
+                      <span className="text-primary font-semibold">{t('products.inquire')}</span>
                     ) : (
-                      <span className="text-foreground font-bold">{fmt(price, tableRegion)}</span>
+                      <span className="text-foreground font-bold">{fmt(price, tableRegion, locale, t('products.inquire'))}</span>
                     )}
                   </td>
                 </tr>
@@ -185,21 +193,21 @@ export default function ProductsPage() {
           </tbody>
         </table>
         <p className="px-4 py-2 text-[10px] text-muted-foreground border-t border-border">
-          Map items = FDH + Vault + FOSC + PED + Sites + Towers + Poles. Upgrade when either meter exceeds the package.
+          {t('products.mapLegend')}
         </p>
       </div>
 
       {/* ── Assign Plan Form ───────────────────────────────────────────────── */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-border">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-foreground">Assign Plan to Client</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-foreground">{t('products.assign')}</h2>
         </div>
 
         <form onSubmit={handleApplyPlan} className="p-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
           {/* Client select */}
           <div className="md:col-span-1">
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-              Client
+              {t('profile.client')}
             </label>
             <div className="relative">
               <select
@@ -208,7 +216,7 @@ export default function ProductsPage() {
                 className="w-full appearance-none bg-background border border-border rounded-md px-3 py-1.5 text-xs text-foreground pr-8 focus:outline-none focus:ring-2 focus:ring-ring"
                 required
               >
-                <option value="">Select client…</option>
+                <option value="">{t('products.selectClient')}</option>
                 {clients.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}{c.company ? ` (${c.company})` : ''}
@@ -222,7 +230,7 @@ export default function ProductsPage() {
           {/* Region select */}
           <div className="md:col-span-1">
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-              Region
+              {t('common.region')}
             </label>
             <div className="relative">
               <select
@@ -230,8 +238,8 @@ export default function ProductsPage() {
                 onChange={(e) => setFormRegion(e.target.value as Region)}
                 className="w-full appearance-none bg-background border border-border rounded-md px-3 py-1.5 text-xs text-foreground pr-8 focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                {REGIONS.map(({ code, label, flag }) => (
-                  <option key={code} value={code}>{flag} {label}</option>
+                {REGIONS.map(({ code, flag }) => (
+                  <option key={code} value={code}>{flag} {t(regionKey(code))}</option>
                 ))}
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
@@ -241,7 +249,7 @@ export default function ProductsPage() {
           {/* Tier select */}
           <div className="md:col-span-1">
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-              Package
+              {t('products.package')}
             </label>
             <div className="relative">
               <select
@@ -250,12 +258,16 @@ export default function ProductsPage() {
                 className="w-full appearance-none bg-background border border-border rounded-md px-3 py-1.5 text-xs text-foreground pr-8 focus:outline-none focus:ring-2 focus:ring-ring"
                 required
               >
-                <option value="">Select package…</option>
-                {PRICING_TIERS.filter((t) => t.maxSeats !== null).map((tier) => {
+                <option value="">{t('products.selectPackage')}</option>
+                {PRICING_TIERS.filter((tier) => tier.maxSeats !== null).map((tier) => {
                   const price = tier.prices[formRegion]
                   return (
                     <option key={tier.label} value={tier.label}>
-                      {tier.maxSeats?.toLocaleString('en-US')} clients / {tier.maxMapItems?.toLocaleString('en-US')} map — {fmt(price, formRegion)}/mo
+                      {t('products.option', {
+                        clients: tier.maxSeats?.toLocaleString(locale) ?? '',
+                        map: tier.maxMapItems?.toLocaleString(locale) ?? '',
+                        price: fmt(price, formRegion, locale, t('products.inquire')),
+                      })}
                     </option>
                   )
                 })}
@@ -271,7 +283,7 @@ export default function ProductsPage() {
               disabled={saving || !selectedClient || !selectedTier}
               className="tw-btn-primary w-full px-4 py-1.5 rounded-md text-xs font-semibold transition disabled:opacity-40"
             >
-              {saving ? 'Applying…' : 'Apply Plan'}
+              {saving ? t('products.applying') : t('products.apply')}
             </button>
           </div>
 
@@ -280,19 +292,19 @@ export default function ProductsPage() {
             <div className="md:col-span-4 flex items-center gap-2">
               <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
               <p className="text-[11px] text-muted-foreground">
-                Monthly amount:{' '}
+                {t('products.monthlyAmount')}{' '}
                 <span className="font-bold text-foreground">
-                  {fmt(selectedPricePreview ?? 'inquire', formRegion)}
+                  {fmt(selectedPricePreview ?? 'inquire', formRegion, locale, t('products.inquire'))}
                 </span>
-                {' '}· Region:{' '}
-                <span className="font-bold text-foreground">{REGION_LABELS[formRegion]}</span>
+                {' '}· {t('products.regionLabel')}{' '}
+                <span className="font-bold text-foreground">{t(regionKey(formRegion))}</span>
                 {(() => {
-                  const t = PRICING_TIERS.find((x) => x.label === selectedTier)
-                  if (!t?.maxMapItems) return null
+                  const tier = PRICING_TIERS.find((item) => item.label === selectedTier)
+                  if (!tier?.maxMapItems) return null
                   return (
                     <>
-                      {' '}· Map items:{' '}
-                      <span className="font-bold text-foreground">{t.maxMapItems.toLocaleString('en-US')}</span>
+                      {' '}· {t('products.mapItemsLabel')}{' '}
+                      <span className="font-bold text-foreground">{tier.maxMapItems.toLocaleString(locale)}</span>
                     </>
                   )
                 })()}
@@ -321,21 +333,21 @@ export default function ProductsPage() {
       {/* ── Client Plan Summary ─────────────────────────────────────────────── */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-border">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-foreground">Current Plans</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-foreground">{t('products.current')}</h2>
         </div>
 
         {loadingClients ? (
           <div className="p-8 text-center">
-            <p className="text-xs text-muted-foreground animate-pulse">Loading clients…</p>
+            <p className="text-xs text-muted-foreground animate-pulse">{t('clients.loading')}</p>
           </div>
         ) : (
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
-                <th className="px-4 py-2.5 font-medium">Client</th>
-                <th className="px-4 py-2.5 font-medium">Region</th>
-                <th className="px-4 py-2.5 font-medium">Package</th>
-                <th className="px-4 py-2.5 font-medium">Monthly</th>
+                <th className="px-4 py-2.5 font-medium">{t('profile.client')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('common.region')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('products.package')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('billing.monthly')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -354,7 +366,7 @@ export default function ProductsPage() {
                       {hasPlan ? (
                         <span className="flex items-center gap-1.5">
                           {REGIONS.find((r) => r.code === sub!.region)?.flag ?? ''}
-                          {REGION_LABELS[sub!.region as Region] ?? sub!.region}
+                          {sub!.region && regionKey(sub.region) !== 'common.region' ? t(regionKey(sub.region)) : sub!.region}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
@@ -363,11 +375,11 @@ export default function ProductsPage() {
                     <td className="px-4 py-3">
                       {hasPlan ? (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold border border-border bg-muted text-foreground">
-                          {Number(sub!.subscriberTier).toLocaleString('en-US')} clients
+                          {t('products.subscriberCount', { n: Number(sub!.subscriberTier).toLocaleString(locale) })}
                           {(() => {
-                            const t = PRICING_TIERS.find((x) => x.label === sub!.subscriberTier)
-                            return t?.maxMapItems
-                              ? ` / ${t.maxMapItems.toLocaleString('en-US')} map`
+                            const tier = PRICING_TIERS.find((item) => item.label === sub!.subscriberTier)
+                            return tier?.maxMapItems
+                              ? t('products.mapSuffix', { n: tier.maxMapItems.toLocaleString(locale) })
                               : ''
                           })()}
                         </span>
@@ -377,7 +389,7 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-4 py-3 font-bold text-foreground">
                       {sub?.monthlyAmount != null ? (
-                        `${CURRENCY_SYMBOL[sub.region as Region] ?? ''}\u00A0${sub.monthlyAmount.toLocaleString('en-US')}`
+                        `${CURRENCY_SYMBOL[sub.region as Region] ?? ''}\u00A0${sub.monthlyAmount.toLocaleString(locale)}`
                       ) : (
                         <span className="text-muted-foreground font-normal">—</span>
                       )}
@@ -388,7 +400,7 @@ export default function ProductsPage() {
               {clients.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                    No clients found.
+                    {t('clients.empty')}
                   </td>
                 </tr>
               )}

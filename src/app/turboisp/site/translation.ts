@@ -1,5 +1,5 @@
 // Marketing site copy for /turboisp/site.
-// Locales: en, pt (Brazil), fr (Quebec), es. Missing strings fall back to en.
+// Locales: en, pt (Brazil), fr (Quebec), es. Every string has all four.
 
 type Copy = { en: string; pt: string; fr: string; es: string }
 
@@ -149,7 +149,7 @@ export const TurboispPageTranslations = {
   module_services_desc: {
     en: "Scheduling, dispatch and field execution. From ticket to close, with SLA and auditable history.",
     pt: "Agendamento, despacho e execução em campo. Do chamado ao encerramento, com SLA e histórico auditável.",
-    fr: "Planification, répartition et exécution sur le terrain. Du billet à la clôture, avec SLA et historique vérifiable.",
+    fr: "Planification, répartition et exécution sur le terrain. Du ticket à la clôture, avec SLA et historique vérifiable.",
     es: "Agenda, despacho y ejecución en campo. Del ticket al cierre, con SLA e historial auditable.",
   },
 
@@ -254,7 +254,7 @@ export const TurboispPageTranslations = {
   value_predictable_scale_desc: {
     en: "Forecast bandwidth, inventory, and team needs by combining usage, ticket, and network data.",
     pt: "Preveja banda, estoque e equipe combinando dados de uso, chamados e rede.",
-    fr: "Prévoyez la bande passante, le stock et les besoins d'équipe en combinant l'utilisation, les billets et le réseau.",
+    fr: "Prévoyez la bande passante, le stock et les besoins d'équipe en combinant l'utilisation, les tickets et le réseau.",
     es: "Anticipa ancho de banda, inventario y equipo combinando uso, tickets y datos de red.",
   },
 

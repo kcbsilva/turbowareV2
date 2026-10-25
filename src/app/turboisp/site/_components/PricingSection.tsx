@@ -11,7 +11,7 @@ import {
   type PricingTier,
   type Region,
 } from "@/lib/pricing";
-import { type Lang, pick } from "./constants";
+import { NUMBER_LOCALE, type Lang, pick } from "./constants";
 
 type Hosting = "cloud" | "self-hosted";
 
@@ -28,8 +28,9 @@ const REGIONS: RegionConfig[] = [
   { code: "GB", flag: "🇬🇧", label: { en: "GB", pt: "GB", fr: "GB", es: "GB" } },
 ];
 
-function planName(tier: PricingTier): string {
-  return tier.maxSeats == null ? "12,000+" : tier.maxSeats.toLocaleString("en-US");
+function planName(tier: PricingTier, locale: string): string {
+  if (tier.maxSeats == null) return `${(12000).toLocaleString(locale)}+`;
+  return tier.maxSeats.toLocaleString(locale);
 }
 
 export function PricingSection({ lang }: { lang: Lang }) {
@@ -38,6 +39,7 @@ export function PricingSection({ lang }: { lang: Lang }) {
   const [openInfo, setOpenInfo] = useState<string | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const s = <T extends Record<Lang, string>>(map: T) => pick(map, lang);
+  const numberLocale = NUMBER_LOCALE[lang];
   const installFee = INSTALLATION_FEES[region];
   const isCloud = hosting === "cloud";
 
@@ -170,7 +172,7 @@ export function PricingSection({ lang }: { lang: Lang }) {
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                         {s({ en: "Up to", pt: "Até", fr: "Jusqu'à", es: "Hasta" })}
                       </p>
-                      <p className="text-lg font-bold text-slate-900 leading-tight">{planName(tier)}</p>
+                      <p className="text-lg font-bold text-slate-900 leading-tight">{planName(tier, numberLocale)}</p>
                       <p className="text-[11px] text-slate-500">
                         {s({ en: "subscribers", pt: "assinantes", fr: "abonnés", es: "abonados" })}
                       </p>
@@ -180,10 +182,10 @@ export function PricingSection({ lang }: { lang: Lang }) {
                         type="button"
                         aria-expanded={infoOpen}
                         aria-label={s({
-                          en: `About the ${planName(tier)} self-hosted plan`,
-                          pt: `Sobre o plano em servidor próprio de ${planName(tier)}`,
-                          fr: `À propos du forfait auto-hébergé ${planName(tier)}`,
-                          es: `Sobre el plan en servidor propio de ${planName(tier)}`,
+                          en: `About the ${planName(tier, numberLocale)} self-hosted plan`,
+                          pt: `Sobre o plano em servidor próprio de ${planName(tier, numberLocale)}`,
+                          fr: `À propos du forfait auto-hébergé ${planName(tier, numberLocale)}`,
+                          es: `Sobre el plan en servidor propio de ${planName(tier, numberLocale)}`,
                         })}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -238,7 +240,7 @@ export function PricingSection({ lang }: { lang: Lang }) {
 
                   {tier.maxMapItems != null && (
                     <p className="text-[11px] text-slate-500 mb-4">
-                      {tier.maxMapItems.toLocaleString("en-US")}{" "}
+                      {tier.maxMapItems.toLocaleString(numberLocale)}{" "}
                       {s({ en: "map items", pt: "itens no mapa", fr: "éléments sur la carte", es: "elementos en el mapa" })}
                     </p>
                   )}
@@ -255,13 +257,13 @@ export function PricingSection({ lang }: { lang: Lang }) {
                   ) : (
                     <div>
                       <p className="text-xl font-black tabular-nums text-slate-900">
-                        {formatPrice(price, region)}
+                        {formatPrice(price, region, numberLocale)}
                         <span className="text-[11px] font-medium text-slate-400">
                           {s({ en: "/mo", pt: "/mês", fr: "/mois", es: "/mes" })}
                         </span>
                       </p>
                       <p className="text-[11px] text-slate-400 mt-1">
-                        {s({ en: "Setup", pt: "Implantação", fr: "Mise en service", es: "Puesta en marcha" })} {formatPrice(installFee, region)}
+                        {s({ en: "Setup", pt: "Implantação", fr: "Mise en service", es: "Puesta en marcha" })} {formatPrice(installFee, region, numberLocale)}
                       </p>
                     </div>
                   )}

@@ -12,6 +12,8 @@ import {
   ChevronLeft,
   Plus,
 } from 'lucide-react'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { dateLocale, type MsgKey } from '@/lib/admin-i18n'
 
 type Status = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED'
 type Priority = 'LOW' | 'MEDIUM' | 'HIGH'
@@ -42,14 +44,36 @@ interface TicketFull extends Omit<TicketRow, '_count'> {
   messages: Message[]
 }
 
-const STATUS_STYLES: Record<Status, { label: string; cls: string; icon: React.ElementType }> = {
-  OPEN:        { label: 'Open',        cls: 'tw-badge-sky', icon: Clock },
-  IN_PROGRESS: { label: 'In Progress', cls: 'tw-badge-peach', icon: AlertCircle },
-  RESOLVED:    { label: 'Resolved',    cls: 'tw-badge-teal', icon: CheckCircle },
-  CLOSED:      { label: 'Closed',      cls: 'tw-badge-mute', icon: XCircle },
+const STATUS_STYLES: Record<Status, { cls: string; icon: React.ElementType }> = {
+  OPEN:        { cls: 'tw-badge-sky', icon: Clock },
+  IN_PROGRESS: { cls: 'tw-badge-peach', icon: AlertCircle },
+  RESOLVED:    { cls: 'tw-badge-teal', icon: CheckCircle },
+  CLOSED:      { cls: 'tw-badge-mute', icon: XCircle },
 }
 
-const CATEGORIES = ['Billing', 'Technical', 'Account', 'Activation', 'Other']
+const STATUS_KEY: Record<Status, MsgKey> = {
+  OPEN: 'ticket.open',
+  IN_PROGRESS: 'ticket.progress',
+  RESOLVED: 'ticket.resolved',
+  CLOSED: 'ticket.closed',
+}
+
+const PRIORITY_KEY: Record<Priority, MsgKey> = {
+  LOW: 'ticket.low',
+  MEDIUM: 'ticket.medium',
+  HIGH: 'ticket.high',
+}
+
+const CATEGORIES = ['Billing', 'Technical', 'Account', 'Activation', 'Other'] as const
+
+const CATEGORY_KEY: Record<string, MsgKey> = {
+  Billing: 'ticket.cat.billing',
+  Technical: 'ticket.cat.technical',
+  Account: 'ticket.cat.account',
+  Activation: 'ticket.cat.activation',
+  Other: 'ticket.cat.other',
+  General: 'ticket.cat.general',
+}
 
 interface Props {
   clientId: string
@@ -57,6 +81,8 @@ interface Props {
 }
 
 export function TicketsTab({ clientId, clientName }: Props) {
+  const { t, lang } = useAdminLang()
+  const locale = dateLocale(lang)
   const [tickets, setTickets] = useState<TicketRow[]>([])
   const [openCount, setOpenCount] = useState(0)
   const [inProgressCount, setInProgressCount] = useState(0)
@@ -148,21 +174,21 @@ export function TicketsTab({ clientId, clientName }: Props) {
     return (
       <div className="space-y-4">
         <button type="button" onClick={() => setCreating(false)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="w-3.5 h-3.5" /> Back to tickets
+          <ChevronLeft className="w-3.5 h-3.5" /> {t('ticket.back')}
         </button>
         <form onSubmit={createTicket} className="bg-card border border-border rounded-lg p-4 space-y-3">
-          <h2 className="text-sm font-semibold text-foreground">New ticket for {clientName}</h2>
+          <h2 className="text-sm font-semibold text-foreground">{t('ticket.newFor', { name: clientName })}</h2>
           <input
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            placeholder="Subject"
+            placeholder={t('ticket.subject')}
             className="w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <textarea
             value={form.body}
             onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
             rows={4}
-            placeholder="First message…"
+            placeholder={t('ticket.firstMessage')}
             className="w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
           />
           <div className="flex flex-wrap gap-2">
@@ -171,23 +197,23 @@ export function TicketsTab({ clientId, clientName }: Props) {
               onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
               className="px-3 py-1.5 bg-muted border border-border rounded-md text-xs"
             >
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {CATEGORIES.map((c) => <option key={c} value={c}>{t(CATEGORY_KEY[c])}</option>)}
             </select>
             <select
               value={form.priority}
               onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value as Priority }))}
               className="px-3 py-1.5 bg-muted border border-border rounded-md text-xs"
             >
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
+              <option value="LOW">{t('ticket.low')}</option>
+              <option value="MEDIUM">{t('ticket.medium')}</option>
+              <option value="HIGH">{t('ticket.high')}</option>
             </select>
             <button
               type="submit"
               disabled={submitting || !form.title.trim() || !form.body.trim()}
               className="tw-btn-primary ml-auto px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-40"
             >
-              {submitting ? 'Opening…' : 'Open ticket'}
+              {submitting ? t('ticket.opening') : t('ticket.openAction')}
             </button>
           </div>
         </form>
@@ -201,7 +227,7 @@ export function TicketsTab({ clientId, clientName }: Props) {
     return (
       <div className="flex min-h-0 flex-col">
         <button type="button" onClick={() => setSelected(null)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
-          <ChevronLeft className="w-3.5 h-3.5" /> Back to tickets
+          <ChevronLeft className="w-3.5 h-3.5" /> {t('ticket.back')}
         </button>
 
         <div className="bg-card border border-border rounded-lg p-4 mb-4">
@@ -209,11 +235,11 @@ export function TicketsTab({ clientId, clientName }: Props) {
             <div>
               <h1 className="text-sm font-semibold text-foreground">{selected.title}</h1>
               <p className="text-[10px] text-muted-foreground mt-1">
-                {selected.category || 'General'} · #{selected.id.slice(-8).toUpperCase()}
+                {(selected.category && CATEGORY_KEY[selected.category] ? t(CATEGORY_KEY[selected.category]) : selected.category) || t('ticket.cat.general')} · #{selected.id.slice(-8).toUpperCase()}
               </p>
             </div>
             <span className={`tw-badge gap-1 ${meta.cls}`}>
-              <Icon className="w-3 h-3" />{meta.label}
+              <Icon className="w-3 h-3" />{t(STATUS_KEY[selected.status])}
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5 mt-3">
@@ -225,7 +251,7 @@ export function TicketsTab({ clientId, clientName }: Props) {
                 onClick={() => changeStatus(s)}
                 className="px-2 py-1 rounded-md border border-border text-[10px] font-medium text-foreground hover:bg-muted disabled:opacity-40"
               >
-                {STATUS_STYLES[s].label}
+                {t(STATUS_KEY[s])}
               </button>
             ))}
           </div>
@@ -244,7 +270,7 @@ export function TicketsTab({ clientId, clientName }: Props) {
                     {msg.body}
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1 px-1">
-                    {msg.authorName ?? (isAdmin ? 'Support' : clientName)} · {new Date(msg.createdAt).toLocaleString()}
+                    {msg.authorName ?? (isAdmin ? t('ticket.support') : clientName)} · {new Date(msg.createdAt).toLocaleString(locale)}
                   </p>
                 </div>
               </div>
@@ -257,7 +283,7 @@ export function TicketsTab({ clientId, clientName }: Props) {
           <form onSubmit={sendReply} className="bg-card border border-border rounded-lg p-3 flex gap-2">
             <input
               className="flex-1 px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Reply as admin…"
+              placeholder={t('ticket.reply')}
               value={reply}
               onChange={(e) => setReply(e.target.value)}
             />
@@ -270,7 +296,7 @@ export function TicketsTab({ clientId, clientName }: Props) {
             </button>
           </form>
         ) : (
-          <p className="text-center text-xs text-muted-foreground py-2">This ticket is closed.</p>
+          <p className="text-center text-xs text-muted-foreground py-2">{t('ticket.closedHint')}</p>
         )}
       </div>
     )
@@ -280,7 +306,7 @@ export function TicketsTab({ clientId, clientName }: Props) {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          {openCount} open · {inProgressCount} in progress
+          {t('ticket.openCount', { n: openCount.toLocaleString(locale) })} · {t('ticket.progressCount', { n: inProgressCount.toLocaleString(locale) })}
         </p>
         <button
           type="button"
@@ -288,7 +314,7 @@ export function TicketsTab({ clientId, clientName }: Props) {
           className="tw-btn-primary flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold"
         >
           <Plus className="w-3.5 h-3.5" />
-          New ticket
+          {t('ticket.new')}
         </button>
       </div>
 
@@ -300,19 +326,19 @@ export function TicketsTab({ clientId, clientName }: Props) {
         ) : tickets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
             <Ticket className="w-8 h-8 opacity-20" />
-            <p className="text-xs">No tickets for this client yet.</p>
+            <p className="text-xs">{t('ticket.emptyClient')}</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {tickets.map((t) => {
-              const meta = STATUS_STYLES[t.status]
+            {tickets.map((ticket) => {
+              const meta = STATUS_STYLES[ticket.status]
               const Icon = meta.icon
-              const last = t.messages[0]
+              const last = ticket.messages[0]
               return (
                 <button
-                  key={t.id}
+                  key={ticket.id}
                   type="button"
-                  onClick={() => openTicket(t.id)}
+                  onClick={() => openTicket(ticket.id)}
                   className="w-full px-4 py-3 flex items-start gap-3 hover:bg-muted/40 text-left"
                 >
                   <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -320,16 +346,16 @@ export function TicketsTab({ clientId, clientName }: Props) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-medium text-foreground truncate">{t.title}</p>
+                      <p className="text-xs font-medium text-foreground truncate">{ticket.title}</p>
                       <span className={`tw-badge gap-1 ${meta.cls}`}>
-                        <Icon className="w-2.5 h-2.5" />{meta.label}
+                        <Icon className="w-2.5 h-2.5" />{t(STATUS_KEY[ticket.status])}
                       </span>
                     </div>
                     <p className="text-[10px] text-muted-foreground truncate">
-                      {last ? `${last.authorType === 'ADMIN' ? 'You: ' : ''}${last.body}` : 'No messages'}
+                      {last ? `${last.authorType === 'ADMIN' ? `${t('ticket.you')} ` : ''}${last.body}` : t('ticket.noMessages')}
                     </p>
                     <p className="text-[10px] text-muted-foreground/70 mt-1">
-                      {t.priority} · {t._count.messages} messages · {new Date(t.updatedAt).toLocaleDateString()}
+                      {t(PRIORITY_KEY[ticket.priority])} · {ticket._count.messages === 1 ? t('ticket.messageOne') : t('ticket.messageMany', { n: ticket._count.messages.toLocaleString(locale) })} · {new Date(ticket.updatedAt).toLocaleDateString(locale)}
                     </p>
                   </div>
                 </button>

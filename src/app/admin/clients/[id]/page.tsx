@@ -14,6 +14,7 @@ import { NotesTab } from './tabs/NotesTab'
 import { HistoryTab } from './tabs/HistoryTab'
 import { TicketsTab } from './tabs/TicketsTab'
 import { DocumentsTab } from './tabs/DocumentsTab'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
 
 interface Client {
   id: string
@@ -57,6 +58,7 @@ interface Client {
 export default function ClientProfilePage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const { t } = useAdminLang()
   const [client, setClient] = useState<Client | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -68,10 +70,10 @@ export default function ClientProfilePage() {
     if (res.ok) {
       setClient(await res.json())
     } else {
-      setError('Could not load client.')
+      setError(t('clients.loadError'))
     }
     setLoading(false)
-  }, [params.id])
+  }, [params.id, t])
 
   useEffect(() => { load() }, [load])
 
@@ -86,10 +88,10 @@ export default function ClientProfilePage() {
   if (error || !client) {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground text-xs">
-        <p>{error || 'Client not found.'}</p>
+        <p>{error || t('clients.notFound')}</p>
         <div className="flex gap-3">
-          <button onClick={load} className="text-primary hover:underline">Retry</button>
-          <Link href="/admin/clients" className="text-primary hover:underline">← All Clients</Link>
+          <button onClick={load} className="text-primary hover:underline">{t('common.retry')}</button>
+          <Link href="/admin/clients" className="text-primary hover:underline">← {t('clients.allClients')}</Link>
         </div>
       </div>
     )

@@ -9,7 +9,7 @@ export const CATEGORIES: Category[] = [
   { id: 'subscribers', title: t('Subscribers', 'Assinantes', 'Abonnés', 'Abonados') },
   { id: 'billing', title: t('Billing', 'Financeiro', 'Facturation', 'Facturación') },
   { id: 'fiscal', title: t('Fiscal (Brazil)', 'Fiscal (Brasil)', 'Fiscal (Brésil)', 'Fiscal (Brasil)') },
-  { id: 'field', title: t('Field & tickets', 'Campo e chamados', 'Terrain et billets', 'Campo y tickets') },
+  { id: 'field', title: t('Field & tickets', 'Campo e chamados', 'Terrain et tickets', 'Campo y tickets') },
   { id: 'inventory', title: t('Inventory', 'Estoque', 'Inventaire', 'Inventario') },
   { id: 'provisioning', title: t('Provisioning', 'Provisionamento', 'Provisionnement', 'Aprovisionamiento') },
   { id: 'noc', title: t('NOC', 'NOC', 'NOC', 'NOC') },

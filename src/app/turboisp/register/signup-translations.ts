@@ -9,7 +9,7 @@ export function localeLabel(code: SignupLocale): string {
   return 'English'
 }
 
-const copy: Record<SignupLocale, Record<string, string>> = {
+export const signupCopy: Record<SignupLocale, Record<string, string>> = {
   en: {
     signup_language: 'Language',
     signup_title: 'Start your ISP on TurboISP',
@@ -137,7 +137,7 @@ const copy: Record<SignupLocale, Record<string, string>> = {
 }
 
 export function t(locale: SignupLocale, key: string): string {
-  return copy[locale][key] ?? copy.en[key] ?? key
+  return signupCopy[locale][key] ?? key
 }
 
 export const API_ERROR_KEYS: Record<string, string> = {

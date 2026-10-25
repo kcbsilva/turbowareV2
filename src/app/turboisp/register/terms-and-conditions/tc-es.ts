@@ -1,57 +1,57 @@
-export const turboIspTermsAndConditionsEs = `# 🇲🇽 Espanol (Mexico)
+export const turboIspTermsAndConditionsEs = `# Español
 
-## Terminos y Condiciones - TurboISP
+## Términos y condiciones - TurboISP
 
-**Ultima actualizacion:** 8 de abril de 2026
+**Última actualización:** 8 de abril de 2026
 
-Al usar TurboISP, usted acepta:
+Al usar TurboISP, usted acepta lo siguiente:
 
-### 1. Descripcion del Servicio
+### 1. Descripción del servicio
 
-TurboISP es una plataforma de gestion para ISPs y operadores telecom con CRM, facturacion, automatizacion, monitoreo, GIS y documentacion de red.
+TurboISP es una plataforma de gestión para ISPs y operadores de telecomunicaciones. Incluye CRM, facturación, automatización, monitoreo, GIS y documentación de infraestructura.
 
-### 2. Cuenta
+### 2. Responsabilidad de la cuenta
 
-Usted es responsable de la seguridad de sus credenciales.
+Usted es responsable de proteger las credenciales y de toda la actividad realizada con su cuenta.
 
-### 3. Suscripcion y Pago
+### 3. Suscripción y pago
 
-* Suscripcion mensual o anual
-* Falta de pago puede resultar en suspension
-* Precios sujetos a cambios con aviso
+* Suscripción mensual o anual
+* La falta de pago puede llevar a la suspensión
+* Los precios pueden cambiar, con aviso previo
 
-### 4. Uso Aceptable
+### 4. Uso aceptable
 
-No se permite:
+Usted se compromete a no:
 
-* Uso ilegal
-* Acceso no autorizado
-* Interrumpir el servicio
-* Revender sin permiso
+* Usar el servicio con fines ilegales
+* Intentar un acceso no autorizado
+* Interferir en la operación del servicio
+* Revender sin autorización
 
-### 5. Propiedad de Datos
+### 5. Propiedad de los datos
 
-Usted mantiene propiedad de sus datos.
+Usted conserva la propiedad de sus datos. TurboISP los procesa para prestar el servicio.
 
 ### 6. Disponibilidad
 
-Servicio proporcionado "tal cual" sin garantia de disponibilidad.
+El servicio se ofrece "tal cual", sin disponibilidad garantizada, salvo acuerdo aparte.
 
-### 7. Limitacion de Responsabilidad
+### 7. Limitación de responsabilidad
 
-TurboISP no es responsable por:
+TurboISP no responde por:
 
-* Perdida de ingresos
-* Caidas de red
-* Errores de configuracion
+* Pérdida de ingresos
+* Caídas de red
+* Errores de configuración
 
-### 8. Terminacion
+### 8. Terminación
 
-Cuentas pueden ser suspendidas por incumplimiento.
+La cuenta puede suspenderse por incumplimiento, abuso o falta de pago.
 
-### 9. Cambios
+### 9. Modificaciones
 
-Los terminos pueden actualizarse.
+Los términos pueden actualizarse de forma periódica.
 `;
 
 export default turboIspTermsAndConditionsEs;

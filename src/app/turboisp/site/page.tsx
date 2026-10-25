@@ -22,6 +22,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { LANGS, type Lang, pick } from "./_components/constants";
+import { useSiteLang } from "./_components/site-lang";
 import { PricingSection } from "./_components/PricingSection";
 
 // Drop your screenshots in /public/slides/ with these filenames.
@@ -76,7 +77,7 @@ const SLIDES = [
     description: {
       en: "Real-time telemetry from OLTs, radios and routers. Alerts grouped by root cause — one fiber cut, one incident, not 400 tickets.",
       pt: "Telemetria em tempo real de OLTs, rádios e roteadores. Alertas agrupados por causa raiz — um rompimento, um incidente, não 400 chamados.",
-      fr: "Télémétrie en temps réel des OLT, radios et routeurs. Alertes groupées par cause racine — une coupure, un incident, pas 400 billets.",
+      fr: "Télémétrie en temps réel des OLT, radios et routeurs. Alertes groupées par cause racine — une coupure, un incident, pas 400 tickets.",
       es: "Telemetría en tiempo real de OLT, radios y routers. Alertas agrupadas por causa raíz: un corte, un incidente, no 400 tickets.",
     },
   },
@@ -94,7 +95,7 @@ const SLIDES = [
     description: {
       en: "Plan, signal levels, invoices, tickets, connection history. Support answers in seconds because everything is already there.",
       pt: "Plano, níveis de sinal, faturas, chamados e histórico de conexão. O suporte responde em segundos porque está tudo ali.",
-      fr: "Forfait, niveaux de signal, factures, billets, historique de connexion. Le soutien répond en quelques secondes — tout est déjà là.",
+      fr: "Forfait, niveaux de signal, factures, tickets, historique de connexion. Le soutien répond en quelques secondes — tout est déjà là.",
       es: "Plan, niveles de señal, facturas, tickets e historial de conexión. Soporte responde en segundos porque todo ya está ahí.",
     },
   },
@@ -193,7 +194,7 @@ const SECTION_NAV = [
 ] as const;
 
 export default function TurboISPSitePage() {
-  const [lang, setLang] = useState<Lang>("pt");
+  const { lang, setLang } = useSiteLang();
   const [slideIndex, setSlideIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [broken, setBroken] = useState<Record<string, boolean>>({});

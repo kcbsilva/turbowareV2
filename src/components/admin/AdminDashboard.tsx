@@ -14,6 +14,8 @@ import {
   Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { dateLocale } from '@/lib/admin-i18n'
 
 export interface DashboardData {
   total: number
@@ -23,7 +25,7 @@ export interface DashboardData {
   pendingInvoices: number
   activeLicenses: number
   coverage: number
-  signups: { label: string; value: number }[]
+  signups: { year: number; month: number; value: number }[]
   recent: {
     id: string
     name: string
@@ -35,11 +37,11 @@ export interface DashboardData {
 
 const ease = [0.22, 1, 0.36, 1] as const
 
-function greeting() {
+function greeting(t: (key: 'dash.morning' | 'dash.afternoon' | 'dash.evening') => string) {
   const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 18) return 'Good afternoon'
-  return 'Good evening'
+  if (h < 12) return t('dash.morning')
+  if (h < 18) return t('dash.afternoon')
+  return t('dash.evening')
 }
 
 function CountUp({ value }: { value: number }) {
@@ -124,7 +126,9 @@ function StatCard({
   href: string
   spark: number[]
   accent: string
+  id?: string
 }) {
+  const { t } = useAdminLang()
   return (
     <TiltCard className="rounded-2xl">
       <Link
@@ -144,7 +148,7 @@ function StatCard({
           </div>
           <span className="tw-badge tw-badge-teal gap-0.5">
             <TrendingUp className="h-3 w-3" />
-            live
+            {t('dash.live')}
           </span>
         </div>
         <p className="relative mt-4 text-sm font-medium text-muted-foreground">{label}</p>
@@ -160,6 +164,7 @@ function StatCard({
 }
 
 export function AdminDashboard({ data }: { data: DashboardData }) {
+  const { t, lang } = useAdminLang()
   const spark = data.signups.map((s) => s.value)
   const licenseSpark = data.signups.map((s, i) => Math.max(0, s.value + (i % 2)))
   const ticketSpark = data.signups.map((_, i) => (i === data.signups.length - 1 ? data.openTickets : Math.max(0, data.openTickets - (5 - i))))
@@ -193,11 +198,11 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
             <div>
               <p className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 <Sparkles className="h-3.5 w-3.5" />
-                {greeting()}
+                {greeting(t)}
               </p>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">Admin dashboard</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('dash.title')}</h1>
               <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-                Tenants, licenses, and support in one place — {data.total} clients on the books.
+                {t('dash.lead', { n: data.total })}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -205,13 +210,13 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
                 href="/admin/tickets"
                 className="rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted"
               >
-                Tickets{data.openTickets > 0 ? ` (${data.openTickets})` : ''}
+                {t('dash.tickets')}{data.openTickets > 0 ? ` (${data.openTickets})` : ''}
               </Link>
               <Link
                 href="/admin/clients/new"
                 className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
               >
-                Set up tenant
+                {t('dash.setup')}
               </Link>
             </div>
           </div>
@@ -220,36 +225,40 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
             {
-              label: 'Total clients',
+              id: 'total',
+              label: t('dash.total'),
               value: data.total,
-              hint: `${data.newThisMonth} new this month`,
+              hint: t('dash.newMonth', { n: data.newThisMonth }),
               icon: Users,
               href: '/admin/clients',
               spark,
               accent: '#a3a3a3',
             },
             {
-              label: 'With licenses',
+              id: 'licensed',
+              label: t('dash.withLicenses'),
               value: data.withLicense,
-              hint: `${data.activeLicenses} active licenses`,
+              hint: t('dash.activeLicenses', { n: data.activeLicenses }),
               icon: KeyRound,
               href: '/admin/licenses',
               spark: licenseSpark,
               accent: '#e5e5e5',
             },
             {
-              label: 'Open tickets',
+              id: 'tickets',
+              label: t('dash.openTickets'),
               value: data.openTickets,
-              hint: 'Open and in progress',
+              hint: t('dash.openHint'),
               icon: Ticket,
               href: '/admin/tickets',
               spark: ticketSpark,
               accent: '#737373',
             },
             {
-              label: 'Pending invoices',
+              id: 'invoices',
+              label: t('dash.pendingInvoices'),
               value: data.pendingInvoices,
-              hint: 'Awaiting payment',
+              hint: t('dash.awaiting'),
               icon: Activity,
               href: '/admin/invoices',
               spark: invoiceSpark,
@@ -257,7 +266,7 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
             },
           ].map((card, i) => (
             <motion.div
-              key={card.label}
+              key={card.id}
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 * i, duration: 0.4, ease }}
@@ -276,16 +285,16 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
           >
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div>
-                <h3 className="text-base font-semibold text-foreground">Recent clients</h3>
-                <p className="text-xs text-muted-foreground">Newest tenants first</p>
+                <h3 className="text-base font-semibold text-foreground">{t('dash.recent')}</h3>
+                <p className="text-xs text-muted-foreground">{t('dash.newest')}</p>
               </div>
               <Link href="/admin/clients" className="text-sm font-semibold text-foreground hover:underline">
-                View all
+                {t('dash.viewAll')}
               </Link>
             </div>
             {data.recent.length === 0 ? (
               <div className="px-5 py-12 text-center text-sm text-muted-foreground">
-                No clients yet. They&apos;ll appear here once they register.
+                {t('dash.empty')}
               </div>
             ) : (
               <div className="divide-y divide-border">
@@ -309,10 +318,10 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
                       </div>
                       <div className="hidden items-center gap-1.5 text-xs text-muted-foreground md:flex">
                         <KeyRound className="h-3 w-3" />
-                        {c.licenses} {c.licenses === 1 ? 'license' : 'licenses'}
+                        {c.licenses === 1 ? t('dash.licenseOne') : t('dash.licenseMany', { n: c.licenses })}
                       </div>
                       <p className="hidden text-xs text-muted-foreground lg:block">
-                        {new Date(c.createdAt).toLocaleDateString()}
+                        {new Date(c.createdAt).toLocaleDateString(dateLocale(lang))}
                       </p>
                     </Link>
                   </motion.div>
@@ -328,21 +337,22 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
               transition={{ delay: 0.28, duration: 0.45, ease }}
               className="rounded-2xl border border-border bg-card p-5"
             >
-              <h3 className="mb-1 text-base font-semibold text-foreground">Signups</h3>
-              <p className="mb-4 text-xs text-muted-foreground">Last six months</p>
+              <h3 className="mb-1 text-base font-semibold text-foreground">{t('dash.signups')}</h3>
+              <p className="mb-4 text-xs text-muted-foreground">{t('dash.lastSix')}</p>
               <div className="flex h-28 items-end gap-2">
                 {data.signups.map((m) => {
                   const max = Math.max(1, ...data.signups.map((s) => s.value))
+                  const label = new Date(m.year, m.month, 1).toLocaleDateString(dateLocale(lang), { month: 'short' })
                   return (
-                    <div key={m.label} className="flex flex-1 flex-col items-center gap-1.5">
+                    <div key={`${m.year}-${m.month}`} className="flex flex-1 flex-col items-center gap-1.5">
                       <motion.div
                         initial={{ height: 8 }}
                         animate={{ height: `${Math.max(10, (m.value / max) * 100)}%` }}
                         transition={{ type: 'spring', stiffness: 220, damping: 18 }}
                         className="w-full rounded-t-lg bg-foreground"
-                        title={`${m.label}: ${m.value}`}
+                        title={`${label}: ${m.value}`}
                       />
-                      <span className="text-[10px] font-medium text-muted-foreground">{m.label}</span>
+                      <span className="text-[10px] font-medium text-muted-foreground">{label}</span>
                     </div>
                   )
                 })}
@@ -355,17 +365,18 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
               transition={{ delay: 0.34, duration: 0.45, ease }}
               className="rounded-2xl border border-border bg-card p-5"
             >
-              <h3 className="mb-4 text-base font-semibold text-foreground">Coverage</h3>
+              <h3 className="mb-4 text-base font-semibold text-foreground">{t('dash.coverage')}</h3>
               {[
-                { label: 'Licensed clients', value: data.coverage, color: '#e5e5e5' },
-                { label: 'Open tickets', value: Math.min(100, data.openTickets * 10), color: '#737373' },
+                { id: 'licensed', label: t('dash.licensed'), value: data.coverage, color: '#e5e5e5' },
+                { id: 'tickets', label: t('dash.openTickets'), value: Math.min(100, data.openTickets * 10), color: '#737373' },
                 {
-                  label: 'New this month',
+                  id: 'new',
+                  label: t('dash.newThisMonth'),
                   value: data.total === 0 ? 0 : Math.min(100, Math.round((data.newThisMonth / data.total) * 100)),
                   color: '#a3a3a3',
                 },
               ].map((row) => (
-                <div key={row.label} className="mb-4 last:mb-0">
+                <div key={row.id} className="mb-4 last:mb-0">
                   <div className="mb-1.5 flex justify-between text-xs">
                     <span className="text-muted-foreground">{row.label}</span>
                     <span className="font-semibold text-foreground">{row.value}%</span>
@@ -389,13 +400,13 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
               transition={{ delay: 0.4, duration: 0.45, ease }}
               className="rounded-2xl border border-border bg-card p-5 text-foreground"
             >
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick actions</p>
-              <p className="mt-1 text-sm text-muted-foreground">Keep the pipeline moving</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('dash.quick')}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t('dash.quickLead')}</p>
               <div className="mt-4 space-y-1">
                 {[
-                  { href: '/admin/clients/new', icon: UserPlus, label: 'Set up tenant' },
-                  { href: '/admin/licenses/new', icon: KeyRound, label: 'New license' },
-                  { href: '/admin/invoices', icon: Activity, label: 'Review invoices' },
+                  { href: '/admin/clients/new', icon: UserPlus, label: t('dash.setup') },
+                  { href: '/admin/licenses/new', icon: KeyRound, label: t('dash.newLicense') },
+                  { href: '/admin/invoices', icon: Activity, label: t('dash.reviewInvoices') },
                 ].map((a) => (
                   <Link
                     key={a.href}

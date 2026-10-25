@@ -1,12 +1,21 @@
-export type AdminLang = 'en' | 'pt-BR'
+import { adminEs } from './admin-i18n-es'
+import { adminFr } from './admin-i18n-fr'
+import { adminUi, type AdminUiKey } from './admin-ui-copy'
+
+export type AdminLang = 'en' | 'pt-BR' | 'fr' | 'es'
 
 export const ADMIN_LANGS: { code: AdminLang; label: string }[] = [
-  { code: 'pt-BR', label: 'PT-BR' },
+  { code: 'pt-BR', label: 'PT' },
   { code: 'en', label: 'EN' },
+  { code: 'fr', label: 'FR' },
+  { code: 'es', label: 'ES' },
 ]
 
 export function dateLocale(lang: AdminLang): string {
-  return lang === 'pt-BR' ? 'pt-BR' : 'en-US'
+  if (lang === 'pt-BR') return 'pt-BR'
+  if (lang === 'fr') return 'fr-CA'
+  if (lang === 'es') return 'es-419'
+  return 'en-US'
 }
 
 const en = {
@@ -291,9 +300,14 @@ const en = {
   'docs.kind.other': 'Other',
 } as const
 
-type MsgKey = keyof typeof en
+type CoreKey = keyof typeof en
+type MsgKey = CoreKey | AdminUiKey
 
-const ptBR: Record<MsgKey, string> = {
+function withUi(core: Record<CoreKey, string>, ui: Record<AdminUiKey, string>): Record<MsgKey, string> {
+  return { ...core, ...ui }
+}
+
+const ptBR: Record<CoreKey, string> = {
   'nav.home': 'Início',
   'nav.clients': 'Clientes',
   'nav.licenses': 'Licenças',
@@ -575,10 +589,17 @@ const ptBR: Record<MsgKey, string> = {
   'docs.kind.other': 'Outro',
 }
 
-const dict: Record<AdminLang, Record<MsgKey, string>> = { en, 'pt-BR': ptBR }
+export const adminLocales = { en, 'pt-BR': ptBR }
+
+const dict: Record<AdminLang, Record<MsgKey, string>> = {
+  en: withUi(en, adminUi.en),
+  'pt-BR': withUi(ptBR, adminUi['pt-BR']),
+  fr: withUi(adminFr as Record<CoreKey, string>, adminUi.fr),
+  es: withUi(adminEs as Record<CoreKey, string>, adminUi.es),
+}
 
 export function translate(lang: AdminLang, key: MsgKey, vars?: Record<string, string | number>): string {
-  let out = dict[lang][key] ?? dict.en[key] ?? key
+  let out = dict[lang][key] ?? key
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
       out = out.replaceAll(`{${k}}`, String(v))
@@ -589,6 +610,8 @@ export function translate(lang: AdminLang, key: MsgKey, vars?: Record<string, st
 
 export function parseAdminLang(raw: string | null | undefined): AdminLang {
   if (raw === 'en') return 'en'
+  if (raw === 'fr' || raw === 'fr-CA' || raw === 'fr-ca' || raw === 'fr_CA') return 'fr'
+  if (raw === 'es' || raw === 'es-419' || raw === 'es-MX' || raw === 'es-mx') return 'es'
   if (raw === 'pt-BR' || raw === 'pt' || raw === 'pt_BR' || raw === 'pt-br') return 'pt-BR'
   return 'pt-BR'
 }

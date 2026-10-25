@@ -126,7 +126,7 @@ export const startAndNetwork: Article[] = [
         { title: t('Add the POP', 'Adicione o POP', 'Ajoutez le POP', 'Agrega el POP'), body: t(
           'Name it the way the NOC says it on the radio — “POP Centro”, not an internal ticket number.',
           'Nomeie como o NOC fala no rádio — “POP Centro”, não um número de chamado interno.',
-          'Nommez-le comme le NOC le dit à la radio — « POP Centre », pas un numéro de billet interne.',
+          'Nommez-le comme le NOC le dit à la radio — « POP Centre », pas un numéro de ticket interne.',
           'Ponle el nombre como lo dice el NOC por radio: “POP Centro”, no un número de ticket interno.',
         ) },
         { title: t('Switch the active POP', 'Troque o POP ativo', 'Changez le POP actif', 'Cambia el POP activo'), body: t(

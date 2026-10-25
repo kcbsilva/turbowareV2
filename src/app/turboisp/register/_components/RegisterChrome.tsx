@@ -4,6 +4,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import logo from '../../assets/TurboISP-logo.png'
+import { useSiteLang } from '../../site/_components/site-lang'
+import { pausedCopy } from '../paused-copy'
+import { pick } from '../../site/_components/constants'
 
 type Props = {
   actionHref?: string
@@ -12,8 +15,10 @@ type Props = {
 
 export function RegisterChrome({
   actionHref = '/client/login',
-  actionLabel = 'Entrar',
+  actionLabel,
 }: Props) {
+  const { lang } = useSiteLang()
+  const label = actionLabel ?? pick(pausedCopy.signIn, lang)
   return (
     <header className="relative z-20 turbo-nav">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
@@ -28,7 +33,7 @@ export function RegisterChrome({
           <Image src={logo} alt="TurboISP" height={44} className="reg-logo h-10 w-auto" priority />
         </Link>
         <Link href={actionHref} className="text-xs text-white/45 hover:text-white transition-colors">
-          {actionLabel}
+          {label}
         </Link>
       </div>
     </header>

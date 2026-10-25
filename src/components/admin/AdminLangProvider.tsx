@@ -36,7 +36,7 @@ export function AdminLangProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    document.documentElement.lang = lang === 'pt-BR' ? 'pt-BR' : 'en'
+    document.documentElement.lang = lang === 'pt-BR' ? 'pt-BR' : lang === 'fr' ? 'fr-CA' : lang === 'es' ? 'es' : 'en'
   }, [lang])
 
   const setLang = useCallback((next: AdminLang) => {

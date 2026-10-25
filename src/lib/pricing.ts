@@ -134,10 +134,10 @@ export function getInstallationFee(region: Region): number {
 }
 
 /** Format a price with the appropriate currency symbol. */
-export function formatPrice(amount: number | 'inquire', region: Region): string {
+export function formatPrice(amount: number | 'inquire', region: Region, locale = 'en-US'): string {
   if (amount === 'inquire') return 'Inquire'
   const symbol = CURRENCY_SYMBOL[region]
-  return `${symbol}\u00A0${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+  return `${symbol}\u00A0${amount.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 }
 
 // ── Brazil pricing table (kept for backwards compatibility) ───────────────────

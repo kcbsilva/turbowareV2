@@ -3,15 +3,35 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { PRICING_TIERS, REGION_LABELS, CURRENCY_SYMBOL, type Region } from '@/lib/pricing'
-import { parseSignupSlug } from '@/lib/signup-slug'
+import { PRICING_TIERS, CURRENCY_SYMBOL, type Region } from '@/lib/pricing'
+import { isValidSignupSlug, normalizeSignupSlug, parseSignupSlug } from '@/lib/signup-slug'
+import { RESERVED_SLUGS } from '@/lib/slug'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { dateLocale, type MsgKey } from '@/lib/admin-i18n'
 
 type Step = 1 | 2 | 3
 
 const REGIONS: Region[] = ['BR', 'CA', 'US', 'GB']
+const REGION_KEY: Record<Region, MsgKey> = {
+  BR: 'region.BR',
+  CA: 'region.CA',
+  US: 'region.US',
+  GB: 'region.GB',
+}
+
+function slugErrorMessage(raw: string, t: (key: MsgKey, vars?: Record<string, string | number>) => string) {
+  const slug = normalizeSignupSlug(raw)
+  if (!slug) return t('setup.slugChars')
+  if (RESERVED_SLUGS.has(slug)) return t('setup.slugReserved', { slug })
+  if (slug.length < 3) return t('setup.slugShort')
+  if (!isValidSignupSlug(slug)) return t('setup.slugFormat')
+  return t('setup.slugRequired')
+}
 
 export default function NewClientPage() {
   const router = useRouter()
+  const { t, lang } = useAdminLang()
+  const locale = dateLocale(lang)
   const [step, setStep] = useState<Step>(1)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -49,13 +69,13 @@ export default function NewClientPage() {
     const parsedSlug = parseSignupSlug(form.subdomain)
     if ('error' in parsedSlug) {
       setLoading(false)
-      setError(parsedSlug.error)
+      setError(slugErrorMessage(form.subdomain, t))
       setStep(2)
       return
     }
     if (!parsedSlug.slug) {
       setLoading(false)
-      setError('Subdomain is required to create a TurboISP tenant')
+      setError(t('setup.slugRequired'))
       setStep(2)
       return
     }
@@ -80,7 +100,7 @@ export default function NewClientPage() {
     const data = await res.json().catch(() => ({}))
     setLoading(false)
     if (!res.ok) {
-      setError(data.error || 'Failed to create tenant.')
+      setError(data.error || t('setup.createError'))
       return
     }
     setResult(data)
@@ -90,42 +110,42 @@ export default function NewClientPage() {
     'w-full px-3 py-2 bg-muted border border-border rounded-md text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition'
 
   const steps = [
-    { n: 1, label: 'Client' },
-    { n: 2, label: 'Tenant & access' },
-    { n: 3, label: 'Product & license' },
-  ] as const
+    { n: 1 as const, label: t('setup.stepClient') },
+    { n: 2 as const, label: t('setup.stepAccess') },
+    { n: 3 as const, label: t('setup.stepPlan') },
+  ]
 
   if (result) {
     return (
       <div className="max-w-lg p-6">
-        <h1 className="text-lg font-bold text-foreground mb-1">Tenant ready</h1>
+        <h1 className="text-lg font-bold text-foreground mb-1">{t('setup.ready')}</h1>
         <p className="text-xs text-muted-foreground mb-4">
-          Client, subscription, and license were created in one step.
+          {t('setup.readyBody')}
         </p>
         <div className="bg-card border border-border rounded-lg p-5 space-y-3 text-xs">
           {result.licenseKey && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">License key</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('lic.key')}</p>
               <p className="font-mono text-foreground mt-0.5">{result.licenseKey}</p>
             </div>
           )}
           {result.temporaryPassword && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Portal temporary password</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('setup.portalPassword')}</p>
               <p className="font-mono text-foreground mt-0.5">{result.temporaryPassword}</p>
               <p className="text-[10px] text-muted-foreground mt-1">
-                {result.emailed ? 'Emailed to the client. They must change it on first login.' : 'Copy and share securely — email was not sent.'}
+                {result.emailed ? t('setup.emailed') : t('setup.notEmailed')}
               </p>
             </div>
           )}
           {result.turboisp && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">TurboISP staff login</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('setup.staffLogin')}</p>
               <p className="font-mono text-foreground mt-0.5">
                 {result.turboisp.adminUsername} / {result.turboisp.adminPassword ?? 'admin'}
               </p>
               <p className="text-[10px] text-muted-foreground mt-1">
-                Change this after first login. Tenant slug: {result.turboisp.slug}
+                {t('setup.staffHint', { slug: result.turboisp.slug })}
               </p>
               <a href={result.turboisp.staffLoginUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                 {result.turboisp.staffLoginUrl}
@@ -143,7 +163,7 @@ export default function NewClientPage() {
           onClick={() => router.push(`/admin/clients/${result.id}`)}
           className="tw-btn-primary mt-4 w-full py-2 text-xs font-semibold rounded-md"
         >
-          Open client profile
+          {t('setup.openProfile')}
         </button>
       </div>
     )
@@ -152,11 +172,11 @@ export default function NewClientPage() {
   return (
     <div className="max-w-lg p-6">
       <Link href="/admin/clients" className="text-xs text-muted-foreground hover:text-foreground mb-2 inline-block">
-        ← Back to clients
+        ← {t('setup.backClients')}
       </Link>
-      <h1 className="text-lg font-bold text-foreground">Set up new tenant</h1>
+      <h1 className="text-lg font-bold text-foreground">{t('setup.title')}</h1>
       <p className="text-muted-foreground text-xs mt-0.5 mb-4">
-        Create the billing client, optional subdomain, plan, and license in one flow.
+        {t('setup.lead')}
       </p>
 
       <div className="flex items-center gap-2 mb-5">
@@ -177,26 +197,26 @@ export default function NewClientPage() {
           <>
             <div>
               <label className="block text-xs font-medium text-foreground mb-1.5">
-                Name <span className="text-destructive">*</span>
+                {t('common.name')} <span className="text-destructive">*</span>
               </label>
-              <input value={form.name} onChange={(e) => handle('name', e.target.value)} required placeholder="Contact or alias" className={inputClass} />
+              <input value={form.name} onChange={(e) => handle('name', e.target.value)} required placeholder={t('setup.namePlaceholder')} className={inputClass} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1.5">Email</label>
+                <label className="block text-xs font-medium text-foreground mb-1.5">{t('login.email')}</label>
                 <input type="email" value={form.email} onChange={(e) => handle('email', e.target.value)} placeholder="billing@isp.com" className={inputClass} />
               </div>
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1.5">Phone</label>
+                <label className="block text-xs font-medium text-foreground mb-1.5">{t('common.phone')}</label>
                 <input value={form.phone} onChange={(e) => handle('phone', e.target.value)} placeholder="+1 555 000 0000" className={inputClass} />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-foreground mb-1.5">Company</label>
-              <input value={form.company} onChange={(e) => handle('company', e.target.value)} placeholder="ISP name" className={inputClass} />
+              <label className="block text-xs font-medium text-foreground mb-1.5">{t('vars.client.company')}</label>
+              <input value={form.company} onChange={(e) => handle('company', e.target.value)} placeholder={t('setup.companyPlaceholder')} className={inputClass} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-foreground mb-1.5">Internal notes</label>
+              <label className="block text-xs font-medium text-foreground mb-1.5">{t('common.optionalNotes')}</label>
               <textarea value={form.notes} onChange={(e) => handle('notes', e.target.value)} rows={3} className={`${inputClass} resize-none`} />
             </div>
           </>
@@ -206,23 +226,21 @@ export default function NewClientPage() {
           <>
             <div>
               <label className="block text-xs font-medium text-foreground mb-1.5">
-                Subdomain / slug <span className="text-destructive">*</span>
+                {t('setup.subdomain')} <span className="text-destructive">*</span>
               </label>
               <input
                 value={form.subdomain}
                 onChange={(e) => handle('subdomain', e.target.value.toLowerCase())}
-                placeholder="acme"
+                placeholder={t('licenses.slugPlaceholder')}
                 className={inputClass}
               />
               <p className="text-[10px] text-muted-foreground mt-1">
-                Required. Creates the TurboISP tenant at this slug with staff login admin / admin.
-                Use 3+ lowercase letters, numbers, or hyphens (e.g. <span className="font-mono">northnet</span>).
-                Reserved: www, api, admin, app, portal, billing, support, turboisp, turboware, mail, smtp, ftp, dev, staging, beta.
+                {t('setup.subdomainHelp')}
               </p>
             </div>
             <label className="flex items-center gap-2 text-xs text-foreground">
               <input type="checkbox" checked={form.createPortalAccess} onChange={(e) => handle('createPortalAccess', e.target.checked)} />
-              Create client-portal login (temp password, must change on first login)
+              {t('setup.portalLogin')}
             </label>
           </>
         )}
@@ -231,27 +249,30 @@ export default function NewClientPage() {
           <>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1.5">Region</label>
+                <label className="block text-xs font-medium text-foreground mb-1.5">{t('common.region')}</label>
                 <select value={form.region} onChange={(e) => handle('region', e.target.value as Region)} className={inputClass}>
                   {REGIONS.map((r) => (
-                    <option key={r} value={r}>{REGION_LABELS[r]}</option>
+                    <option key={r} value={r}>{t(REGION_KEY[r])}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1.5">Trial days</label>
+                <label className="block text-xs font-medium text-foreground mb-1.5">{t('setup.trialDays')}</label>
                 <input type="number" min={0} max={90} value={form.trialDays} onChange={(e) => handle('trialDays', Number(e.target.value))} className={inputClass} />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-foreground mb-1.5">TurboISP package</label>
+              <label className="block text-xs font-medium text-foreground mb-1.5">{t('setup.package')}</label>
               <select value={form.subscriberTier} onChange={(e) => handle('subscriberTier', e.target.value)} className={inputClass}>
-                <option value="">Skip plan for now</option>
-                {PRICING_TIERS.filter((t) => t.maxSeats !== null).map((tier) => {
+                <option value="">{t('setup.skipPlan')}</option>
+                {PRICING_TIERS.filter((tier) => tier.maxSeats !== null).map((tier) => {
                   const price = tier.prices[form.region]
+                  const amount = price === 'inquire'
+                    ? t('setup.inquire')
+                    : `${CURRENCY_SYMBOL[form.region]} ${typeof price === 'number' ? price.toLocaleString(locale) : price}`
                   return (
                     <option key={tier.label} value={tier.label}>
-                      {tier.maxSeats?.toLocaleString()} clients — {CURRENCY_SYMBOL[form.region]} {price === 'inquire' ? 'Inquire' : price}/mo
+                      {t('setup.tierOption', { n: tier.maxSeats?.toLocaleString(locale) ?? '', price: amount })}
                     </option>
                   )
                 })}
@@ -259,7 +280,7 @@ export default function NewClientPage() {
             </div>
             <label className="flex items-center gap-2 text-xs text-foreground">
               <input type="checkbox" checked={form.createLicense} onChange={(e) => handle('createLicense', e.target.checked)} />
-              Generate license key and attach it to the subscription
+              {t('setup.generateLicense')}
             </label>
           </>
         )}
@@ -271,7 +292,7 @@ export default function NewClientPage() {
         <div className="flex gap-2">
           {step > 1 && (
             <button type="button" onClick={() => setStep((s) => (s - 1) as Step)} className="flex-1 py-2 text-xs border border-border rounded-md">
-              Back
+              {t('common.back')}
             </button>
           )}
           {step < 3 ? (
@@ -279,7 +300,7 @@ export default function NewClientPage() {
               type="button"
               onClick={() => {
                 if (step === 1 && !form.name.trim()) {
-                  setError('Name is required')
+                  setError(t('overview.nameRequired'))
                   return
                 }
                 setError('')
@@ -287,7 +308,7 @@ export default function NewClientPage() {
               }}
               className="tw-btn-primary flex-1 py-2 text-xs font-semibold rounded-md"
             >
-              Continue
+              {t('common.continue')}
             </button>
           ) : (
             <button
@@ -295,7 +316,7 @@ export default function NewClientPage() {
               disabled={loading}
               className="tw-btn-primary flex-1 py-2 text-xs font-semibold rounded-md disabled:opacity-50"
             >
-              {loading ? 'Creating…' : 'Create tenant'}
+              {loading ? t('common.creating') : t('setup.create')}
             </button>
           )}
         </div>

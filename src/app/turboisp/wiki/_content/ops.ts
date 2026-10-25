@@ -32,7 +32,7 @@ export const opsArticles: Article[] = [
         { title: t('Schedule, then assign', 'Agende, depois atribua', 'Planifiez, puis assignez', 'Agenda y luego asigna'), body: t(
           'Scheduling is its own window. An unassigned OS sits in the queue until someone owns the route.',
           'Agendamento é uma janela própria. Chamado sem responsável fica na fila até alguém assumir a rota.',
-          'La planification est une fenêtre à part. Un billet non assigné reste en file jusqu’à ce que quelqu’un prenne la tournée.',
+          'La planification est une fenêtre à part. Un ticket non assigné reste en file jusqu’à ce que quelqu’un prenne la tournée.',
           'La agenda es una ventana aparte. Una orden sin responsable se queda en la cola hasta que alguien tome la ruta.',
         ) },
       ] },
@@ -100,7 +100,7 @@ export const opsArticles: Article[] = [
     summary: t(
       'A bundle that leaves the warehouse when an install OS is completed.',
       'Um pacote que sai do depósito quando o chamado de instalação é encerrado.',
-      'Un lot qui sort de l’entrepôt quand le billet d’installation se clôt.',
+      'Un lot qui sort de l’entrepôt quand le ticket d’installation se clôt.',
       'Un paquete que sale del depósito cuando se cierra la orden de instalación.',
     ),
     body: [
@@ -305,7 +305,7 @@ export const opsArticles: Article[] = [
     summary: t(
       'Subscribers pay, open tickets, and see invoices on a separate login.',
       'Assinantes pagam, abrem chamados e veem faturas em um acesso próprio.',
-      'Les abonnés paient, ouvrent des billets et voient les factures avec un accès distinct.',
+      'Les abonnés paient, ouvrent des tickets et voient les factures avec un accès distinct.',
       'Los abonados pagan, abren tickets y ven las facturas con un acceso aparte.',
     ),
     body: [

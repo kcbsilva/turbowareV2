@@ -93,9 +93,9 @@ const CONTRACT_STATUS_KEY: Record<ContractStatus, MsgKey> = {
   CANCELLED: 'contracts.status.cancelled',
 }
 
-function planLabel(name: string | null | undefined) {
+function planLabel(name: string | null | undefined, tierName: (name: string) => string) {
   if (!name) return '—'
-  if (/^\d/.test(name) || name.toLowerCase().endsWith('k+')) return `Tier ${name}`
+  if (/^\d/.test(name) || name.toLowerCase().endsWith('k+')) return tierName(name)
   return name
 }
 
@@ -392,7 +392,7 @@ export function ContractsTab({ clientId }: Props) {
                           <td className="px-4 py-3">
                             <p className="font-medium text-foreground">{row.product.name}</p>
                           </td>
-                          <td className="px-4 py-3 text-foreground">{planLabel(row.tier?.name)}</td>
+                          <td className="px-4 py-3 text-foreground">{planLabel(row.tier?.name, (name) => t('licenses.tierNamed', { name }))}</td>
                           <td className="px-4 py-3 text-foreground">
                             {row.expiresAt ? new Date(row.expiresAt).toLocaleDateString(dateLocale(lang)) : '—'}
                           </td>
@@ -436,7 +436,7 @@ export function ContractsTab({ clientId }: Props) {
                                       disabled={row.tier?.id === tier.id}
                                       onClick={() => patch(row.productId, { tierId: tier.id })}
                                     >
-                                      {planLabel(tier.name)}
+                                      {planLabel(tier.name, (name) => t('licenses.tierNamed', { name }))}
                                     </DropdownMenuItem>
                                   ))}
                                 </DropdownMenuContent>
@@ -600,7 +600,7 @@ export function ContractsTab({ clientId }: Props) {
                 <option value="">{t('licenses.selectTier')}</option>
                 {(selectedProduct?.tiers ?? []).map((tier) => (
                   <option key={tier.id} value={tier.id}>
-                    {planLabel(tier.name)}
+                    {planLabel(tier.name, (name) => t('licenses.tierNamed', { name }))}
                   </option>
                 ))}
               </select>
@@ -660,7 +660,7 @@ export function ContractsTab({ clientId }: Props) {
               body: JSON.stringify(payload),
             })
             const data = await res.json().catch(() => ({}))
-            if (!res.ok) throw new Error(data.error || 'Failed to extend grace.')
+            if (!res.ok) throw new Error(data.error || t('lic.extendGraceError'))
             await load()
           }}
         />

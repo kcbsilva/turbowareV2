@@ -1,61 +1,57 @@
-export const turboIspTermsAndConditionsPt = `# 🇧🇷 Portugues (Brasil)
+export const turboIspTermsAndConditionsPt = `# Português (Brasil)
 
-## Termos e Condicoes - TurboISP
+## Termos e condições - TurboISP
 
-**Ultima atualizacao:** 8 de abril de 2026
+**Última atualização:** 8 de abril de 2026
 
-Ao utilizar o TurboISP, voce concorda com os seguintes termos:
+Ao usar o TurboISP, você concorda com o seguinte:
 
-### 1. Descricao do Servico
+### 1. Descrição do serviço
 
-O TurboISP e uma plataforma de gestao para provedores de internet e telecom, incluindo CRM, faturamento, automacao, monitoramento, GIS e documentacao de rede.
+O TurboISP é uma plataforma de gestão para provedores de internet e operadoras de telecom, com CRM, faturamento, automação, monitoramento, GIS e documentação de infraestrutura.
 
-### 2. Conta
+### 2. Responsabilidade da conta
 
-Voce e responsavel por manter a confidencialidade das credenciais e por todas as atividades realizadas em sua conta.
+Você é responsável por proteger as credenciais e por toda a atividade feita na sua conta.
 
-### 3. Assinatura e Pagamento
+### 3. Assinatura e pagamento
 
-* Servico baseado em assinatura mensal ou anual
-* Nao pagamento pode resultar em suspensao
-* Valores podem ser ajustados com aviso previo
+* Assinatura mensal ou anual
+* A falta de pagamento pode levar à suspensão
+* Os preços podem mudar, com aviso prévio
 
-### 4. Uso Aceitavel
+### 4. Uso aceitável
 
-Voce concorda em nao:
+Você concorda em não:
 
-* Usar para atividades ilegais
-* Tentar acesso nao autorizado
-* Interferir na operacao do sistema
-* Revender sem autorizacao
+* Usar o serviço para fins ilegais
+* Tentar acesso não autorizado
+* Interferir na operação do serviço
+* Revender sem autorização
 
-### 5. Propriedade dos Dados
+### 5. Propriedade dos dados
 
-Seus dados permanecem seus. O TurboISP apenas processa para operacao do servico.
+Os seus dados continuam seus. O TurboISP os processa para prestar o serviço.
 
 ### 6. Disponibilidade
 
-O servico e fornecido "como esta", sem garantia de disponibilidade continua.
+O serviço é fornecido "como está", sem garantia de disponibilidade, salvo acordo à parte.
 
-### 7. Limitacao de Responsabilidade
+### 7. Limitação de responsabilidade
 
-O TurboISP nao se responsabiliza por:
+O TurboISP não se responsabiliza por:
 
 * Perda de receita
-* Interrupcoes de rede
-* Erros de configuracao
+* Interrupções de rede
+* Erros de configuração
 
-### 8. Cancelamento
+### 8. Rescisão
 
-O TurboISP pode suspender contas por:
+A conta pode ser suspensa por violação, abuso ou falta de pagamento.
 
-* Violacao dos termos
-* Falta de pagamento
-* Uso abusivo
+### 9. Alterações
 
-### 9. Alteracoes
-
-Os termos podem ser atualizados a qualquer momento.
+Os termos podem ser atualizados periodicamente.
 `;
 
 export default turboIspTermsAndConditionsPt;
