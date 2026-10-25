@@ -52,7 +52,12 @@ export async function createStripePaymentLink(
   },
 ): Promise<{ url: string; sessionId: string }> {
   const stripe      = getStripe()
-  const appUrl      = process.env.NEXT_PUBLIC_APP_URL || 'https://app.turboisp.com.br'
+  const appUrl      = (
+    process.env.TURBOWARE_APP_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.APP_URL ||
+    'https://turboware.com.br'
+  ).replace(/\/$/, '')
   const customer    = await createStripeCustomer(client)
 
   // Amount in centavos (Stripe requires integer smallest-unit)
