@@ -1,5 +1,5 @@
 /**
- * Singleton pg.Pool for TurboISP's Supabase instance.
+ * Singleton pg.Pool for the TurboISP Postgres database (TURBOISP_DATABASE_URL).
  * Used by registration to provision tenants and system users.
  */
 import { Pool } from 'pg'
