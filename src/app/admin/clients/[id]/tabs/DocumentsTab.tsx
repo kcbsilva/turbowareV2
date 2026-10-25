@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { FileText, Loader2, Plus, Trash2, Eye } from 'lucide-react'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 import { dateLocale } from '@/lib/admin-i18n'
 import {
   DOCUMENT_KINDS,
@@ -89,7 +90,7 @@ export function DocumentsTab({ clientId }: Props) {
     const data = await res.json().catch(() => ({}))
     setUploading(false)
     if (!res.ok) {
-      setError(data.error || t('docs.uploadError'))
+      setError(explainApiError(data.error, lang) || t('docs.uploadError'))
       return
     }
     setDocs((prev) => [data, ...prev])
@@ -103,7 +104,7 @@ export function DocumentsTab({ clientId }: Props) {
     setRemoving(null)
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || t('docs.removeError'))
+      setError(explainApiError(data.error, lang) || t('docs.removeError'))
       return
     }
     setDocs((prev) => prev.filter((d) => d.id !== doc.id))

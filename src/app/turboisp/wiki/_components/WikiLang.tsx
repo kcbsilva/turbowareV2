@@ -38,8 +38,12 @@ export function WikiProviders({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY)
-    if (saved === 'en' || saved === 'pt' || saved === 'fr') setLangState(saved)
+    if (saved && LANGS.some((item) => item.code === saved)) setLangState(saved as Lang)
   }, [])
+
+  useEffect(() => {
+    document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang === 'fr' ? 'fr-CA' : lang === 'es' ? 'es' : 'en'
+  }, [lang])
 
   const setLang = useCallback((next: Lang) => {
     setLangState(next)

@@ -114,7 +114,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="flex h-14 shrink-0 items-center justify-center border-b border-border">
-          <Link href="/admin" className="grid size-9 place-content-center rounded-md hover:bg-muted" aria-label="Turboware">
+          <Link href="/admin" className="grid size-9 place-content-center rounded-md hover:bg-muted" aria-label={t('shell.brand')}>
             <Image
               src={turbowareLogo}
               alt=""
@@ -147,7 +147,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
             iconOnly
           />
           {me && (
-            <div className="flex h-12 items-center justify-center pb-2" title={me.name || me.email || 'Admin'}>
+            <div className="flex h-12 items-center justify-center pb-2" title={me.name || me.email || t('title.admin')}>
               <div className="grid size-8 place-content-center rounded-full bg-muted text-xs font-bold text-foreground">
                 {initials}
               </div>
@@ -169,7 +169,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
             </button>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">{title}</p>
-              <p className="hidden truncate text-[11px] text-muted-foreground sm:block">Turboware</p>
+              <p className="hidden truncate text-[11px] text-muted-foreground sm:block">{t('shell.brand')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { User, Lock, Save, Loader2, CheckCircle } from 'lucide-react'
+import { useClientLang } from '@/components/client/ClientLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 
 interface Profile {
   id: string; name: string; email: string | null
@@ -9,16 +11,17 @@ interface Profile {
 }
 
 const input = 'w-full px-3 py-2.5 rounded-lg text-sm bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition'
-const card  = 'bg-white/3 border border-white/8 rounded-xl p-6'
+const card = 'bg-white/3 border border-white/8 rounded-xl p-6'
 
 export default function ProfilePage() {
+  const { lang, t } = useClientLang()
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [form, setForm]       = useState({ name: '', email: '', phone: '', company: '' })
-  const [pwForm, setPwForm]   = useState({ newPassword: '', confirmPassword: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', company: '' })
+  const [pwForm, setPwForm] = useState({ newPassword: '', confirmPassword: '' })
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving]   = useState(false)
+  const [saving, setSaving] = useState(false)
   const [pwSaving, setPwSaving] = useState(false)
-  const [toast, setToast]     = useState<{ msg: string; ok: boolean } | null>(null)
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
 
   function flash(msg: string, ok = true) {
     setToast({ msg, ok })
@@ -44,14 +47,17 @@ export default function ProfilePage() {
       body: JSON.stringify(form),
     })
     setSaving(false)
-    if (res.ok) { flash('Profile updated'); setProfile(await res.json()) }
-    else flash((await res.json().catch(() => ({}))).error || 'Failed', false)
+    if (res.ok) { flash(t('profile.updated')); setProfile(await res.json()) }
+    else {
+      const data = await res.json().catch(() => ({}))
+      flash(explainApiError(data.error, lang) || t('profile.failed'), false)
+    }
   }
 
   async function savePassword(e: React.FormEvent) {
     e.preventDefault()
-    if (pwForm.newPassword.length < 8) { flash('Password must be at least 8 characters', false); return }
-    if (pwForm.newPassword !== pwForm.confirmPassword) { flash('Passwords do not match', false); return }
+    if (pwForm.newPassword.length < 8) { flash(t('password.tooShort'), false); return }
+    if (pwForm.newPassword !== pwForm.confirmPassword) { flash(t('password.mismatch'), false); return }
     setPwSaving(true)
     const res = await fetch('/api/client/password', {
       method: 'PATCH',
@@ -59,8 +65,11 @@ export default function ProfilePage() {
       body: JSON.stringify({ newPassword: pwForm.newPassword }),
     })
     setPwSaving(false)
-    if (res.ok) { flash('Password updated'); setPwForm({ newPassword: '', confirmPassword: '' }) }
-    else flash((await res.json().catch(() => ({}))).error || 'Failed', false)
+    if (res.ok) { flash(t('password.updated')); setPwForm({ newPassword: '', confirmPassword: '' }) }
+    else {
+      const data = await res.json().catch(() => ({}))
+      flash(explainApiError(data.error, lang) || t('password.failed'), false)
+    }
   }
 
   if (loading) return (
@@ -71,9 +80,8 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
-      <h1 className="text-lg font-bold text-white">Profile</h1>
+      <h1 className="text-lg font-bold text-white">{t('profile.title')}</h1>
 
-      {/* Toast */}
       {toast && (
         <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium border ${toast.ok ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-red-500/10 border-red-500/20 text-red-300'}`}>
           {toast.ok && <CheckCircle className="w-4 h-4 shrink-0" />}
@@ -81,33 +89,32 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Personal info */}
       <form onSubmit={saveProfile} className={card}>
         <div className="flex items-center gap-2 mb-5">
           <User className="w-4 h-4 text-white" />
-          <h2 className="text-sm font-semibold text-white">Personal Information</h2>
+          <h2 className="text-sm font-semibold text-white">{t('profile.personal')}</h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">Full Name</label>
-            <input className={input} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Your name" required />
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">{t('profile.fullName')}</label>
+            <input className={input} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={t('profile.namePlaceholder')} required />
           </div>
           <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">Email</label>
-            <input className={input} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@example.com" />
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">{t('profile.email')}</label>
+            <input className={input} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder={t('profile.emailPlaceholder')} />
           </div>
           <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">Phone</label>
-            <input className={input} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+55 11 99999-9999" />
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">{t('profile.phone')}</label>
+            <input className={input} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder={t('profile.phonePlaceholder')} />
           </div>
           <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">Company</label>
-            <input className={input} value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} placeholder="Company name" />
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">{t('profile.company')}</label>
+            <input className={input} value={form.company} onChange={e => setForm(f => ({ ...f, company: e.target.value }))} placeholder={t('profile.companyPlaceholder')} />
           </div>
           {profile?.cnpj && (
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">CNPJ</label>
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">{t('profile.cnpj')}</label>
               <div className="px-3 py-2.5 rounded-lg text-sm font-mono text-white/40 bg-white/3 border border-white/8 cursor-not-allowed">{profile.cnpj}</div>
             </div>
           )}
@@ -117,25 +124,24 @@ export default function ProfilePage() {
           className="mt-5 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
           style={{ backgroundColor: '#fff', color: '#000' }}>
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {saving ? 'Saving…' : 'Save changes'}
+          {saving ? t('common.saving') : t('profile.save')}
         </button>
       </form>
 
-      {/* Change password */}
       <form onSubmit={savePassword} className={card}>
         <div className="flex items-center gap-2 mb-5">
           <Lock className="w-4 h-4 text-white" />
-          <h2 className="text-sm font-semibold text-white">Change Password</h2>
+          <h2 className="text-sm font-semibold text-white">{t('profile.passwordTitle')}</h2>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">New Password</label>
-            <input className={input} type="password" value={pwForm.newPassword} onChange={e => setPwForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="Minimum 8 characters" />
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">{t('password.new')}</label>
+            <input className={input} type="password" value={pwForm.newPassword} onChange={e => setPwForm(f => ({ ...f, newPassword: e.target.value }))} placeholder={t('password.minPlaceholder')} />
           </div>
           <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">Confirm Password</label>
-            <input className={input} type="password" value={pwForm.confirmPassword} onChange={e => setPwForm(f => ({ ...f, confirmPassword: e.target.value }))} placeholder="Repeat your new password" />
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">{t('password.confirm')}</label>
+            <input className={input} type="password" value={pwForm.confirmPassword} onChange={e => setPwForm(f => ({ ...f, confirmPassword: e.target.value }))} placeholder={t('password.repeatPlaceholder')} />
           </div>
         </div>
 
@@ -143,7 +149,7 @@ export default function ProfilePage() {
           className="mt-5 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition hover:opacity-90 disabled:opacity-40"
           style={{ backgroundColor: '#fff', color: '#000' }}>
           {pwSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-          {pwSaving ? 'Updating…' : 'Update password'}
+          {pwSaving ? t('password.updating') : t('password.update')}
         </button>
       </form>
     </div>

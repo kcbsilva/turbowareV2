@@ -1,6 +1,8 @@
 'use client'
 
 import { History, Key, User, FileText, Ticket } from 'lucide-react'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { dateLocale, type MsgKey } from '@/lib/admin-i18n'
 
 type LicenseStatus = 'ACTIVE' | 'SUSPENDED' | 'REVOKED' | 'EXPIRED'
 
@@ -48,6 +50,20 @@ interface TimelineEvent {
   detail?: string
 }
 
+const LICENSE_STATUS_KEY: Record<LicenseStatus, MsgKey> = {
+  ACTIVE: 'licenses.status.active',
+  SUSPENDED: 'licenses.status.suspended',
+  REVOKED: 'lic.revoked',
+  EXPIRED: 'lic.expired',
+}
+
+const TICKET_STATUS_KEY: Record<string, MsgKey> = {
+  OPEN: 'ticket.open',
+  IN_PROGRESS: 'ticket.progress',
+  RESOLVED: 'ticket.resolved',
+  CLOSED: 'ticket.closed',
+}
+
 const statusColors: Record<LicenseStatus, string> = {
   ACTIVE:    'text-foreground',
   SUSPENDED: 'text-muted-foreground',
@@ -56,6 +72,7 @@ const statusColors: Record<LicenseStatus, string> = {
 }
 
 export function HistoryTab({ client, licenses, notes, tickets = [] }: Props) {
+  const { t, lang } = useAdminLang()
   const events: TimelineEvent[] = []
 
   // Client created
@@ -64,7 +81,7 @@ export function HistoryTab({ client, licenses, notes, tickets = [] }: Props) {
     time: client.createdAt,
     icon: User,
     iconColor: 'text-primary',
-    title: `Client profile created`,
+    title: t('history.created'),
     detail: client.name,
   })
 
@@ -75,8 +92,8 @@ export function HistoryTab({ client, licenses, notes, tickets = [] }: Props) {
       time: l.createdAt,
       icon: Key,
       iconColor: statusColors[l.status],
-      title: `License assigned`,
-      detail: `${l.key} — ${l.product} (${l.status})`,
+      title: t('history.license'),
+      detail: `${l.key} — ${l.product} (${t(LICENSE_STATUS_KEY[l.status])})`,
     })
   }
 
@@ -87,19 +104,19 @@ export function HistoryTab({ client, licenses, notes, tickets = [] }: Props) {
       time: n.createdAt,
       icon: FileText,
       iconColor: 'text-muted-foreground',
-      title: `Note added by ${n.author}`,
+      title: t('history.note', { name: n.author }),
       detail: n.body.length > 80 ? n.body.slice(0, 80) + '…' : n.body,
     })
   }
 
-  for (const t of tickets) {
+  for (const ticket of tickets) {
     events.push({
-      id: `ticket-${t.id}`,
-      time: t.createdAt,
+      id: `ticket-${ticket.id}`,
+      time: ticket.createdAt,
       icon: Ticket,
       iconColor: 'text-[#2B6CB0]',
-      title: `Ticket opened`,
-      detail: `${t.title} (${t.status.replaceAll('_', ' ')})`,
+      title: t('history.ticket'),
+      detail: `${ticket.title} (${TICKET_STATUS_KEY[ticket.status] ? t(TICKET_STATUS_KEY[ticket.status]) : ticket.status})`,
     })
   }
 
@@ -111,7 +128,7 @@ export function HistoryTab({ client, licenses, notes, tickets = [] }: Props) {
       {events.length === 0 ? (
         <div className="bg-card border border-border rounded-lg px-6 py-10 flex flex-col items-center gap-2 text-muted-foreground">
           <History className="w-8 h-8 opacity-20" />
-          <p className="text-xs">No activity recorded yet.</p>
+          <p className="text-xs">{t('history.empty')}</p>
         </div>
       ) : (
         <div className="relative">
@@ -135,7 +152,7 @@ export function HistoryTab({ client, licenses, notes, tickets = [] }: Props) {
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs font-medium text-foreground">{ev.title}</p>
                       <span className="text-[10px] text-muted-foreground shrink-0">
-                        {new Date(ev.time).toLocaleString()}
+                        {new Date(ev.time).toLocaleString(dateLocale(lang))}
                       </span>
                     </div>
                     {ev.detail && (

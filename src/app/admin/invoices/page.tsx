@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { Receipt, Loader2 } from 'lucide-react'
 import { badge } from '@/lib/badges'
 import { formatInvoiceNumber, resolveInvoiceDisplayStatus } from '@/lib/invoice-display'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { dateLocale, type MsgKey } from '@/lib/admin-i18n'
 
 interface InvoiceRow {
   id: string
@@ -22,14 +24,25 @@ interface InvoiceRow {
   }
 }
 
-const STATUS_CLS = {
-  PENDING: { cls: badge.pending, label: 'Pending' },
-  PAID: { cls: badge.paid, label: 'Paid' },
-  OVERDUE: { cls: badge.overdue, label: 'Overdue' },
-  WAIVED: { cls: badge.mute, label: 'Waived' },
-} as const
+type InvoiceStatus = InvoiceRow['status']
+
+const STATUS_CLS: Record<InvoiceStatus, string> = {
+  PENDING: badge.pending,
+  PAID: badge.paid,
+  OVERDUE: badge.overdue,
+  WAIVED: badge.mute,
+}
+
+const STATUS_KEY: Record<InvoiceStatus, MsgKey> = {
+  PENDING: 'billing.pending',
+  PAID: 'billing.paid',
+  OVERDUE: 'billing.overdue',
+  WAIVED: 'billing.waived',
+}
 
 export default function InvoicesPage() {
+  const { t, lang } = useAdminLang()
+  const locale = dateLocale(lang)
   const [invoices, setInvoices] = useState<InvoiceRow[]>([])
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(true)
@@ -52,8 +65,8 @@ export default function InvoicesPage() {
             <Receipt className="w-4 h-4 text-foreground" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-foreground">Invoices</h1>
-            <p className="text-[11px] text-muted-foreground">All subscription invoices — mark paid from the client billing tab.</p>
+            <h1 className="text-base font-bold text-foreground">{t('title.invoices')}</h1>
+            <p className="text-[11px] text-muted-foreground">{t('invoice.subtitle')}</p>
           </div>
         </div>
         <select
@@ -61,11 +74,11 @@ export default function InvoicesPage() {
           onChange={(e) => setStatus(e.target.value)}
           className="px-3 py-1.5 bg-card border border-border rounded-md text-xs"
         >
-          <option value="">All statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="OVERDUE">Overdue</option>
-          <option value="PAID">Paid</option>
-          <option value="WAIVED">Waived</option>
+          <option value="">{t('common.allStatuses')}</option>
+          <option value="PENDING">{t('billing.pending')}</option>
+          <option value="OVERDUE">{t('billing.overdue')}</option>
+          <option value="PAID">{t('billing.paid')}</option>
+          <option value="WAIVED">{t('billing.waived')}</option>
         </select>
       </div>
 
@@ -75,24 +88,23 @@ export default function InvoicesPage() {
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>
         ) : invoices.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-16">No invoices found.</p>
+          <p className="text-xs text-muted-foreground text-center py-16">{t('invoice.empty')}</p>
         ) : (
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
-                <th className="px-4 py-2.5 font-medium">Invoice</th>
-                <th className="px-4 py-2.5 font-medium">Client</th>
-                <th className="px-4 py-2.5 font-medium">Product</th>
-                <th className="px-4 py-2.5 font-medium">Value</th>
-                <th className="px-4 py-2.5 font-medium">Status</th>
-                <th className="px-4 py-2.5 font-medium">Due</th>
-                <th className="px-4 py-2.5 font-medium">Gateway</th>
+                <th className="px-4 py-2.5 font-medium">{t('billing.invoice')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('profile.client')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('billing.product')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('billing.value')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('billing.status')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('common.due')}</th>
+                <th className="px-4 py-2.5 font-medium">{t('common.gateway')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {invoices.map((inv) => {
                 const display = resolveInvoiceDisplayStatus(inv)
-                const st = STATUS_CLS[display]
                 return (
                 <tr key={inv.id} className="hover:bg-muted/30">
                   <td className="px-4 py-3 font-mono text-[11px] font-semibold text-foreground">
@@ -104,13 +116,13 @@ export default function InvoicesPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-foreground">{inv.subscription.product}</td>
-                  <td className="px-4 py-3 font-mono text-foreground">{inv.amount.toLocaleString()}</td>
+                  <td className="px-4 py-3 font-mono text-foreground">{inv.amount.toLocaleString(locale)}</td>
                   <td className="px-4 py-3">
-                    <span className={st.cls}>
-                      {st.label}
+                    <span className={STATUS_CLS[display]}>
+                      {t(STATUS_KEY[display])}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{new Date(inv.dueDate).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{new Date(inv.dueDate).toLocaleDateString(locale)}</td>
                   <td className="px-4 py-3 text-muted-foreground">{inv.paymentGateway || '—'}</td>
                 </tr>
                 )

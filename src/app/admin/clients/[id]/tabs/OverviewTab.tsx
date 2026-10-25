@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Edit, Trash2, Check, KeyRound, Mail, Loader2 } from 'lucide-react'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
-import type { MsgKey } from '@/lib/admin-i18n'
+import { explainApiError } from '@/lib/api-errors'
+import { dateLocale, type MsgKey } from '@/lib/admin-i18n'
 import {
   CLIENT_CONTRACT_FIELDS,
   parseTerms,
@@ -33,6 +34,7 @@ interface Props {
 
 export function OverviewTab({ client, onUpdated }: Props) {
   const router = useRouter()
+  const { t, lang } = useAdminLang()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -50,9 +52,9 @@ export function OverviewTab({ client, onUpdated }: Props) {
   })
 
   const [passwordResetting, setPasswordResetting] = useState(false)
-  const [passwordMsg, setPasswordMsg] = useState('')
+  const [passwordMsg, setPasswordMsg] = useState<{ text: string; ok: boolean } | null>(null)
   const [resendingVerification, setResendingVerification] = useState(false)
-  const [verificationMsg, setVerificationMsg] = useState('')
+  const [verificationMsg, setVerificationMsg] = useState<{ text: string; ok: boolean } | null>(null)
   const [canDelete, setCanDelete] = useState(false)
 
   useEffect(() => {
@@ -98,7 +100,7 @@ export function OverviewTab({ client, onUpdated }: Props) {
   }
 
   async function save() {
-    if (!form.name.trim()) { setError('Name is required'); return }
+    if (!form.name.trim()) { setError(t('overview.nameRequired')); return }
     setSaving(true); setError('')
     const res = await fetch(`/api/admin/clients/${client.id}`, {
       method: 'PATCH',
@@ -112,23 +114,23 @@ export function OverviewTab({ client, onUpdated }: Props) {
       setEditing(false)
     } else {
       const d = await res.json().catch(() => ({}))
-      setError(d.error || 'Save failed.')
+      setError(explainApiError(d.error, lang) || t('overview.saveFailed'))
     }
   }
 
   async function resetPassword() {
     setPasswordResetting(true)
-    setPasswordMsg('')
+    setPasswordMsg(null)
     const res = await fetch(`/api/admin/clients/${client.id}/reset-password`, {
       method: 'POST',
     })
     setPasswordResetting(false)
     if (res.ok) {
-      setPasswordMsg('Temporary password sent by email.')
+      setPasswordMsg({ text: t('overview.tempSent'), ok: true })
       router.refresh()
     } else {
       const data = await res.json().catch(() => ({}))
-      setPasswordMsg(data.error || 'Failed to send temporary password.')
+      setPasswordMsg({ text: explainApiError(data.error, lang) || t('overview.tempFailed'), ok: false })
     }
   }
 
@@ -143,11 +145,11 @@ export function OverviewTab({ client, onUpdated }: Props) {
         return
       }
       const data = (await res.json().catch(() => ({}))) as { error?: string; detail?: string }
-      const msg = [data.error, data.detail].filter(Boolean).join(' — ') || 'Delete failed.'
+      const msg = [data.error, data.detail].filter(Boolean).map((part) => explainApiError(part, lang)).join(' — ') || t('overview.deleteFailed')
       setDeleteError(msg)
       setConfirmDelete(true)
     } catch {
-      setDeleteError('Delete request failed. Check your connection and try again.')
+      setDeleteError(t('overview.deleteRequestFailed'))
       setConfirmDelete(true)
     } finally {
       setDeleting(false)
@@ -156,7 +158,7 @@ export function OverviewTab({ client, onUpdated }: Props) {
 
   async function resendVerificationEmail() {
     setResendingVerification(true)
-    setVerificationMsg('')
+    setVerificationMsg(null)
 
     const res = await fetch(`/api/admin/clients/${client.id}/resend-verification`, {
       method: 'POST',
@@ -165,21 +167,21 @@ export function OverviewTab({ client, onUpdated }: Props) {
     setResendingVerification(false)
 
     if (res.ok) {
-      setVerificationMsg('Verification email sent.')
+      setVerificationMsg({ text: t('overview.verifySent'), ok: true })
     } else {
       const data = await res.json().catch(() => ({}))
-      setVerificationMsg(data.error || 'Failed to send verification email.')
+      setVerificationMsg({ text: explainApiError(data.error, lang) || t('overview.verifyFailed'), ok: false })
     }
   }
 
   const inputClass = 'w-full px-3 py-1.5 bg-muted border border-border rounded-md text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring'
 
   const fields = [
-    { key: 'name',    label: 'Full Name', type: 'text',  required: true  },
-    { key: 'email',   label: 'Email',     type: 'email', required: false },
-    { key: 'phone',   label: 'Phone',     type: 'text',  required: false },
-    { key: 'company', label: 'Company',   type: 'text',  required: false },
-    { key: 'cnpj',    label: 'CNPJ',      type: 'text',  required: false },
+    { key: 'name',    label: t('common.fullName'), type: 'text',  required: true  },
+    { key: 'email',   label: t('login.email'),     type: 'email', required: false },
+    { key: 'phone',   label: t('common.phone'),     type: 'text',  required: false },
+    { key: 'company', label: t('vars.client.company'), type: 'text', required: false },
+    { key: 'cnpj',    label: t('vars.client.cnpj'), type: 'text',  required: false },
   ] as const
 
   return (
@@ -187,20 +189,20 @@ export function OverviewTab({ client, onUpdated }: Props) {
       {/* Identity card */}
       <div className="bg-card border border-border rounded-lg">
         <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
-          <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Identity</h2>
+          <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('overview.identity')}</h2>
           <div className="flex items-center gap-2">
             {editing ? (
               <>
                 <button onClick={save} disabled={saving} className="flex items-center gap-1 text-[10px] text-foreground hover:opacity-80 transition">
-                  <Check size={11} /> {saving ? 'Saving…' : 'Save'}
+                  <Check size={11} /> {saving ? t('templates.saving') : t('templates.save')}
                 </button>
                 <button onClick={() => { setEditing(false); setError('') }} className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground">
-                  <X size={11} /> Cancel
+                  <X size={11} /> {t('licenses.cancel')}
                 </button>
               </>
             ) : (
               <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-[10px] text-primary hover:opacity-80">
-                <Edit size={11} /> Edit
+                <Edit size={11} /> {t('common.edit')}
               </button>
             )}
           </div>
@@ -235,20 +237,20 @@ export function OverviewTab({ client, onUpdated }: Props) {
           ) : (
             <dl className="grid grid-cols-2 gap-3">
               {[
-                ['Full Name', client.name],
-                ['Company',   client.company],
-                ['Email',     client.email],
-                ['Phone',     client.phone],
-                ['CNPJ',      displayCnpj(client.cnpj)],
-              ].map(([label, value]) => (
-                <div key={label as string}>
-                  <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{label}</dt>
-                  <dd className="text-xs text-foreground font-medium font-mono">{value || <span className="text-muted-foreground/40 font-normal font-sans">—</span>}</dd>
+                { key: 'name', label: t('common.fullName'), value: client.name },
+                { key: 'company', label: t('vars.client.company'), value: client.company },
+                { key: 'email', label: t('login.email'), value: client.email },
+                { key: 'phone', label: t('common.phone'), value: client.phone },
+                { key: 'cnpj', label: t('vars.client.cnpj'), value: displayCnpj(client.cnpj) },
+              ].map((row) => (
+                <div key={row.key}>
+                  <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{row.label}</dt>
+                  <dd className="text-xs text-foreground font-medium font-mono">{row.value || <span className="text-muted-foreground/40 font-normal font-sans">—</span>}</dd>
                 </div>
               ))}
               <div>
-                <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Client Since</dt>
-                <dd className="text-xs text-foreground">{new Date(client.createdAt).toLocaleDateString()}</dd>
+                <dt className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{t('overview.clientSince')}</dt>
+                <dd className="text-xs text-foreground">{new Date(client.createdAt).toLocaleDateString(dateLocale(lang))}</dd>
               </div>
             </dl>
           )}
@@ -259,11 +261,11 @@ export function OverviewTab({ client, onUpdated }: Props) {
       <div className="bg-card border border-border rounded-lg">
         <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
           <KeyRound size={11} className="text-muted-foreground" />
-          <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Portal Access</h2>
+          <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('overview.portal')}</h2>
           {client.hasPassword ? (
-            <span className="ml-auto text-[10px] text-foreground font-medium">Password set</span>
+            <span className="ml-auto text-[10px] text-foreground font-medium">{t('overview.passwordSet')}</span>
           ) : (
-            <span className="ml-auto text-[10px] text-muted-foreground/50">No password</span>
+            <span className="ml-auto text-[10px] text-muted-foreground/50">{t('overview.noPassword')}</span>
           )}
         </div>
         <div className="px-4 py-3 flex items-end gap-3">
@@ -271,10 +273,10 @@ export function OverviewTab({ client, onUpdated }: Props) {
             <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2">
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">
-                  Email Verification
+                  {t('overview.emailVerification')}
                 </p>
                 <p className={`text-xs font-medium ${client.emailVerified ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  {client.emailVerified ? 'Verified' : 'Pending verification'}
+                  {client.emailVerified ? t('overview.verified') : t('overview.pendingVerification')}
                 </p>
               </div>
               <button
@@ -284,26 +286,26 @@ export function OverviewTab({ client, onUpdated }: Props) {
                 className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-[10px] font-medium text-foreground transition hover:bg-background disabled:opacity-40"
               >
                 {resendingVerification ? <Loader2 size={11} className="animate-spin" /> : <Mail size={11} />}
-                {resendingVerification ? 'Sending…' : 'Resend verification'}
+                {resendingVerification ? t('common.sending') : t('overview.resend')}
               </button>
             </div>
 
             <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">
-                Password Reset
+                {t('overview.passwordReset')}
               </p>
               <p className="text-xs text-foreground">
-                Sends a temporary password to the client email and forces a password change on next login.
+                {t('overview.passwordHint')}
               </p>
             </div>
             {passwordMsg && (
-              <p className={`text-[10px] mt-1 ${passwordMsg.includes('Failed') ? 'text-destructive' : 'text-foreground'}`}>
-                {passwordMsg}
+              <p className={`text-[10px] mt-1 ${passwordMsg.ok ? 'text-foreground' : 'text-destructive'}`}>
+                {passwordMsg.text}
               </p>
             )}
             {verificationMsg && (
-              <p className={`text-[10px] mt-1 ${verificationMsg.includes('Failed') || verificationMsg.includes('already') || verificationMsg.includes('does not') ? 'text-destructive' : 'text-foreground'}`}>
-                {verificationMsg}
+              <p className={`text-[10px] mt-1 ${verificationMsg.ok ? 'text-foreground' : 'text-destructive'}`}>
+                {verificationMsg.text}
               </p>
             )}
           </div>
@@ -313,7 +315,7 @@ export function OverviewTab({ client, onUpdated }: Props) {
             className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-md hover:opacity-90 disabled:opacity-40 transition flex items-center gap-1.5"
           >
             {passwordResetting ? <Loader2 size={11} className="animate-spin" /> : <KeyRound size={11} />}
-            {passwordResetting ? 'Sending…' : 'Reset password'}
+            {passwordResetting ? t('common.sending') : t('overview.resetPassword')}
           </button>
         </div>
       </div>
@@ -323,7 +325,7 @@ export function OverviewTab({ client, onUpdated }: Props) {
       {/* Internal notes */}
       <div className="bg-card border border-border rounded-lg">
         <div className="px-4 py-2.5 border-b border-border">
-          <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">Internal Notes</h2>
+          <h2 className="text-[10px] font-semibold text-foreground uppercase tracking-wider">{t('overview.internalNotes')}</h2>
         </div>
         <div className="px-4 py-3">
           {editing ? (
@@ -332,12 +334,12 @@ export function OverviewTab({ client, onUpdated }: Props) {
               value={form.internalNotes}
               onChange={handle}
               rows={3}
-              placeholder="Private notes about this client…"
+              placeholder={t('overview.notesPlaceholder')}
               className={`${inputClass} resize-none`}
             />
           ) : (
             <p className="text-xs text-foreground whitespace-pre-wrap">
-              {client.internalNotes || <span className="text-muted-foreground/40">No internal notes.</span>}
+              {client.internalNotes || <span className="text-muted-foreground/40">{t('overview.noNotes')}</span>}
             </p>
           )}
         </div>
@@ -347,27 +349,27 @@ export function OverviewTab({ client, onUpdated }: Props) {
       {canDelete && (
       <div className="bg-card border border-destructive/20 rounded-lg">
         <div className="px-4 py-2.5 border-b border-destructive/20">
-          <h2 className="text-[10px] font-semibold text-destructive uppercase tracking-wider">Danger Zone</h2>
+          <h2 className="text-[10px] font-semibold text-destructive uppercase tracking-wider">{t('overview.danger')}</h2>
         </div>
         <div className="px-4 py-3 flex items-center justify-between">
           <div>
-            <p className="text-xs text-foreground font-medium">Delete this client</p>
+            <p className="text-xs text-foreground font-medium">{t('overview.deleteClient')}</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              Removes the billing client and any linked TurboISP tenant. Licenses are unassigned, not deleted.
+              {t('overview.deleteHint')}
             </p>
           </div>
           {confirmDelete ? (
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-muted-foreground">Are you sure?</span>
+              <span className="text-[10px] text-muted-foreground">{t('common.areYouSure')}</span>
               <button
                 onClick={deleteClient}
                 disabled={deleting}
                 className="px-3 py-1.5 bg-destructive text-destructive-foreground text-xs font-medium rounded-md hover:opacity-90 disabled:opacity-50 transition"
               >
-                {deleting ? 'Deleting…' : 'Yes, delete'}
+                {deleting ? t('common.deleting') : t('common.yesDelete')}
               </button>
               <button onClick={() => setConfirmDelete(false)} className="text-xs text-muted-foreground hover:text-foreground transition">
-                Cancel
+                {t('licenses.cancel')}
               </button>
             </div>
           ) : (
@@ -375,7 +377,7 @@ export function OverviewTab({ client, onUpdated }: Props) {
               onClick={() => { setConfirmDelete(true); setDeleteError('') }}
               className="flex items-center gap-1.5 px-3 py-1.5 border border-destructive/50 text-destructive hover:bg-destructive/10 text-xs font-medium rounded-md transition"
             >
-              <Trash2 size={12} /> Delete Client
+              <Trash2 size={12} /> {t('overview.deleteButton')}
             </button>
           )}
         </div>
@@ -397,7 +399,7 @@ function ContractTermsCard({
   client: Client
   onUpdated?: (client: Client) => void
 }) {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -425,7 +427,7 @@ function ContractTermsCard({
         setEditing(false)
       } else {
         const data = await res.json().catch(() => ({}))
-        setError(data.error || t('profile.contractTermsSaveError'))
+        setError(explainApiError(data.error, lang) || t('profile.contractTermsSaveError'))
       }
     } catch {
       setError(t('profile.contractTermsSaveError'))
@@ -457,12 +459,12 @@ function ContractTermsCard({
                 }}
                 className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
               >
-                <X size={11} /> Cancel
+                <X size={11} /> {t('licenses.cancel')}
               </button>
             </>
           ) : (
             <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-[10px] text-primary hover:opacity-80">
-              <Edit size={11} /> Edit
+              <Edit size={11} /> {t('common.edit')}
             </button>
           )}
         </div>

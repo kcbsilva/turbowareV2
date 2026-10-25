@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Users, Key, ShieldOff, UserPlus, X, RefreshCw } from 'lucide-react'
 import { badge } from '@/lib/badges'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
+import { dateLocale } from '@/lib/admin-i18n'
 
 type StatusFilter = 'all' | 'with-licenses' | 'no-licenses'
 
@@ -28,6 +31,7 @@ const PER_PAGE = 12
 
 export default function ClientsPage() {
   const router = useRouter()
+  const { t, lang } = useAdminLang()
   const [clients, setClients] = useState<ClientRow[]>([])
   const [stats, setStats] = useState<Stats>({ total: 0, withLicenses: 0, activeLicenses: 0, revokedLicenses: 0 })
   const [loading, setLoading] = useState(true)
@@ -69,18 +73,21 @@ export default function ClientsPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setSyncMsg(data.error || 'Sync failed')
+        setSyncMsg(explainApiError(data.error, lang) || t('clients.syncFailed'))
         return
       }
       const parts: string[] = []
-      if (data.synced?.length) parts.push(`Synced ${data.synced.length}: ${data.synced.join(', ')}`)
-      if (data.skipped?.length) parts.push(`${data.skipped.length} already linked`)
+      if (data.synced?.length) parts.push(t('clients.synced', { n: data.synced.length, names: data.synced.join(', ') }))
+      if (data.skipped?.length) parts.push(t('clients.syncLinked', { n: data.skipped.length }))
       if (data.errors?.length) {
         parts.push(
-          `${data.errors.length} failed (${data.errors.map((e: { slug: string }) => e.slug).join(', ')})`,
+          t('clients.syncErrors', {
+            n: data.errors.length,
+            names: data.errors.map((e: { slug: string }) => e.slug).join(', '),
+          }),
         )
       }
-      setSyncMsg(parts.join(' · ') || 'No TurboISP tenants need syncing')
+      setSyncMsg(parts.join(' · ') || t('clients.syncNone'))
       await fetchClients(search)
     } finally {
       setSyncing(false)
@@ -98,16 +105,16 @@ export default function ClientsPage() {
   const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const statusConfig = [
-    { value: 'all' as const, label: 'All', color: 'bg-neutral-200' },
-    { value: 'with-licenses' as const, label: 'Has Licenses', color: 'bg-foreground' },
-    { value: 'no-licenses' as const, label: 'No Licenses', color: 'bg-neutral-500' },
+    { value: 'all' as const, label: t('common.all'), color: 'bg-neutral-200' },
+    { value: 'with-licenses' as const, label: t('clients.filter.has'), color: 'bg-foreground' },
+    { value: 'no-licenses' as const, label: t('clients.filter.none'), color: 'bg-neutral-500' },
   ]
 
   const statCards = [
-    { label: 'Total Clients', value: stats.total, icon: <Users className="w-4 h-4 text-muted-foreground" /> },
-    { label: 'With Licenses', value: stats.withLicenses, icon: <Key className="w-4 h-4 text-muted-foreground" /> },
-    { label: 'Without Licenses', value: stats.total - stats.withLicenses, icon: <UserPlus className="w-4 h-4 text-muted-foreground" /> },
-    { label: 'This Page', value: paged.length, icon: <ShieldOff className="w-4 h-4 text-muted-foreground" /> },
+    { id: 'total', label: t('clients.stat.total'), value: stats.total, icon: <Users className="w-4 h-4 text-muted-foreground" /> },
+    { id: 'with', label: t('clients.stat.with'), value: stats.withLicenses, icon: <Key className="w-4 h-4 text-muted-foreground" /> },
+    { id: 'without', label: t('clients.stat.without'), value: stats.total - stats.withLicenses, icon: <UserPlus className="w-4 h-4 text-muted-foreground" /> },
+    { id: 'page', label: t('clients.stat.page'), value: paged.length, icon: <ShieldOff className="w-4 h-4 text-muted-foreground" /> },
   ]
 
   return (
@@ -115,7 +122,7 @@ export default function ClientsPage() {
       {/* Stat Cards */}
       <div className="grid grid-cols-4 gap-3 mb-4">
         {statCards.map((c) => (
-          <div key={c.label} className="bg-card border border-border rounded-lg p-3 flex items-center justify-between">
+          <div key={c.id} className="bg-card border border-border rounded-lg p-3 flex items-center justify-between">
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{c.label}</p>
               <p className="text-xl font-bold text-foreground mt-0.5">
@@ -132,7 +139,7 @@ export default function ClientsPage() {
         <div className="flex items-center justify-between gap-3 flex-wrap">
           {/* Count */}
           <p className="text-xs text-muted-foreground min-w-fit">
-            {filtered.length} client{filtered.length !== 1 ? 's' : ''} found
+            {filtered.length === 1 ? t('clients.foundOne') : t('clients.found', { n: filtered.length })}
           </p>
 
           {/* Search */}
@@ -145,7 +152,7 @@ export default function ClientsPage() {
             <input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              placeholder="Search by name, email, company…"
+              placeholder={t('clients.search')}
               className="w-full pl-8 pr-8 py-1.5 rounded-full bg-card border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             {search && (
@@ -162,17 +169,17 @@ export default function ClientsPage() {
               className="tw-btn-primary flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              New tenant
+              {t('clients.newTenant')}
             </button>
             <button
               type="button"
               onClick={syncTenants}
               disabled={syncing}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-card text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
-              title="Create Turboware billing clients for TurboISP tenants missing from this list"
+              title={t('clients.syncTitle')}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-              Sync TurboISP tenants
+              {t('clients.sync')}
             </button>
           </div>
 
@@ -203,17 +210,17 @@ export default function ClientsPage() {
       <div className="flex-1 bg-card border border-border rounded-lg overflow-hidden flex flex-col">
         {loading ? (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-xs text-muted-foreground animate-pulse">Loading clients…</p>
+            <p className="text-xs text-muted-foreground animate-pulse">{t('clients.loading')}</p>
           </div>
         ) : paged.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <Users className="w-8 h-8 opacity-20" />
-            <p className="text-xs">No clients found.</p>
+            <p className="text-xs">{t('clients.empty')}</p>
             <button
               onClick={() => router.push('/admin/clients/new')}
               className="text-xs text-primary hover:underline"
             >
-              Add your first client
+              {t('clients.addFirst')}
             </button>
           </div>
         ) : (
@@ -221,12 +228,12 @@ export default function ClientsPage() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
-                  <th className="px-4 py-2.5 font-medium">Name</th>
-                  <th className="px-4 py-2.5 font-medium">Company</th>
-                  <th className="px-4 py-2.5 font-medium">Email</th>
-                  <th className="px-4 py-2.5 font-medium">Phone</th>
-                  <th className="px-4 py-2.5 font-medium">Licenses</th>
-                  <th className="px-4 py-2.5 font-medium">Since</th>
+                  <th className="px-4 py-2.5 font-medium">{t('common.name')}</th>
+                  <th className="px-4 py-2.5 font-medium">{t('vars.client.company')}</th>
+                  <th className="px-4 py-2.5 font-medium">{t('login.email')}</th>
+                  <th className="px-4 py-2.5 font-medium">{t('common.phone')}</th>
+                  <th className="px-4 py-2.5 font-medium">{t('nav.licenses')}</th>
+                  <th className="px-4 py-2.5 font-medium">{t('profile.since')}</th>
                   <th className="px-4 py-2.5 font-medium"></th>
                 </tr>
               </thead>
@@ -246,8 +253,8 @@ export default function ClientsPage() {
                         {c._count.licenses}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-primary font-medium">View →</td>
+                    <td className="px-4 py-3 text-muted-foreground">{new Date(c.createdAt).toLocaleDateString(dateLocale(lang))}</td>
+                    <td className="px-4 py-3 text-primary font-medium">{t('clients.view')} →</td>
                   </tr>
                 ))}
               </tbody>
@@ -257,8 +264,12 @@ export default function ClientsPage() {
             <div className="border-t border-border px-4 py-2.5 flex items-center justify-between mt-auto">
               <span className="text-[10px] text-muted-foreground">
                 {filtered.length > 0
-                  ? `Showing ${(page - 1) * PER_PAGE + 1}–${Math.min(page * PER_PAGE, filtered.length)} of ${filtered.length}`
-                  : 'No entries'}
+                  ? t('clients.showing', {
+                      from: (page - 1) * PER_PAGE + 1,
+                      to: Math.min(page * PER_PAGE, filtered.length),
+                      total: filtered.length,
+                    })
+                  : t('clients.noEntries')}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -266,7 +277,7 @@ export default function ClientsPage() {
                   disabled={page === 1}
                   className="px-2.5 py-1 rounded border border-border text-xs text-foreground hover:bg-muted disabled:opacity-40 transition"
                 >
-                  Previous
+                  {t('common.previous')}
                 </button>
                 <span className="text-xs text-muted-foreground px-1">
                   {page} / {totalPages}
@@ -276,7 +287,7 @@ export default function ClientsPage() {
                   disabled={page === totalPages}
                   className="px-2.5 py-1 rounded border border-border text-xs text-foreground hover:bg-muted disabled:opacity-40 transition"
                 >
-                  Next
+                  {t('common.next')}
                 </button>
               </div>
             </div>

@@ -4,12 +4,12 @@ export const SIGNUP_LOCALES: SignupLocale[] = ['en', 'pt', 'fr', 'es']
 
 export function localeLabel(code: SignupLocale): string {
   if (code === 'pt') return 'Português (Brasil)'
-  if (code === 'fr') return 'Français'
+  if (code === 'fr') return 'Français (Canada)'
   if (code === 'es') return 'Español'
   return 'English'
 }
 
-const copy: Record<SignupLocale, Record<string, string>> = {
+export const signupCopy: Record<SignupLocale, Record<string, string>> = {
   en: {
     signup_language: 'Language',
     signup_title: 'Start your ISP on TurboISP',
@@ -27,7 +27,7 @@ const copy: Record<SignupLocale, Record<string, string>> = {
     signup_create_tenant: 'Create tenant',
     signup_creating: 'Creating tenant…',
     signup_already_have: 'Already have an account?',
-    signup_sign_in: 'Client portal',
+    signup_sign_in: 'Sign in',
     signup_slug_rule: 'Use 3–63 characters: lowercase letters, numbers, and hyphens',
     signup_slug_available: 'Available',
     signup_slug_taken: 'This URL is already taken',
@@ -45,7 +45,7 @@ const copy: Record<SignupLocale, Record<string, string>> = {
     signup_language: 'Idioma',
     signup_title: 'Inicie seu ISP no TurboISP',
     signup_company_name: 'Nome da empresa',
-    signup_url_slug: 'Slug da URL',
+    signup_url_slug: 'Endereço (URL)',
     signup_slug_placeholder: 'suaempresa',
     signup_admin_username: 'Usuário administrador',
     signup_admin_username_placeholder: 'suaempresa.admin',
@@ -55,14 +55,14 @@ const copy: Record<SignupLocale, Record<string, string>> = {
     signup_password_mismatch: 'As senhas não coincidem',
     signup_country: 'País',
     signup_currency: 'Moeda',
-    signup_create_tenant: 'Criar tenant',
-    signup_creating: 'Criando tenant…',
+    signup_create_tenant: 'Criar conta da empresa',
+    signup_creating: 'Criando a conta da empresa…',
     signup_already_have: 'Já tem uma conta?',
-    signup_sign_in: 'Portal do cliente',
+    signup_sign_in: 'Entrar',
     signup_slug_rule: 'Use 3–63 caracteres: letras minúsculas, números e hífens',
     signup_slug_available: 'Disponível',
     signup_slug_taken: 'Esta URL já está em uso',
-    signup_slug_invalid: 'Slug de URL inválido',
+    signup_slug_invalid: 'Endereço (URL) inválido',
     signup_slug_check_failed: 'Não foi possível verificar a disponibilidade',
     signup_slug_checking: 'Verificando…',
     signup_failed: 'Falha no cadastro',
@@ -80,17 +80,17 @@ const copy: Record<SignupLocale, Record<string, string>> = {
     signup_slug_placeholder: 'votreentreprise',
     signup_admin_username: "Nom d'utilisateur administrateur",
     signup_admin_username_placeholder: 'votreentreprise.admin',
-    signup_admin_email: 'E-mail administrateur',
+    signup_admin_email: "Courriel de l'administrateur",
     signup_admin_password: 'Mot de passe administrateur',
     signup_confirm_password: 'Confirmer le mot de passe',
     signup_password_mismatch: 'Les mots de passe ne correspondent pas',
     signup_country: 'Pays',
     signup_currency: 'Devise',
-    signup_create_tenant: 'Créer le tenant',
-    signup_creating: 'Création du tenant…',
-    signup_already_have: 'Vous avez déjà un compte ?',
-    signup_sign_in: 'Portail client',
-    signup_slug_rule: 'Utilisez 3 à 63 caractères : minuscules, chiffres et tirets',
+    signup_create_tenant: "Créer l'espace",
+    signup_creating: "Création de l'espace…",
+    signup_already_have: 'Vous avez déjà un compte?',
+    signup_sign_in: 'Se connecter',
+    signup_slug_rule: 'Utilisez 3 à 63 caractères: minuscules, chiffres et tirets',
     signup_slug_available: 'Disponible',
     signup_slug_taken: 'Cette URL est déjà utilisée',
     signup_slug_invalid: 'Identifiant URL invalide',
@@ -101,13 +101,13 @@ const copy: Record<SignupLocale, Record<string, string>> = {
     signup_error_password: 'Le mot de passe doit contenir au minimum 8 caractères',
     signup_error_invalid_body: 'Requête invalide',
     signup_error_username_taken: "Ce nom d'utilisateur est déjà pris",
-    signup_error_email_taken: 'Cet e-mail est déjà utilisé',
+    signup_error_email_taken: 'Ce courriel est déjà utilisé',
   },
   es: {
     signup_language: 'Idioma',
     signup_title: 'Inicia tu ISP en TurboISP',
     signup_company_name: 'Nombre de la empresa',
-    signup_url_slug: 'Slug de URL',
+    signup_url_slug: 'Dirección (URL)',
     signup_slug_placeholder: 'tuempresa',
     signup_admin_username: 'Nombre de usuario del administrador',
     signup_admin_username_placeholder: 'tuempresa.admin',
@@ -117,14 +117,14 @@ const copy: Record<SignupLocale, Record<string, string>> = {
     signup_password_mismatch: 'Las contraseñas no coinciden',
     signup_country: 'País',
     signup_currency: 'Moneda',
-    signup_create_tenant: 'Crear tenant',
-    signup_creating: 'Creando tenant…',
+    signup_create_tenant: 'Crear cuenta',
+    signup_creating: 'Creando la cuenta…',
     signup_already_have: '¿Ya tienes una cuenta?',
-    signup_sign_in: 'Portal del cliente',
+    signup_sign_in: 'Iniciar sesión',
     signup_slug_rule: 'Usa 3–63 caracteres: minúsculas, números y guiones',
     signup_slug_available: 'Disponible',
     signup_slug_taken: 'Esta URL ya está en uso',
-    signup_slug_invalid: 'Slug de URL no válido',
+    signup_slug_invalid: 'Dirección (URL) no válida',
     signup_slug_check_failed: 'No se pudo comprobar la disponibilidad',
     signup_slug_checking: 'Comprobando…',
     signup_failed: 'Error en el registro',
@@ -137,7 +137,7 @@ const copy: Record<SignupLocale, Record<string, string>> = {
 }
 
 export function t(locale: SignupLocale, key: string): string {
-  return copy[locale][key] ?? copy.en[key] ?? key
+  return signupCopy[locale][key] ?? key
 }
 
 export const API_ERROR_KEYS: Record<string, string> = {

@@ -18,6 +18,7 @@ import { ContractBodyEditor, type ContractBodyEditorHandle } from '@/components/
 import { ContractVariableSidebar } from '@/components/admin/ContractVariableSidebar'
 import { sanitizeContractHtml } from '@/lib/contract-variables'
 import { dateLocale } from '@/lib/admin-i18n'
+import { explainApiError } from '@/lib/api-errors'
 import type { MsgKey } from '@/lib/admin-i18n'
 import {
   DropdownMenu,
@@ -93,9 +94,9 @@ const CONTRACT_STATUS_KEY: Record<ContractStatus, MsgKey> = {
   CANCELLED: 'contracts.status.cancelled',
 }
 
-function planLabel(name: string | null | undefined) {
+function planLabel(name: string | null | undefined, tierName: (name: string) => string) {
   if (!name) return '—'
-  if (/^\d/.test(name) || name.toLowerCase().endsWith('k+')) return `Tier ${name}`
+  if (/^\d/.test(name) || name.toLowerCase().endsWith('k+')) return tierName(name)
   return name
 }
 
@@ -220,7 +221,7 @@ export function ContractsTab({ clientId }: Props) {
     })
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      setError(data.error || t('licenses.updateError'))
+      setError(explainApiError(data.error, lang) || t('licenses.updateError'))
     } else {
       await load()
     }
@@ -249,7 +250,7 @@ export function ContractsTab({ clientId }: Props) {
     const data = await res.json().catch(() => ({}))
     setSavingContract(false)
     if (!res.ok) {
-      setContractError(data.error || t('contracts.createError'))
+      setContractError(explainApiError(data.error, lang) || t('contracts.createError'))
       return
     }
     setContractOpen(false)
@@ -278,7 +279,7 @@ export function ContractsTab({ clientId }: Props) {
     const data = await res.json().catch(() => ({}))
     setSavingLicense(false)
     if (!res.ok) {
-      setLicenseError(data.error || t('licenses.createError'))
+      setLicenseError(explainApiError(data.error, lang) || t('licenses.createError'))
       return
     }
     setLicenseOpen(false)
@@ -392,7 +393,7 @@ export function ContractsTab({ clientId }: Props) {
                           <td className="px-4 py-3">
                             <p className="font-medium text-foreground">{row.product.name}</p>
                           </td>
-                          <td className="px-4 py-3 text-foreground">{planLabel(row.tier?.name)}</td>
+                          <td className="px-4 py-3 text-foreground">{planLabel(row.tier?.name, (name) => t('licenses.tierNamed', { name }))}</td>
                           <td className="px-4 py-3 text-foreground">
                             {row.expiresAt ? new Date(row.expiresAt).toLocaleDateString(dateLocale(lang)) : '—'}
                           </td>
@@ -436,7 +437,7 @@ export function ContractsTab({ clientId }: Props) {
                                       disabled={row.tier?.id === tier.id}
                                       onClick={() => patch(row.productId, { tierId: tier.id })}
                                     >
-                                      {planLabel(tier.name)}
+                                      {planLabel(tier.name, (name) => t('licenses.tierNamed', { name }))}
                                     </DropdownMenuItem>
                                   ))}
                                 </DropdownMenuContent>
@@ -600,7 +601,7 @@ export function ContractsTab({ clientId }: Props) {
                 <option value="">{t('licenses.selectTier')}</option>
                 {(selectedProduct?.tiers ?? []).map((tier) => (
                   <option key={tier.id} value={tier.id}>
-                    {planLabel(tier.name)}
+                    {planLabel(tier.name, (name) => t('licenses.tierNamed', { name }))}
                   </option>
                 ))}
               </select>
@@ -652,7 +653,23 @@ export function ContractsTab({ clientId }: Props) {
           onOpenChange={setGraceOpen}
           currentEndsAt={grace.gracePeriodEndsAt}
           maxDays={MAX_ADMIN_GRACE_DAYS}
-          confirmLabel={t('billing.extendGrace')}
+          dateLocale={dateLocale(lang)}
+          formatError={(message) => explainApiError(message, lang)}
+          labels={{
+            title: t('grace.title'),
+            description: t('grace.description'),
+            extraDays: t('grace.extraDays'),
+            calendarDate: t('grace.calendar'),
+            accessUntil: t('grace.accessUntil'),
+            range: t('grace.range'),
+            accessThrough: t('grace.accessThrough'),
+            day: t('grace.day'),
+            days: t('grace.days'),
+            cancel: t('grace.cancel'),
+            saving: t('grace.saving'),
+            failed: t('grace.failed'),
+            confirm: t('billing.extendGrace'),
+          }}
           onConfirm={async (payload) => {
             const res = await fetch(`/api/admin/clients/${clientId}/subscription/grace`, {
               method: 'POST',
@@ -660,7 +677,7 @@ export function ContractsTab({ clientId }: Props) {
               body: JSON.stringify(payload),
             })
             const data = await res.json().catch(() => ({}))
-            if (!res.ok) throw new Error(data.error || 'Failed to extend grace.')
+            if (!res.ok) throw new Error(explainApiError(data.error, lang) || t('lic.extendGraceError'))
             await load()
           }}
         />

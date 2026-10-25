@@ -104,7 +104,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
         <ToolbarButton
           active={editor.isActive('bold')}
           onClick={() => editor.chain().focus().toggleBold().run()}
-          title="Bold"
+          title={t('editor.bold')}
           disabled={mode === 'html'}
         >
           <Bold className="h-3.5 w-3.5" />
@@ -112,7 +112,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
         <ToolbarButton
           active={editor.isActive('italic')}
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          title="Italic"
+          title={t('editor.italic')}
           disabled={mode === 'html'}
         >
           <Italic className="h-3.5 w-3.5" />
@@ -120,7 +120,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
         <ToolbarButton
           active={editor.isActive('underline')}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          title="Underline"
+          title={t('editor.underline')}
           disabled={mode === 'html'}
         >
           <UnderlineIcon className="h-3.5 w-3.5" />
@@ -129,7 +129,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
         <ToolbarButton
           active={editor.isActive({ textAlign: 'left' })}
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          title="Align left"
+          title={t('editor.alignLeft')}
           disabled={mode === 'html'}
         >
           <AlignLeft className="h-3.5 w-3.5" />
@@ -137,7 +137,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
         <ToolbarButton
           active={editor.isActive({ textAlign: 'center' })}
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          title="Align center"
+          title={t('editor.alignCenter')}
           disabled={mode === 'html'}
         >
           <AlignCenter className="h-3.5 w-3.5" />
@@ -145,7 +145,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
         <ToolbarButton
           active={editor.isActive({ textAlign: 'right' })}
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          title="Align right"
+          title={t('editor.alignRight')}
           disabled={mode === 'html'}
         >
           <AlignRight className="h-3.5 w-3.5" />
@@ -153,7 +153,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
         <ToolbarButton
           active={editor.isActive({ textAlign: 'justify' })}
           onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-          title="Justify"
+          title={t('editor.justify')}
           disabled={mode === 'html'}
         >
           <AlignJustify className="h-3.5 w-3.5" />
@@ -162,7 +162,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
         <ToolbarButton
           active={editor.isActive('bulletList')}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          title="List"
+          title={t('editor.list')}
           disabled={mode === 'html'}
         >
           <List className="h-3.5 w-3.5" />
@@ -170,7 +170,7 @@ export const ContractBodyEditor = forwardRef<ContractBodyEditorHandle, Props>(fu
         <ToolbarButton
           active={editor.isActive('orderedList')}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          title="Numbered list"
+          title={t('editor.numbered')}
           disabled={mode === 'html'}
         >
           <ListOrdered className="h-3.5 w-3.5" />

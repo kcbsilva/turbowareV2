@@ -1,57 +1,57 @@
-export const turboIspTermsAndConditionsFr = `# 🇨🇦 Francais (Canada)
+export const turboIspTermsAndConditionsFr = `# Français (Canada)
 
-## Conditions d'Utilisation - TurboISP
+## Conditions d'utilisation - TurboISP
 
-**Derniere mise a jour :** 8 avril 2026
+**Dernière mise à jour:** 8 avril 2026
 
-En utilisant TurboISP, vous acceptez les conditions suivantes :
+En utilisant TurboISP, vous acceptez les conditions suivantes:
 
-### 1. Description du Service
+### 1. Description du service
 
-TurboISP est une plateforme de gestion pour FAI et operateurs telecom, incluant CRM, facturation, automatisation, surveillance, SIG et documentation reseau.
+TurboISP est une plateforme de gestion pour les FAI et les opérateurs de télécom. Elle couvre le CRM, la facturation, l'automatisation, la surveillance, le SIG et la documentation d'infrastructure.
 
-### 2. Compte
+### 2. Responsabilité du compte
 
-Vous etes responsable de la confidentialite de vos identifiants.
+Vous devez protéger vos identifiants et vous êtes responsable de toute activité faite avec votre compte.
 
-### 3. Abonnement et Paiement
+### 3. Abonnement et paiement
 
 * Abonnement mensuel ou annuel
-* Suspension possible en cas de non-paiement
-* Tarification modifiable avec preavis
+* Un impayé peut entraîner la suspension
+* Les prix peuvent changer, avec préavis
 
-### 4. Utilisation Acceptable
+### 4. Utilisation acceptable
 
-Il est interdit de :
+Vous vous engagez à ne pas:
 
-* Utiliser a des fins illegales
-* Tenter un acces non autorise
-* Perturber le service
+* Utiliser le service à des fins illégales
+* Tenter un accès non autorisé
+* Perturber le fonctionnement du service
 * Revendre sans autorisation
 
-### 5. Propriete des Donnees
+### 5. Propriété des données
 
-Vos donnees vous appartiennent. TurboISP les traite uniquement pour fournir le service.
+Vous conservez la propriété de vos données. TurboISP les traite pour fournir le service.
 
-### 6. Disponibilite
+### 6. Disponibilité
 
-Service fourni "tel quel" sans garantie d'acces continu.
+Le service est fourni «tel quel», sans disponibilité garantie, sauf entente distincte.
 
-### 7. Limitation de Responsabilite
+### 7. Limitation de responsabilité
 
-TurboISP n'est pas responsable de :
+TurboISP n'est pas responsable de:
 
-* Perte de revenus
-* Pannes reseau
-* Mauvaise configuration
+* Pertes de revenus
+* Pannes de réseau
+* Erreurs de configuration
 
-### 8. Resiliation
+### 8. Résiliation
 
-Compte suspendu en cas de violation ou non-paiement.
+Le compte peut être suspendu en cas de violation, d'abus ou de non-paiement.
 
 ### 9. Modifications
 
-Conditions sujettes a modification.
+Les conditions peuvent être mises à jour de temps à autre.
 `;
 
 export default turboIspTermsAndConditionsFr;

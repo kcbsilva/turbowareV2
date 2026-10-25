@@ -36,13 +36,14 @@ async function getDashboard(): Promise<DashboardData> {
   const newThisMonth = clients.filter((c) => new Date(c.createdAt) >= startOfMonth).length
   const coverage = total === 0 ? 0 : Math.round((withLicense / total) * 100)
 
-  const signups: { label: string; value: number }[] = []
+  const signups: { year: number; month: number; value: number }[] = []
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const key = monthKey(d)
     const value = clients.filter((c) => monthKey(new Date(c.createdAt)) === key).length
     signups.push({
-      label: d.toLocaleString('en', { month: 'short' }),
+      year: d.getFullYear(),
+      month: d.getMonth(),
       value,
     })
   }

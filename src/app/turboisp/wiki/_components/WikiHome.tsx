@@ -28,11 +28,13 @@ import {
   wikiCopy,
 } from '../_content'
 import { useWikiLang } from './WikiLang'
+import { turbowareTitle, useDocumentTitle } from '@/lib/document-title'
 
 const JOB_ICONS = [WarehouseIcon, RadioIcon, UserPlusIcon, FileTextIcon, CableIcon, WrenchIcon, MapIcon]
 
 export function WikiHome() {
   const { lang } = useWikiLang()
+  useDocumentTitle(turbowareTitle(pick(lang, wikiCopy.brand)))
 
   return (
     <div className="mx-auto max-w-3xl">

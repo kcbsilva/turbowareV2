@@ -12,11 +12,12 @@ import {
 } from '@/components/TurboAuthShell'
 import { cn } from '@/lib/utils'
 import { AdminLangToggle, useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 
 type Step = 'login' | 'forgot' | 'mfa' | 'newPassword'
 
 export default function LoginForm() {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const [step, setStep] = useState<Step>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -45,19 +46,19 @@ export default function LoginForm() {
         setForgotSent(true)
       } else {
         const data = await res.json().catch(() => ({}))
-        setError(data.error || 'Could not send reset email.')
+        setError(explainApiError(data.error, lang) || t('login.resetSendError'))
       }
       return
     }
 
     if (step === 'newPassword') {
       if (newPassword.length < 8) {
-        setError('Password must be at least 8 characters.')
+        setError(t('login.passwordShort'))
         setLoading(false)
         return
       }
       if (newPassword !== confirmPassword) {
-        setError('Passwords do not match.')
+        setError(t('login.passwordMismatch'))
         setLoading(false)
         return
       }
@@ -71,7 +72,7 @@ export default function LoginForm() {
         window.location.assign('/admin')
       } else {
         const data = await res.json().catch(() => ({}))
-        setError(data.error || 'Could not update password.')
+        setError(explainApiError(data.error, lang) || t('login.updateError'))
       }
       return
     }
@@ -87,7 +88,7 @@ export default function LoginForm() {
         window.location.assign('/admin')
       } else {
         const data = await res.json().catch(() => ({}))
-        setError(data.error || 'Invalid verification code.')
+        setError(explainApiError(data.error, lang) || t('login.mfaInvalid'))
       }
       return
     }
@@ -116,7 +117,7 @@ export default function LoginForm() {
       window.location.assign('/admin')
     } else {
       const data = await res.json().catch(() => ({}))
-        setError(data.error || t('login.invalid'))
+        setError(explainApiError(data.error, lang) || t('login.invalid'))
     }
   }
 
@@ -171,7 +172,7 @@ export default function LoginForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={loginInputClassIcon}
-                    placeholder="admin@example.com"
+                    placeholder={t('login.emailPlaceholder')}
                     autoComplete="email"
                     autoFocus
                   />
@@ -224,11 +225,11 @@ export default function LoginForm() {
             <div>
               {forgotSent ? (
                 <p className="text-sm text-neutral-400 leading-relaxed">
-                  If an account exists for that email, a single-use reset link has been sent. Check your inbox to continue.
+                  {t('login.forgotSent')}
                 </p>
               ) : (
                 <>
-                  <label htmlFor="admin-forgot-email" className={loginLabelClass}>Email</label>
+                  <label htmlFor="admin-forgot-email" className={loginLabelClass}>{t('login.email')}</label>
                   <div className="relative">
                     <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                     <input
@@ -237,7 +238,7 @@ export default function LoginForm() {
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       className={loginInputClassIcon}
-                      placeholder="admin@example.com"
+                      placeholder={t('login.emailPlaceholder')}
                       autoComplete="email"
                       required
                       autoFocus
@@ -254,14 +255,14 @@ export default function LoginForm() {
                   setError('')
                 }}
               >
-                Back to sign in
+                {t('login.back')}
               </button>
             </div>
           )}
 
           {step === 'mfa' && (
             <div>
-              <label htmlFor="admin-mfa" className={loginLabelClass}>Authenticator code</label>
+              <label htmlFor="admin-mfa" className={loginLabelClass}>{t('login.mfaPlaceholder')}</label>
               <div className="relative">
                 <ShieldCheck className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                 <input
@@ -284,7 +285,7 @@ export default function LoginForm() {
                 className={cn(loginLinkClass, 'mt-3 text-xs')}
                 onClick={() => { setStep('login'); setMfaCode(''); setError('') }}
               >
-                Back to sign in
+                {t('login.back')}
               </button>
             </div>
           )}
@@ -292,7 +293,7 @@ export default function LoginForm() {
           {step === 'newPassword' && (
             <>
               <div>
-                <label htmlFor="admin-new-password" className={loginLabelClass}>New password</label>
+                <label htmlFor="admin-new-password" className={loginLabelClass}>{t('login.newPassword')}</label>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                   <input
@@ -301,7 +302,7 @@ export default function LoginForm() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className={loginInputClassIcon}
-                    placeholder="At least 8 characters"
+                    placeholder={t('login.passwordHint')}
                     autoComplete="new-password"
                     required
                     autoFocus
@@ -309,7 +310,7 @@ export default function LoginForm() {
                 </div>
               </div>
               <div>
-                <label htmlFor="admin-confirm-password" className={loginLabelClass}>Confirm password</label>
+                <label htmlFor="admin-confirm-password" className={loginLabelClass}>{t('login.confirmPassword')}</label>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                   <input
@@ -318,7 +319,7 @@ export default function LoginForm() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={loginInputClassIcon}
-                    placeholder="Repeat password"
+                    placeholder={t('login.passwordRepeat')}
                     autoComplete="new-password"
                     required
                   />

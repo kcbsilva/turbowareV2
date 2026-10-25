@@ -2,8 +2,11 @@
 
 import { FormEvent, useState } from 'react'
 import Link from 'next/link'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 
 export function ResetPasswordForm({ token }: { token: string }) {
+  const { t, lang } = useAdminLang()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [message, setMessage] = useState('')
@@ -12,7 +15,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (password.length < 12 || password !== confirm) {
-      setMessage('Use at least 12 characters and make sure both passwords match.')
+      setMessage(t('login.resetRules'))
       return
     }
 
@@ -27,10 +30,10 @@ export function ResetPasswordForm({ token }: { token: string }) {
     setSaving(false)
 
     if (!response.ok) {
-      setMessage(data.error ?? 'Unable to reset password.')
+      setMessage(explainApiError(data.error, lang) || t('login.resetFailed'))
       return
     }
-    setMessage('Password updated. You can now sign in.')
+    setMessage(t('login.passwordUpdated'))
     setPassword('')
     setConfirm('')
   }
@@ -39,11 +42,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
     <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">
       <form onSubmit={submit} className="mx-auto max-w-md space-y-5 rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
         <div>
-          <h1 className="text-2xl font-semibold">Reset password</h1>
-          <p className="mt-2 text-sm text-slate-400">Choose a new password for your Turboware admin account.</p>
+          <h1 className="text-2xl font-semibold">{t('login.resetTitle')}</h1>
+          <p className="mt-2 text-sm text-slate-400">{t('login.resetLead')}</p>
         </div>
         <label className="block text-sm">
-          New password
+          {t('login.newPassword')}
           <input
             className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
             type="password"
@@ -55,7 +58,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           />
         </label>
         <label className="block text-sm">
-          Confirm password
+          {t('login.confirmPassword')}
           <input
             className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
             type="password"
@@ -68,10 +71,10 @@ export function ResetPasswordForm({ token }: { token: string }) {
         </label>
         {message && <p className="text-sm text-slate-300">{message}</p>}
         <button className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium disabled:opacity-50" disabled={saving || !token}>
-          {saving ? 'Updating…' : 'Update password'}
+          {saving ? t('login.updating') : t('login.update')}
         </button>
         <Link className="block text-center text-sm text-blue-400 hover:text-blue-300" href="/admin/login">
-          Back to sign in
+          {t('login.back')}
         </Link>
       </form>
     </main>

@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { Shield, ShieldCheck, Loader2 } from 'lucide-react'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 
 export default function SecurityPage() {
+  const { t, lang } = useAdminLang()
   const [mfaEnabled, setMfaEnabled] = useState(false)
   const [loading, setLoading] = useState(true)
   const [setup, setSetup] = useState<{ otpauthUrl: string; secret: string } | null>(null)
@@ -33,7 +36,7 @@ export default function SecurityPage() {
       setSetup(await res.json())
       setCode('')
     } else {
-      flash((await res.json().catch(() => ({}))).error || 'Setup failed', false)
+      flash(explainApiError((await res.json().catch(() => ({}))).error, lang) || t('security.setupFailed'), false)
     }
   }
 
@@ -50,9 +53,9 @@ export default function SecurityPage() {
       setMfaEnabled(true)
       setSetup(null)
       setCode('')
-      flash('Two-factor authentication is now enabled')
+      flash(t('security.enabled'))
     } else {
-      flash((await res.json().catch(() => ({}))).error || 'Invalid code', false)
+      flash(explainApiError((await res.json().catch(() => ({}))).error, lang) || t('security.invalidCode'), false)
     }
   }
 
@@ -70,25 +73,25 @@ export default function SecurityPage() {
       setSetup(null)
       setDisablePassword('')
       setDisableCode('')
-      flash('Two-factor authentication disabled')
+      flash(t('security.disabled'))
     } else {
-      flash((await res.json().catch(() => ({}))).error || 'Could not disable MFA', false)
+      flash(explainApiError((await res.json().catch(() => ({}))).error, lang) || t('security.disableFailed'), false)
     }
   }
 
   if (loading) {
     return (
       <div className="p-6 flex items-center gap-2 text-muted-foreground text-sm">
-        <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+        <Loader2 className="w-4 h-4 animate-spin" /> {t('common.loading')}
       </div>
     )
   }
 
   return (
     <div className="p-6 max-w-lg">
-      <h1 className="text-lg font-bold text-foreground mb-1">Security</h1>
+      <h1 className="text-lg font-bold text-foreground mb-1">{t('title.security')}</h1>
       <p className="text-xs text-muted-foreground mb-6">
-        Protect admin access with TOTP (Google Authenticator, 1Password, etc.). Required on Vercel-hosted deployments.
+        {t('security.lead')}
       </p>
 
       {message && (
@@ -104,10 +107,10 @@ export default function SecurityPage() {
             : <Shield className="w-5 h-5 text-muted-foreground" />}
           <div>
             <p className="text-sm font-medium text-foreground">
-              Two-factor authentication
+              {t('security.mfa')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {mfaEnabled ? 'Enabled — required at each sign-in' : 'Not enabled'}
+              {mfaEnabled ? t('security.enabledHint') : t('security.disabledHint')}
             </p>
           </div>
         </div>
@@ -119,14 +122,14 @@ export default function SecurityPage() {
             onClick={startSetup}
             className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground disabled:opacity-50"
           >
-            {busy ? 'Preparing…' : 'Set up authenticator'}
+            {busy ? t('security.preparing') : t('security.setup')}
           </button>
         )}
 
         {setup && !mfaEnabled && (
           <form onSubmit={enableMfa} className="space-y-4">
             <p className="text-xs text-muted-foreground">
-              Scan this URI in your authenticator app, or enter the secret manually:
+              {t('security.scan')}
             </p>
             <code className="block text-[10px] break-all p-2 rounded bg-muted/30 text-foreground/80">
               {setup.secret}
@@ -135,7 +138,7 @@ export default function SecurityPage() {
               href={setup.otpauthUrl}
               className="text-xs text-muted-foreground underline break-all"
             >
-              Open in authenticator app
+              {t('security.openApp')}
             </a>
             <input
               type="text"
@@ -143,7 +146,7 @@ export default function SecurityPage() {
               maxLength={6}
               value={code}
               onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="6-digit code"
+              placeholder={t('security.code')}
               className="w-full px-3 py-2 rounded-md text-sm bg-background border border-border"
               required
             />
@@ -153,14 +156,14 @@ export default function SecurityPage() {
                 disabled={busy || code.length !== 6}
                 className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground disabled:opacity-50"
               >
-                Enable MFA
+                {t('security.enable')}
               </button>
               <button
                 type="button"
                 className="px-4 py-2 text-sm rounded-md border border-border"
                 onClick={() => setSetup(null)}
               >
-                Cancel
+                {t('licenses.cancel')}
               </button>
             </div>
           </form>
@@ -169,13 +172,13 @@ export default function SecurityPage() {
         {mfaEnabled && (
           <form onSubmit={disableMfa} className="space-y-3 pt-2 border-t border-border">
             <p className="text-xs text-muted-foreground pt-2">
-              To disable MFA, confirm your password and a current authenticator code.
+              {t('security.disableLead')}
             </p>
             <input
               type="password"
               value={disablePassword}
               onChange={e => setDisablePassword(e.target.value)}
-              placeholder="Password"
+              placeholder={t('login.password')}
               className="w-full px-3 py-2 rounded-md text-sm bg-background border border-border"
               required
             />
@@ -185,7 +188,7 @@ export default function SecurityPage() {
               maxLength={6}
               value={disableCode}
               onChange={e => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="6-digit code"
+              placeholder={t('security.code')}
               className="w-full px-3 py-2 rounded-md text-sm bg-background border border-border"
               required
             />
@@ -194,7 +197,7 @@ export default function SecurityPage() {
               disabled={busy || disableCode.length !== 6}
               className="px-4 py-2 text-sm rounded-md border border-red-500/40 text-red-400 disabled:opacity-50"
             >
-              Disable MFA
+              {t('security.disable')}
             </button>
           </form>
         )}

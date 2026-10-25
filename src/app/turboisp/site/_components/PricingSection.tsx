@@ -11,7 +11,7 @@ import {
   type PricingTier,
   type Region,
 } from "@/lib/pricing";
-import { type Lang, pick } from "./constants";
+import { NUMBER_LOCALE, type Lang, pick } from "./constants";
 
 type Hosting = "cloud" | "self-hosted";
 
@@ -22,14 +22,15 @@ type RegionConfig = {
 };
 
 const REGIONS: RegionConfig[] = [
-  { code: "BR", flag: "🇧🇷", label: { en: "BR", pt: "BR", fr: "BR" } },
-  { code: "CA", flag: "🇨🇦", label: { en: "CA", pt: "CA", fr: "CA" } },
-  { code: "US", flag: "🇺🇸", label: { en: "US", pt: "US", fr: "US" } },
-  { code: "GB", flag: "🇬🇧", label: { en: "GB", pt: "GB", fr: "GB" } },
+  { code: "BR", flag: "🇧🇷", label: { en: "BR", pt: "BR", fr: "BR", es: "BR" } },
+  { code: "CA", flag: "🇨🇦", label: { en: "CA", pt: "CA", fr: "CA", es: "CA" } },
+  { code: "US", flag: "🇺🇸", label: { en: "US", pt: "US", fr: "US", es: "US" } },
+  { code: "GB", flag: "🇬🇧", label: { en: "GB", pt: "GB", fr: "GB", es: "GB" } },
 ];
 
-function planName(tier: PricingTier): string {
-  return tier.maxSeats == null ? "12,000+" : tier.maxSeats.toLocaleString("en-US");
+function planName(tier: PricingTier, locale: string): string {
+  if (tier.maxSeats == null) return `${(12000).toLocaleString(locale)}+`;
+  return tier.maxSeats.toLocaleString(locale);
 }
 
 export function PricingSection({ lang }: { lang: Lang }) {
@@ -38,6 +39,7 @@ export function PricingSection({ lang }: { lang: Lang }) {
   const [openInfo, setOpenInfo] = useState<string | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const s = <T extends Record<Lang, string>>(map: T) => pick(map, lang);
+  const numberLocale = NUMBER_LOCALE[lang];
   const installFee = INSTALLATION_FEES[region];
   const isCloud = hosting === "cloud";
 
@@ -64,26 +66,29 @@ export function PricingSection({ lang }: { lang: Lang }) {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8 max-w-md mx-auto">
           <span className="text-sky-600 text-sm font-mono uppercase tracking-wider">
-            {s({ en: "Pricing", pt: "Planos", fr: "Tarifs" })}
+            {s({ en: "Pricing", pt: "Planos", fr: "Tarifs", es: "Precios" })}
           </span>
           <h2 className="text-3xl lg:text-4xl font-bold mt-3 text-slate-900">
             {s({
               en: "Plans that grow with you",
               pt: "Planos que crescem com você",
-              fr: "Des forfaits évolutifs",
+              fr: "Des forfaits qui grandissent avec vous",
+              es: "Planes que crecen contigo",
             })}
           </h2>
           <p className="text-sm text-slate-600 mt-3 leading-relaxed">
             {isCloud
               ? s({
                   en: "We host TurboISP. One monthly fee by subscriber count.",
-                  pt: "Nós hospedamos o TurboISP. Uma mensalidade por assinantes.",
-                  fr: "Nous hébergeons TurboISP. Un forfait mensuel selon les abonnés.",
+                  pt: "Nós hospedamos o TurboISP. Uma mensalidade conforme o número de assinantes.",
+                  fr: "Nous hébergeons TurboISP. Un forfait mensuel selon le nombre d'abonnés.",
+                  es: "Nosotros hospedamos TurboISP. Una mensualidad según la cantidad de abonados.",
                 })
               : s({
                   en: "You run TurboISP on your own servers. Same plans, you own the stack.",
-                  pt: "Você roda o TurboISP nos seus servidores. Mesmos planos, a stack é sua.",
-                  fr: "Vous hébergez TurboISP. Mêmes forfaits, vous possédez la stack.",
+                  pt: "Você roda o TurboISP nos seus servidores. Os mesmos planos, a infraestrutura é sua.",
+                  fr: "Vous hébergez TurboISP. Mêmes forfaits, vous gardez la maîtrise de l'infrastructure.",
+                  es: "Tú operas TurboISP en tus servidores. Los mismos planes, la infraestructura es tuya.",
                 })}
           </p>
         </div>
@@ -91,7 +96,7 @@ export function PricingSection({ lang }: { lang: Lang }) {
         <div className="flex items-stretch gap-2 max-w-xl mx-auto mb-6">
           <div
             role="tablist"
-            aria-label={s({ en: "Hosting", pt: "Hospedagem", fr: "Hébergement" })}
+            aria-label={s({ en: "Hosting", pt: "Hospedagem", fr: "Hébergement", es: "Hospedaje" })}
             className="flex flex-1 p-1 rounded-lg bg-slate-100 border border-slate-200"
           >
             <button
@@ -104,7 +109,7 @@ export function PricingSection({ lang }: { lang: Lang }) {
               }`}
             >
               <Cloud className="w-3.5 h-3.5" />
-              {s({ en: "Cloud", pt: "Cloud", fr: "Cloud" })}
+              {s({ en: "Cloud", pt: "Nuvem", fr: "Nuage", es: "Nube" })}
             </button>
             <button
               type="button"
@@ -116,12 +121,12 @@ export function PricingSection({ lang }: { lang: Lang }) {
               }`}
             >
               <Server className="w-3.5 h-3.5" />
-              {s({ en: "Self-hosted", pt: "Self-hosted", fr: "Auto-hébergé" })}
+              {s({ en: "Self-hosted", pt: "Servidor próprio", fr: "Auto-hébergé", es: "Servidor propio" })}
             </button>
           </div>
 
           <label className="sr-only" htmlFor="pricing-region">
-            {s({ en: "Region", pt: "Região", fr: "Région" })}
+            {s({ en: "Region", pt: "Região", fr: "Région", es: "Región" })}
           </label>
           <select
             id="pricing-region"
@@ -141,7 +146,7 @@ export function PricingSection({ lang }: { lang: Lang }) {
           <button
             type="button"
             onClick={() => scrollByCard(-1)}
-            aria-label={s({ en: "Previous plans", pt: "Planos anteriores", fr: "Forfaits précédents" })}
+            aria-label={s({ en: "Previous plans", pt: "Planos anteriores", fr: "Forfaits précédents", es: "Planes anteriores" })}
             className="shrink-0 p-2 rounded-full border border-slate-300 text-slate-600 hover:border-sky-500 hover:text-sky-600 transition bg-white"
           >
             <ChevronLeft size={18} />
@@ -165,11 +170,11 @@ export function PricingSection({ lang }: { lang: Lang }) {
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                        {s({ en: "Up to", pt: "Até", fr: "Jusqu'à" })}
+                        {s({ en: "Up to", pt: "Até", fr: "Jusqu'à", es: "Hasta" })}
                       </p>
-                      <p className="text-lg font-bold text-slate-900 leading-tight">{planName(tier)}</p>
+                      <p className="text-lg font-bold text-slate-900 leading-tight">{planName(tier, numberLocale)}</p>
                       <p className="text-[11px] text-slate-500">
-                        {s({ en: "subscribers", pt: "assinantes", fr: "abonnés" })}
+                        {s({ en: "subscribers", pt: "assinantes", fr: "abonnés", es: "abonados" })}
                       </p>
                     </div>
                     {!isCloud && (
@@ -177,9 +182,10 @@ export function PricingSection({ lang }: { lang: Lang }) {
                         type="button"
                         aria-expanded={infoOpen}
                         aria-label={s({
-                          en: `About the ${planName(tier)} self-hosted plan`,
-                          pt: `Sobre o plano self-hosted ${planName(tier)}`,
-                          fr: `À propos du forfait auto-hébergé ${planName(tier)}`,
+                          en: `About the ${planName(tier, numberLocale)} self-hosted plan`,
+                          pt: `Sobre o plano em servidor próprio de ${planName(tier, numberLocale)}`,
+                          fr: `À propos du forfait auto-hébergé ${planName(tier, numberLocale)}`,
+                          es: `Sobre el plan en servidor propio de ${planName(tier, numberLocale)}`,
                         })}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -207,6 +213,7 @@ export function PricingSection({ lang }: { lang: Lang }) {
                           en: "Minimum recommended server",
                           pt: "Servidor mínimo recomendado",
                           fr: "Serveur minimum recommandé",
+                          es: "Servidor mínimo recomendado",
                         })}
                       </p>
                       {spec ? (
@@ -215,7 +222,7 @@ export function PricingSection({ lang }: { lang: Lang }) {
                           <li>{spec.ramGb} GB RAM</li>
                           <li>
                             {formatDisk(spec.diskGb)}{" "}
-                            {s({ en: "disk", pt: "disco", fr: "disque" })}
+                            {s({ en: "disk", pt: "disco", fr: "disque", es: "disco" })}
                           </li>
                         </ul>
                       ) : (
@@ -223,7 +230,8 @@ export function PricingSection({ lang }: { lang: Lang }) {
                           {s({
                             en: "We'll size CPU, RAM, and disk with you.",
                             pt: "Dimensionamos CPU, RAM e disco com você.",
-                            fr: "Nous dimensionnons CPU, RAM et disque avec vous.",
+                            fr: "Nous dimensionnons le CPU, la RAM et le disque avec vous.",
+                            es: "Definimos CPU, RAM y disco contigo.",
                           })}
                         </p>
                       )}
@@ -232,30 +240,30 @@ export function PricingSection({ lang }: { lang: Lang }) {
 
                   {tier.maxMapItems != null && (
                     <p className="text-[11px] text-slate-500 mb-4">
-                      {tier.maxMapItems.toLocaleString("en-US")}{" "}
-                      {s({ en: "map items", pt: "itens no mapa", fr: "éléments carte" })}
+                      {tier.maxMapItems.toLocaleString(numberLocale)}{" "}
+                      {s({ en: "map items", pt: "itens no mapa", fr: "éléments sur la carte", es: "elementos en el mapa" })}
                     </p>
                   )}
                   {tier.maxMapItems == null && (
                     <p className="text-[11px] text-slate-500 mb-4">
-                      {s({ en: "Custom map capacity", pt: "Mapa customizado", fr: "Carte sur mesure" })}
+                      {s({ en: "Custom map capacity", pt: "Capacidade de mapa sob medida", fr: "Capacité de carte sur mesure", es: "Capacidad de mapa a medida" })}
                     </p>
                   )}
 
                   {isInquire ? (
                     <p className="text-sm font-semibold text-slate-500">
-                      {s({ en: "On request", pt: "Sob consulta", fr: "Sur demande" })}
+                      {s({ en: "On request", pt: "Sob consulta", fr: "Sur demande", es: "A consultar" })}
                     </p>
                   ) : (
                     <div>
                       <p className="text-xl font-black tabular-nums text-slate-900">
-                        {formatPrice(price, region)}
+                        {formatPrice(price, region, numberLocale)}
                         <span className="text-[11px] font-medium text-slate-400">
-                          {s({ en: "/mo", pt: "/mês", fr: "/mois" })}
+                          {s({ en: "/mo", pt: "/mês", fr: "/mois", es: "/mes" })}
                         </span>
                       </p>
                       <p className="text-[11px] text-slate-400 mt-1">
-                        {s({ en: "Setup", pt: "Setup", fr: "Setup" })} {formatPrice(installFee, region)}
+                        {s({ en: "Setup", pt: "Implantação", fr: "Mise en service", es: "Puesta en marcha" })} {formatPrice(installFee, region, numberLocale)}
                       </p>
                     </div>
                   )}
@@ -267,7 +275,7 @@ export function PricingSection({ lang }: { lang: Lang }) {
           <button
             type="button"
             onClick={() => scrollByCard(1)}
-            aria-label={s({ en: "Next plans", pt: "Próximos planos", fr: "Forfaits suivants" })}
+            aria-label={s({ en: "Next plans", pt: "Próximos planos", fr: "Forfaits suivants", es: "Planes siguientes" })}
             className="shrink-0 p-2 rounded-full border border-slate-300 text-slate-600 hover:border-sky-500 hover:text-sky-600 transition bg-white"
           >
             <ChevronRight size={18} />

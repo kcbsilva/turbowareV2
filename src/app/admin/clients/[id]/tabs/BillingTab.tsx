@@ -6,6 +6,7 @@ import { formatBRL, getInstallationFee, type Region } from '@/lib/pricing'
 import { badge } from '@/lib/badges'
 import { formatInvoiceNumber, resolveInvoiceDisplayStatus } from '@/lib/invoice-display'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 import type { MsgKey } from '@/lib/admin-i18n'
 import {
   Dialog,
@@ -79,7 +80,7 @@ const INVOICE_STATUS_BADGE = {
 interface Props { clientId: string }
 
 export function BillingTab({ clientId }: Props) {
-  const { t } = useAdminLang()
+  const { t, lang } = useAdminLang()
   const [sub, setSub]           = useState<Subscription | null | undefined>(undefined)
   const [loading, setLoading]   = useState(true)
   const [sending, setSending]   = useState<string | null>(null)  // `${invoiceId}-asaas` | `${invoiceId}-stripe`
@@ -121,7 +122,7 @@ export function BillingTab({ clientId }: Props) {
         window.open(data.paymentUrl, '_blank', 'noopener,noreferrer')
         load()
       } else {
-        alert(data.error || t('billing.payError'))
+        alert(explainApiError(data.error, lang) || t('billing.payError'))
       }
     } finally {
       setSending(null)
@@ -136,7 +137,7 @@ export function BillingTab({ clientId }: Props) {
       const res = await fetch(`/api/admin/invoices/${inv.id}`, { method: 'DELETE' })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        alert(data.error || t('billing.removeError'))
+        alert(explainApiError(data.error, lang) || t('billing.removeError'))
         return
       }
       await load()
@@ -202,7 +203,7 @@ export function BillingTab({ clientId }: Props) {
     const data = await res.json().catch(() => ({}))
     setSavingCharge(false)
     if (!res.ok) {
-      setChargeError(data.error || t('billing.chargeError'))
+      setChargeError(explainApiError(data.error, lang) || t('billing.chargeError'))
       return
     }
     setChargeOpen(false)

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { CheckCircle, ChevronDown } from "lucide-react";
 import logo from "../assets/TurboISP-logo.png";
 import {
   PRICING_TIERS,
@@ -10,32 +11,31 @@ import {
   CURRENCY_SYMBOL,
   type Region,
 } from "@/lib/pricing";
-import { CheckCircle } from "lucide-react";
+import { LANGS, pick, type Lang } from "../site/_components/constants";
+import { useSiteLang } from "../site/_components/site-lang";
+import { NUMBER_LOCALE, pricingCopy } from "./copy";
+import { turbowareTitle, useDocumentTitle } from "@/lib/document-title";
 
-type RegionConfig = {
-  code: Region;
-  label: string;
-  flag: string;
-};
-
-const REGIONS: RegionConfig[] = [
-  { code: "BR", label: "Brasil", flag: "🇧🇷" },
-  { code: "CA", label: "Canada", flag: "🇨🇦" },
-  { code: "US", label: "United States", flag: "🇺🇸" },
-  { code: "GB", label: "England", flag: "🇬🇧" },
+const REGION_KEYS: { code: Region; flag: string; label: keyof typeof pricingCopy }[] = [
+  { code: "BR", flag: "🇧🇷", label: "regionBR" },
+  { code: "CA", flag: "🇨🇦", label: "regionCA" },
+  { code: "US", flag: "🇺🇸", label: "regionUS" },
+  { code: "GB", flag: "🇬🇧", label: "regionGB" },
 ];
 
-function fmt(amount: number | "inquire", region: Region): string {
-  if (amount === "inquire") return "Inquire";
-  const sym = CURRENCY_SYMBOL[region];
-  return `${sym}\u00A0${amount.toLocaleString("en-US")}`;
+function fill(template: string, vars: Record<string, string>) {
+  return Object.entries(vars).reduce((out, [key, value]) => out.replaceAll(`{${key}}`, value), template);
 }
 
 export default function PricingPage() {
   const [region, setRegion] = useState<Region>("BR");
+  const { lang, setLang } = useSiteLang();
+  const s = (key: keyof typeof pricingCopy) => pick(pricingCopy[key], lang);
+  useDocumentTitle(turbowareTitle(s("navPricing")));
 
   const installFee = INSTALLATION_FEES[region];
   const sym = CURRENCY_SYMBOL[region];
+  const numberLocale = NUMBER_LOCALE[lang];
 
   return (
     <div
@@ -72,30 +72,45 @@ export default function PricingPage() {
             />
           </Link>
 
-          <nav
-            className="hidden md:flex items-center gap-6 text-xs"
-            style={{ color: "rgba(10,20,40,0.5)" }}
-          >
-            <Link
-              href="/turboisp/site#modules"
-              className="hover:text-[#0a1428] transition"
+          <div className="flex items-center gap-6">
+            <nav
+              className="hidden md:flex items-center gap-6 text-xs"
+              style={{ color: "rgba(10,20,40,0.5)" }}
             >
-              Modules
-            </Link>
-            <Link
-              href="/turboisp/site#valores"
-              className="hover:text-[#0a1428] transition"
-            >
-              Why TurboISP
-            </Link>
-            <Link
-              href="/turboisp/pricing"
-              className="font-semibold transition"
-              style={{ color: "#0a1428" }}
-            >
-              Pricing
-            </Link>
-          </nav>
+              <Link
+                href="/turboisp/site#platform"
+                className="hover:text-[#0a1428] transition"
+              >
+                {s("navModules")}
+              </Link>
+              <Link
+                href="/turboisp/site#why"
+                className="hover:text-[#0a1428] transition"
+              >
+                {s("navWhy")}
+              </Link>
+              <Link
+                href="/turboisp/pricing"
+                className="font-semibold transition"
+                style={{ color: "#0a1428" }}
+              >
+                {s("navPricing")}
+              </Link>
+            </nav>
+            <label className="relative inline-flex h-8 items-center">
+              <span className="sr-only">{s("language")}</span>
+              <select
+                value={lang}
+                onChange={(e) => setLang(e.target.value as Lang)}
+                className="h-8 appearance-none rounded-full border border-slate-800 bg-white pl-3 pr-7 text-xs font-semibold text-black cursor-pointer"
+              >
+                {LANGS.map(({ code, label }) => (
+                  <option key={code} value={code}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 text-black" />
+            </label>
+          </div>
         </div>
       </header>
 
@@ -110,28 +125,27 @@ export default function PricingPage() {
           }}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-[#1AABF0] animate-pulse" />
-          Simple, Transparent Pricing
+          {s("eyebrow")}
         </div>
 
         <h1
           className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-4"
           style={{ color: "#0a1428" }}
         >
-          Plans that grow with your operation
+          {s("title")}
         </h1>
         <p
           className="text-sm max-w-xl mx-auto leading-relaxed"
           style={{ color: "rgba(10,20,40,0.5)" }}
         >
-          One monthly fee based on your subscriber count. No hidden charges, no
-          per-feature tiers.
+          {s("lead")}
         </p>
       </section>
 
       {/* ── Region Switcher ─────────────────────────────────────────────────── */}
       <section className="relative z-10 max-w-4xl mx-auto px-6 pb-8">
         <div className="flex items-center justify-center gap-2 flex-wrap">
-          {REGIONS.map(({ code, label, flag }) => (
+          {REGION_KEYS.map(({ code, label, flag }) => (
             <button
               key={code}
               onClick={() => setRegion(code)}
@@ -145,7 +159,7 @@ export default function PricingPage() {
               }}
             >
               <span className="text-base leading-none">{flag}</span>
-              {label}
+              {s(label)}
             </button>
           ))}
         </div>
@@ -172,13 +186,13 @@ export default function PricingPage() {
             </div>
             <div>
               <p className="text-xs font-bold" style={{ color: "#0a1428" }}>
-                One-time Installation Fee
+                {s("installTitle")}
               </p>
               <p
                 className="text-[11px]"
                 style={{ color: "rgba(10,20,40,0.45)" }}
               >
-                Covers full platform setup, DNS configuration, and onboarding
+                {s("installBody")}
               </p>
             </div>
           </div>
@@ -186,7 +200,7 @@ export default function PricingPage() {
             className="text-2xl font-black shrink-0"
             style={{ color: "#0a1428" }}
           >
-            {sym}&nbsp;{installFee.toLocaleString("en-US")}
+            {sym}&nbsp;{installFee.toLocaleString(numberLocale)}
           </p>
         </div>
       </section>
@@ -209,8 +223,8 @@ export default function PricingPage() {
               color: "rgba(255,255,255,0.5)",
             }}
           >
-            <span>Subscribers</span>
-            <span className="text-right">Monthly</span>
+            <span>{s("subscribers")}</span>
+            <span className="text-right">{s("monthly")}</span>
           </div>
 
           {/* Rows */}
@@ -233,8 +247,10 @@ export default function PricingPage() {
                     style={{ color: "#0a1428" }}
                   >
                     {isLast
-                      ? "12,000+"
-                      : `${Number(tier.label).toLocaleString("en-US")} active subscribers`}
+                      ? `${Number(12000).toLocaleString(numberLocale)}+`
+                      : fill(s("activeSubscribers"), {
+                          n: Number(tier.label).toLocaleString(numberLocale),
+                        })}
                   </p>
                 </div>
                 <div className="text-right">
@@ -243,7 +259,7 @@ export default function PricingPage() {
                       className="text-sm font-semibold"
                       style={{ color: "rgba(10,20,40,0.45)" }}
                     >
-                      On request
+                      {s("onRequest")}
                     </p>
                   ) : (
                     <div>
@@ -251,13 +267,13 @@ export default function PricingPage() {
                         className="text-lg font-black"
                         style={{ color: "#0a1428" }}
                       >
-                        {fmt(price, region)}
+                        {`${sym}\u00A0${price.toLocaleString(numberLocale)}`}
                       </p>
                       <p
                         className="text-[10px]"
                         style={{ color: "rgba(10,20,40,0.35)" }}
                       >
-                        / month
+                        {s("perMonth")}
                       </p>
                     </div>
                   )}
@@ -288,16 +304,16 @@ export default function PricingPage() {
           />
           <div className="flex items-center gap-6 text-[11px]">
             <Link
-              href="/turboisp/site#modules"
+              href="/turboisp/site#platform"
               className="hover:text-white/60 transition"
             >
-              Modules
+              {s("navModules")}
             </Link>
             <Link
               href="/turboisp/pricing"
               className="hover:text-white/60 transition"
             >
-              Pricing
+              {s("navPricing")}
             </Link>
           </div>
           <p className="text-[10px]">

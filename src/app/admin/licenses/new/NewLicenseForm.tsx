@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAdminLang } from '@/components/admin/AdminLangProvider'
+import { explainApiError } from '@/lib/api-errors'
 
 type Client = { id: string; name: string; company: string | null }
 
@@ -14,6 +16,7 @@ export function NewLicenseForm({
   defaultClientId: string
 }) {
   const router = useRouter()
+  const { t, lang } = useAdminLang()
   const [form, setForm] = useState({
     product: '',
     notes: '',
@@ -52,7 +55,7 @@ export function NewLicenseForm({
       router.push(`/admin/licenses/${data.id}`)
     } else {
       const data = await res.json()
-      setError(data.error || 'Failed to create license.')
+      setError(explainApiError(data.error, lang) || t('lic.createError'))
     }
   }
 
@@ -63,33 +66,33 @@ export function NewLicenseForm({
     <div className="max-w-md">
       <div className="mb-6">
         <Link href="/admin/licenses" className="text-xs text-muted-foreground hover:text-foreground mb-2 inline-block">
-          ← Back to licenses
+          ← {t('lic.back')}
         </Link>
-        <h1 className="text-lg font-bold text-foreground">Generate License Key</h1>
-        <p className="text-muted-foreground text-xs mt-0.5">A unique key will be generated automatically.</p>
+        <h1 className="text-lg font-bold text-foreground">{t('lic.generateTitle')}</h1>
+        <p className="text-muted-foreground text-xs mt-0.5">{t('lic.generateHint')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-5 space-y-4">
         <div>
           <label className="block text-xs font-medium text-foreground mb-1.5">
-            Product <span className="text-destructive">*</span>
+            {t('licenses.product')} <span className="text-destructive">*</span>
           </label>
           <input
             name="product"
             value={form.product}
             onChange={handleChange}
             required
-            placeholder="e.g. Turboware Pro"
+            placeholder={t('lic.productPlaceholder')}
             className={inputClass}
           />
         </div>
 
         <div>
           <label className="block text-xs font-medium text-foreground mb-1.5">
-            Assign to Client <span className="text-muted-foreground">(optional)</span>
+            {t('lic.assignTo')} <span className="text-muted-foreground">{t('common.optional')}</span>
           </label>
           <select name="clientId" value={form.clientId} onChange={handleChange} className={inputClass}>
-            <option value="">— No client —</option>
+            <option value="">— {t('lic.noClient')} —</option>
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}{c.company ? ` (${c.company})` : ''}
@@ -98,16 +101,16 @@ export function NewLicenseForm({
           </select>
           {clients.length === 0 && (
             <p className="text-[10px] text-muted-foreground mt-1">
-              No clients yet.{' '}
+              {t('lic.noClients')}{' '}
               <Link href="/admin/clients/new" className="text-primary hover:underline">
-                Create one
+                {t('lic.createOne')}
               </Link>
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-foreground mb-1.5">Max Seats</label>
+          <label className="block text-xs font-medium text-foreground mb-1.5">{t('lic.maxSeats')}</label>
           <input
             name="maxSeats"
             type="number"
@@ -116,12 +119,12 @@ export function NewLicenseForm({
             onChange={handleChange}
             className={inputClass}
           />
-          <p className="text-[10px] text-muted-foreground mt-1">Number of devices that can activate this license.</p>
+          <p className="text-[10px] text-muted-foreground mt-1">{t('lic.maxSeatsHint')}</p>
         </div>
 
         <div>
           <label className="block text-xs font-medium text-foreground mb-1.5">
-            Expiration Date <span className="text-muted-foreground">(optional)</span>
+            {t('lic.expires')} <span className="text-muted-foreground">{t('common.optional')}</span>
           </label>
           <input
             name="expiresAt"
@@ -130,19 +133,19 @@ export function NewLicenseForm({
             onChange={handleChange}
             className={inputClass}
           />
-          <p className="text-[10px] text-muted-foreground mt-1">Leave blank for a never-expiring license.</p>
+          <p className="text-[10px] text-muted-foreground mt-1">{t('lic.expiresHint')}</p>
         </div>
 
         <div>
           <label className="block text-xs font-medium text-foreground mb-1.5">
-            Notes <span className="text-muted-foreground">(optional)</span>
+            {t('contracts.notes')} <span className="text-muted-foreground">{t('common.optional')}</span>
           </label>
           <textarea
             name="notes"
             value={form.notes}
             onChange={handleChange}
             rows={3}
-            placeholder="Internal notes about this license…"
+            placeholder={t('lic.notesPlaceholder')}
             className={`${inputClass} resize-none`}
           />
         </div>
@@ -158,7 +161,7 @@ export function NewLicenseForm({
           disabled={loading}
           className="tw-btn-primary w-full py-2 text-xs font-semibold rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Generating…' : 'Generate License Key'}
+          {loading ? t('lic.generating') : t('lic.generate')}
         </button>
       </form>
     </div>

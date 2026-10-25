@@ -1,12 +1,21 @@
-export type AdminLang = 'en' | 'pt-BR'
+import { adminEs } from './admin-i18n-es'
+import { adminFr } from './admin-i18n-fr'
+import { adminUi, type AdminUiKey } from './admin-ui-copy'
+
+export type AdminLang = 'en' | 'pt-BR' | 'fr' | 'es'
 
 export const ADMIN_LANGS: { code: AdminLang; label: string }[] = [
-  { code: 'pt-BR', label: 'PT-BR' },
+  { code: 'pt-BR', label: 'PT' },
   { code: 'en', label: 'EN' },
+  { code: 'fr', label: 'FR' },
+  { code: 'es', label: 'ES' },
 ]
 
 export function dateLocale(lang: AdminLang): string {
-  return lang === 'pt-BR' ? 'pt-BR' : 'en-US'
+  if (lang === 'pt-BR') return 'pt-BR'
+  if (lang === 'fr') return 'fr-CA'
+  if (lang === 'es') return 'es-419'
+  return 'en-US'
 }
 
 const en = {
@@ -59,7 +68,7 @@ const en = {
   'login.newPassSubtitle': 'Choose a new password before continuing',
   'profile.client': 'Client',
   'profile.since': 'Since',
-  'profile.tab.overview': 'Client',
+  'profile.tab.overview': 'Overview',
   'profile.tab.contracts': 'Contract',
   'profile.tab.billing': 'Billing',
   'profile.tab.documents': 'Documents',
@@ -106,7 +115,7 @@ const en = {
   'contracts.notes': 'Notes',
   'contracts.create': 'Create contract',
   'contracts.creating': 'Creating…',
-  'contracts.required': 'Start date is required, plus a title or template.',
+  'contracts.required': 'Enter a start date and either a title or a template.',
   'contracts.template': 'Template',
   'contracts.templateNone': 'None',
   'settings.templates': 'Contract templates',
@@ -291,9 +300,14 @@ const en = {
   'docs.kind.other': 'Other',
 } as const
 
-type MsgKey = keyof typeof en
+type CoreKey = keyof typeof en
+type MsgKey = CoreKey | AdminUiKey
 
-const ptBR: Record<MsgKey, string> = {
+function withUi(core: Record<CoreKey, string>, ui: Record<AdminUiKey, string>): Record<MsgKey, string> {
+  return { ...core, ...ui }
+}
+
+const ptBR: Record<CoreKey, string> = {
   'nav.home': 'Início',
   'nav.clients': 'Clientes',
   'nav.licenses': 'Licenças',
@@ -308,7 +322,7 @@ const ptBR: Record<MsgKey, string> = {
   'nav.signOut': 'Sair',
   'title.dashboard': 'Painel',
   'title.clients': 'Clientes',
-  'title.clientsNew': 'Novo tenant',
+  'title.clientsNew': 'Novo cliente (instância)',
   'title.licenses': 'Licenças',
   'title.license': 'Licença',
   'title.tickets': 'Chamados',
@@ -343,7 +357,7 @@ const ptBR: Record<MsgKey, string> = {
   'login.newPassSubtitle': 'Escolha uma nova senha antes de continuar',
   'profile.client': 'Cliente',
   'profile.since': 'Desde',
-  'profile.tab.overview': 'Cliente',
+  'profile.tab.overview': 'Visão geral',
   'profile.tab.contracts': 'Contrato',
   'profile.tab.billing': 'Cobrança',
   'profile.tab.documents': 'Documentos',
@@ -357,7 +371,7 @@ const ptBR: Record<MsgKey, string> = {
   'licenses.product': 'Produto',
   'licenses.plan': 'Plano',
   'licenses.dueDate': 'Vencimento',
-  'licenses.tenantSlug': 'Slug do tenant',
+  'licenses.tenantSlug': 'Identificador da instância',
   'licenses.status': 'Status',
   'licenses.options': 'Opções',
   'licenses.statusBtn': 'Status',
@@ -371,11 +385,11 @@ const ptBR: Record<MsgKey, string> = {
   'licenses.selectProduct': 'Selecionar produto',
   'licenses.selectTier': 'Selecionar plano',
   'licenses.slugPlaceholder': 'acme',
-  'licenses.required': 'Produto, plano, vencimento e slug do tenant são obrigatórios.',
+  'licenses.required': 'Produto, plano, vencimento e identificador da instância são obrigatórios.',
   'licenses.createError': 'Não foi possível criar a licença.',
   'licenses.creating': 'Criando…',
   'licenses.create': 'Criar licença',
-  'licenses.createdTenant': 'Tenant TurboISP criado. Login {user} — senha temporária {password}',
+  'licenses.createdTenant': 'Instância TurboISP criada. Login {user} — senha temporária {password}',
   'licenses.status.active': 'Ativa',
   'licenses.status.pending': 'Pendente',
   'licenses.status.suspended': 'Suspensa',
@@ -390,7 +404,7 @@ const ptBR: Record<MsgKey, string> = {
   'contracts.notes': 'Notas',
   'contracts.create': 'Criar contrato',
   'contracts.creating': 'Criando…',
-  'contracts.required': 'Data de início é obrigatória, mais um título ou modelo.',
+  'contracts.required': 'Informe a data de início e um título ou modelo.',
   'contracts.template': 'Modelo',
   'contracts.templateNone': 'Nenhum',
   'settings.templates': 'Modelos de contrato',
@@ -460,7 +474,7 @@ const ptBR: Record<MsgKey, string> = {
   'terms.group.contract': 'Contrato',
   'terms.group.provider': 'Provedor',
   'terms.group.party': 'Cliente',
-  'terms.group.fees': 'Honorários',
+  'terms.group.fees': 'Valores e reajustes',
   'terms.group.sla': 'SLA e responsabilidade',
   'terms.group.law': 'Lei aplicável',
   'contracts.createError': 'Não foi possível criar o contrato.',
@@ -479,11 +493,11 @@ const ptBR: Record<MsgKey, string> = {
   'billing.users': 'Usuários',
   'billing.monthly': 'Mensal',
   'billing.billingDay': 'Dia de cobrança',
-  'billing.trialEnds': 'Fim do trial',
+  'billing.trialEnds': 'Fim do período de teste',
   'billing.licenseKey': 'Chave de licença',
   'billing.day': 'Dia {n}',
   'billing.enterprise': 'Enterprise',
-  'billing.seats': '{n} assentos',
+  'billing.seats': '{n} usuários',
   'billing.invoices': 'Faturas',
   'billing.unpaid': '{n} em aberto',
   'billing.none': 'Nenhuma fatura ainda.',
@@ -494,10 +508,10 @@ const ptBR: Record<MsgKey, string> = {
   'billing.marking': 'Marcando…',
   'billing.pay': 'Pagar',
   'billing.asaas': 'Boleto/PIX (Asaas)',
-  'billing.asaasRegen': 'Gerar Boleto/PIX de novo (Asaas)',
+  'billing.asaasRegen': 'Gerar novo boleto/PIX (Asaas)',
   'billing.asaasBusy': 'Gerando…',
   'billing.stripe': 'Cartão de crédito/débito (Stripe)',
-  'billing.stripeRegen': 'Gerar link de cartão de novo (Stripe)',
+  'billing.stripeRegen': 'Gerar novo link de cartão (Stripe)',
   'billing.stripeBusy': 'Criando…',
   'billing.payError': 'Falha ao criar link de pagamento',
   'billing.remove': 'Remover',
@@ -512,7 +526,7 @@ const ptBR: Record<MsgKey, string> = {
   'billing.inv.installation': 'Taxa de instalação',
   'billing.inv.monthly': 'Assinatura mensal',
   'billing.inv.prorated': 'Cobrança proporcional',
-  'billing.inv.grace': 'Taxa de carência',
+  'billing.inv.grace': 'Taxa de extensão de prazo',
   'billing.inv.importation': 'Taxa de importação',
   'billing.inv.custom': 'Cobrança avulsa',
   'billing.charge': 'Nova cobrança',
@@ -537,7 +551,7 @@ const ptBR: Record<MsgKey, string> = {
   'billing.pending': 'Pendente',
   'billing.overdue': 'Vencida',
   'billing.waived': 'Isenta',
-  'billing.sub.trial': 'Trial',
+  'billing.sub.trial': 'Em teste',
   'billing.sub.pending': 'Aguardando pagamento',
   'billing.sub.active': 'Ativa',
   'billing.sub.suspended': 'Suspensa',
@@ -575,10 +589,17 @@ const ptBR: Record<MsgKey, string> = {
   'docs.kind.other': 'Outro',
 }
 
-const dict: Record<AdminLang, Record<MsgKey, string>> = { en, 'pt-BR': ptBR }
+export const adminLocales = { en, 'pt-BR': ptBR }
+
+const dict: Record<AdminLang, Record<MsgKey, string>> = {
+  en: withUi(en, adminUi.en),
+  'pt-BR': withUi(ptBR, adminUi['pt-BR']),
+  fr: withUi(adminFr as Record<CoreKey, string>, adminUi.fr),
+  es: withUi(adminEs as Record<CoreKey, string>, adminUi.es),
+}
 
 export function translate(lang: AdminLang, key: MsgKey, vars?: Record<string, string | number>): string {
-  let out = dict[lang][key] ?? dict.en[key] ?? key
+  let out = dict[lang][key] ?? key
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
       out = out.replaceAll(`{${k}}`, String(v))
@@ -589,6 +610,8 @@ export function translate(lang: AdminLang, key: MsgKey, vars?: Record<string, st
 
 export function parseAdminLang(raw: string | null | undefined): AdminLang {
   if (raw === 'en') return 'en'
+  if (raw === 'fr' || raw === 'fr-CA' || raw === 'fr-ca' || raw === 'fr_CA') return 'fr'
+  if (raw === 'es' || raw === 'es-419' || raw === 'es-MX' || raw === 'es-mx') return 'es'
   if (raw === 'pt-BR' || raw === 'pt' || raw === 'pt_BR' || raw === 'pt-br') return 'pt-BR'
   return 'pt-BR'
 }
