@@ -3,7 +3,7 @@ import { startAndNetwork } from './start-network'
 import { mapPlansCustomers } from './map-customers'
 import { billingFiscal } from './billing'
 import { opsArticles } from './ops'
-import type { Article, CategoryId } from './types'
+import type { Article, CategoryId, Lang } from './types'
 
 export { CATEGORIES, JOBS }
 export type { Article, CategoryId, I18n, Lang, Block, Category, Job } from './types'
@@ -31,7 +31,7 @@ export function articleSlugs(): string[] {
   return ARTICLES.map((a) => a.slug)
 }
 
-export function flattenArticleText(article: Article, lang: 'en' | 'pt' | 'fr'): string {
+export function flattenArticleText(article: Article, lang: Lang): string {
   const parts = [article.title[lang], article.summary[lang]]
   for (const block of article.body) {
     if (block.type === 'p' || block.type === 'h2' || block.type === 'callout') {

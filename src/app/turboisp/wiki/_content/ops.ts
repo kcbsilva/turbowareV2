@@ -8,7 +8,7 @@ export const opsArticles: Article[] = [
     slug: 'service-orders',
     category: 'field',
     minutes: 7,
-    title: t('Create a service order', 'Criar uma ordem de serviço', 'Créer un ordre de service'),
+    title: t('Create a service order', 'Criar uma ordem de serviço', 'Créer un ordre de service', 'Crear una orden de servicio'),
     summary: t(
       'Dispatch, schedule, materials, and close with a signature.',
       'Despacho, agenda, materiais e encerramento com assinatura.',
@@ -28,7 +28,7 @@ export const opsArticles: Article[] = [
         ) },
         { title: t('Schedule, then assign', 'Agende, depois atribua', 'Planifiez, puis assignez'), body: t(
           'Scheduling is its own window. An unassigned OS sits in the queue until someone owns the route.',
-          'Agendamento é janela própria. OS sem dono fica na fila até alguém assumir a rota.',
+          'Agendamento é uma janela própria. Chamado sem responsável fica na fila até alguém assumir a rota.',
           'Le planning est une fenêtre à part. Un OS non assigné reste en file jusqu’à ce que quelqu’un prenne la tournée.',
         ) },
       ] },
@@ -39,7 +39,7 @@ export const opsArticles: Article[] = [
     slug: 'field-app',
     category: 'field',
     minutes: 5,
-    title: t('Use the field app', 'Usar o app de campo', 'Utiliser l’app terrain'),
+    title: t('Use the field app', 'Usar o app de campo', 'Utiliser l’app terrain', 'Usar la app de campo'),
     summary: t(
       'PWA on the technician’s phone — offline, checklist, signature.',
       'PWA no celular do técnico — offline, checklist, assinatura.',
@@ -63,7 +63,7 @@ export const opsArticles: Article[] = [
     slug: 'inventory-basics',
     category: 'inventory',
     minutes: 6,
-    title: t('Warehouses, products, stock', 'Depósitos, produtos, saldo', 'Entrepôts, produits, stock'),
+    title: t('Warehouses, products, stock', 'Depósitos, produtos, saldo', 'Entrepôts, produits, stock', 'Depósitos, productos y saldo'),
     summary: t(
       'Locations, SKUs, and movements — including NFe inbound.',
       'Locais, SKUs e movimentações — inclusive entrada via NF-e.',
@@ -87,10 +87,10 @@ export const opsArticles: Article[] = [
     slug: 'installation-kits',
     category: 'inventory',
     minutes: 4,
-    title: t('Installation kits', 'Kits de instalação', 'Kits d’installation'),
+    title: t('Installation kits', 'Kits de instalação', 'Kits d’installation', 'Kits de instalación'),
     summary: t(
       'A bundle that leaves the warehouse when an install OS is completed.',
-      'Um pacote que sai do depósito quando a OS de instalação fecha.',
+      'Um pacote que sai do depósito quando o chamado de instalação é encerrado.',
       'Un lot qui sort de l’entrepôt quand l’OS d’install se clôt.',
     ),
     body: [
@@ -111,7 +111,7 @@ export const opsArticles: Article[] = [
     slug: 'commodato',
     category: 'inventory',
     minutes: 5,
-    title: t('Comodato / CPE on the customer', 'Comodato / CPE no cliente', 'Comodato / CPE chez le client'),
+    title: t('Comodato / CPE on the customer', 'Comodato / CPE no cliente', 'Comodato / CPE chez le client', 'Comodato / CPE en el cliente'),
     summary: t(
       'Equipment on loan is subscriber equipment, not a vanished warehouse row.',
       'Equipamento em comodato é CPE do assinante, não uma linha de estoque sumida.',
@@ -135,7 +135,7 @@ export const opsArticles: Article[] = [
     slug: 'add-olt',
     category: 'provisioning',
     minutes: 8,
-    title: t('Add an OLT', 'Cadastrar uma OLT', 'Ajouter une OLT'),
+    title: t('Add an OLT', 'Cadastrar uma OLT', 'Ajouter une OLT', 'Registrar una OLT'),
     summary: t(
       'Chassis in the tenant, templates, then ONUs can be queued.',
       'Chassis no tenant, templates, aí as ONUs entram na fila.',
@@ -166,7 +166,7 @@ export const opsArticles: Article[] = [
     slug: 'provision-onu',
     category: 'provisioning',
     minutes: 8,
-    title: t('Provision an ONU', 'Provisionar uma ONU', 'Provisionner une ONU'),
+    title: t('Provision an ONU', 'Provisionar uma ONU', 'Provisionner une ONU', 'Aprovisionar una ONU'),
     summary: t(
       'Serial to OLT to contract — then watch the queue.',
       'Serial na OLT no contrato — depois olhe a fila.',
@@ -197,7 +197,7 @@ export const opsArticles: Article[] = [
     slug: 'provisioning-queue',
     category: 'provisioning',
     minutes: 4,
-    title: t('Watch the provisioning queue', 'Acompanhar a fila de provisionamento', 'Suivre la file de provisionnement'),
+    title: t('Watch the provisioning queue', 'Acompanhar a fila de provisionamento', 'Suivre la file de provisionnement', 'Seguir la cola de aprovisionamiento'),
     summary: t(
       'Pending, failed, retry — this is the truth, not the last SSH session.',
       'Pendente, falhou, retry — esta é a verdade, não o último SSH.',
@@ -221,7 +221,7 @@ export const opsArticles: Article[] = [
     slug: 'noc-overview',
     category: 'noc',
     minutes: 5,
-    title: t('NOC overview', 'Visão geral do NOC', 'Aperçu NOC'),
+    title: t('NOC overview', 'Visão geral do NOC', 'Aperçu NOC', 'Vista general del NOC'),
     summary: t(
       'Fiber, wireless, FWA, devices, ACS — one place to see what is sick.',
       'Fibra, wireless, FWA, devices, ACS — um lugar para ver o que está doente.',
@@ -245,7 +245,7 @@ export const opsArticles: Article[] = [
     slug: 'disconnect-session',
     category: 'noc',
     minutes: 4,
-    title: t('Disconnect a session', 'Desconectar uma sessão', 'Déconnecter une session'),
+    title: t('Disconnect a session', 'Desconectar uma sessão', 'Déconnecter une session', 'Desconectar una sesión'),
     summary: t(
       'CoA Disconnect to the NAS. The worktop is not a substitute for UDP 3799 reaching the box.',
       'CoA Disconnect no NAS. O worktop não substitui UDP 3799 chegando na caixa.',
@@ -269,11 +269,11 @@ export const opsArticles: Article[] = [
     slug: 'customer-portal',
     category: 'portal',
     minutes: 5,
-    title: t('Customer portal', 'Portal do cliente', 'Portail client'),
+    title: t('Customer portal', 'Portal do cliente', 'Portail client', 'Portal del cliente'),
     summary: t(
       'Subscribers pay, open tickets, and see invoices on a separate login.',
-      'Assinantes pagam, abrem tickets e veem faturas noutro login.',
-      'Les abonnés paient, ouvrent des tickets et voient les factures sur un autre login.',
+      'Assinantes pagam, abrem chamados e veem faturas em um acesso próprio.',
+      'Les abonnés paient, ouvrent des billets et voient les factures avec un accès distinct.',
     ),
     body: [
       { type: 'p', text: t(
@@ -295,11 +295,11 @@ export const opsArticles: Article[] = [
     slug: 'email-whatsapp',
     category: 'portal',
     minutes: 5,
-    title: t('Email and WhatsApp', 'E-mail e WhatsApp', 'E-mail et WhatsApp'),
+    title: t('Email and WhatsApp', 'E-mail e WhatsApp', 'Courriel et WhatsApp', 'Correo y WhatsApp'),
     summary: t(
       'Transactional mail and Cloud API WhatsApp. Not a marketing blast tool.',
       'E-mail transacional e WhatsApp Cloud API. Não é ferramenta de disparo de marketing.',
-      'Mail transactionnel et WhatsApp Cloud API. Pas un outil de blast marketing.',
+      'Courriel transactionnel et WhatsApp Cloud API. Pas un outil d’envoi marketing.',
     ),
     body: [
       { type: 'path', trail: trail(
@@ -319,7 +319,7 @@ export const opsArticles: Article[] = [
     slug: 'reports',
     category: 'reports',
     minutes: 4,
-    title: t('Reports', 'Relatórios', 'Rapports'),
+    title: t('Reports', 'Relatórios', 'Rapports', 'Reportes'),
     summary: t(
       'Contracts, delinquents, system activity, regulatory extracts.',
       'Contratos, inadimplentes, atividade do sistema, extratos regulatórios.',
@@ -332,9 +332,9 @@ export const opsArticles: Article[] = [
         [...turbo, 'Rapports'],
       ) },
       { type: 'ul', items: [
-        t('Administrative: clients, contracts, delinquents.', 'Administrativo: clientes, contratos, inadimplentes.', 'Administratif : clients, contrats, impayés.'),
+        t('Administrative: clients, contracts, delinquents.', 'Administrativo: clientes, contratos, inadimplentes.', 'Administratif: clients, contrats, impayés.'),
         t('System activity for audit, not for NOC alarms.', 'Atividade do sistema para auditoria, não para alarme de NOC.', 'Activité système pour l’audit, pas pour les alarmes NOC.'),
-        t('Regulatory extracts (e.g. SICI-style) when the tenant country requires them.', 'Extratos regulatórios (ex. cara de SICI) quando o país do tenant exige.', 'Extraits réglementaires (ex. type SICI) si le pays du tenant l’exige.'),
+        t('Regulatory extracts (e.g. SICI-style) when the tenant country requires them.', 'Extratos regulatórios (por exemplo, SICI) quando o país da operadora exige.', 'Extraits réglementaires lorsque le pays l’exige (au Brésil, par exemple le SICI).'),
       ] },
       { type: 'related', slugs: ['generate-invoices', 'noc-overview'] },
     ],
@@ -343,7 +343,7 @@ export const opsArticles: Article[] = [
     slug: 'global-settings',
     category: 'settings',
     minutes: 5,
-    title: t('Global settings', 'Configurações globais', 'Paramètres globaux'),
+    title: t('Global settings', 'Configurações globais', 'Paramètres globaux', 'Configuración global'),
     summary: t(
       'Locale, map keys, and tenant-wide defaults. Always scoped to this operator.',
       'Locale, chaves de mapa e padrões do tenant. Sempre deste operador.',

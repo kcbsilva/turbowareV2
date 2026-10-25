@@ -8,7 +8,7 @@ export const mapPlansCustomers: Article[] = [
     slug: 'map-api-keys',
     category: 'map',
     minutes: 4,
-    title: t('Put map keys on the tenant', 'Colocar chaves de mapa no tenant', 'Mettre les clés carte sur le tenant'),
+    title: t('Put map keys on the tenant', 'Colocar chaves de mapa no tenant', 'Mettre les clés carte sur le tenant', 'Poner las claves del mapa en el operador'),
     summary: t(
       'Google Maps, Mapbox, and HERE keys live in this tenant’s global settings — never in a shared env file.',
       'Chaves Google Maps, Mapbox e HERE ficam nas settings globais deste tenant — nunca num .env compartilhado.',
@@ -29,13 +29,13 @@ export const mapPlansCustomers: Article[] = [
         { title: t('Open the map to confirm tiles', 'Abra o mapa para confirmar as tiles', 'Ouvrez la carte pour confirmer les tuiles'), body: t(
           'Infrastructure → Map. If the basemap is blank, the key is missing, restricted to the wrong HTTP referrer, or belongs to another cloud project.',
           'Infraestrutura → Mapa. Basemap em branco: chave ausente, referrer HTTP errado, ou projeto de nuvem errado.',
-          'Infrastructure → Carte. Fond blanc : clé absente, referrer HTTP faux, ou mauvais projet cloud.',
+          'Infrastructure → Carte. Fond blanc: clé absente, referrer HTTP faux ou mauvais projet cloud.',
         ) },
       ] },
       { type: 'callout', kind: 'warn', text: t(
         'Do not store map keys in localStorage as the source of truth. The API is scoped by tenant_id.',
         'Não use localStorage como fonte da verdade para chaves de mapa. A API é por tenant_id.',
-        'Ne stockez pas les clés carte dans localStorage comme source de vérité. L’API est scopée par tenant_id.',
+        'Ne stockez pas les clés carte dans localStorage comme source de vérité. L’API est cloisonnée par tenant_id.',
       ) },
       { type: 'related', slugs: ['network-map', 'import-kml'] },
     ],
@@ -44,7 +44,7 @@ export const mapPlansCustomers: Article[] = [
     slug: 'network-map',
     category: 'map',
     minutes: 8,
-    title: t('Work the network map', 'Usar o mapa de rede', 'Utiliser la carte réseau'),
+    title: t('Work the network map', 'Usar o mapa de rede', 'Utiliser la carte réseau', 'Usar el mapa de red'),
     summary: t(
       'Poles, cables, splitters, FDH/CTO, and subscribers on one GIS canvas.',
       'Postes, cabos, splitters, FDH/CTO e assinantes num canvas GIS.',
@@ -59,8 +59,8 @@ export const mapPlansCustomers: Article[] = [
       { type: 'steps', items: [
         { title: t('Pick a layer, then draw', 'Escolha a camada e desenhe', 'Choisissez une couche, puis dessinez'), body: t(
           'The toolbar is the inventory type you are placing. Click a feature to open detail, uploads, and comments.',
-          'A toolbar é o tipo de inventário que você está colocando. Clique num feature para detalhe, uploads e comentários.',
-          'La barre d’outils est le type d’inventaire que vous placez. Cliquez une entité pour détail, uploads et commentaires.',
+          'A barra de ferramentas é o tipo de item que você está lançando. Clique em um elemento para ver detalhes, anexos e comentários.',
+          'La barre d’outils est le type d’élément que vous placez. Cliquez sur un élément pour voir le détail, les pièces jointes et les commentaires.',
         ) },
         { title: t('Keep plant in projects', 'Mantenha a planta em projetos', 'Gardez la plante dans des projets'), body: t(
           'OSP hangs off tenant → project → phase. Do not dump every pole into a scratch layer you cannot report on.',
@@ -80,7 +80,7 @@ export const mapPlansCustomers: Article[] = [
     slug: 'import-kml',
     category: 'map',
     minutes: 5,
-    title: t('Import or export KML / KMZ', 'Importar ou exportar KML / KMZ', 'Importer ou exporter KML / KMZ'),
+    title: t('Import or export KML / KMZ', 'Importar ou exportar KML / KMZ', 'Importer ou exporter KML / KMZ', 'Importar o exportar KML / KMZ'),
     summary: t(
       'Bring an existing plant file onto the map, or take TurboISP plant out to Google Earth.',
       'Traga um arquivo de planta existente para o mapa, ou leve a planta do TurboISP para o Google Earth.',
@@ -111,7 +111,7 @@ export const mapPlansCustomers: Article[] = [
     slug: 'fdh-cto',
     category: 'map',
     minutes: 6,
-    title: t('FDH / CTO and splitters', 'FDH / CTO e splitters', 'FDH / CTO et splitters'),
+    title: t('FDH / CTO and splitters', 'FDH / CTO e splitters', 'FDH / CTO et splitters', 'FDH / CTO y splitters'),
     summary: t(
       'Cabinets and splitters are inventory objects on the map, not just a drawing.',
       'Armários e splitters são objetos de inventário no mapa, não só um desenho.',
@@ -135,7 +135,7 @@ export const mapPlansCustomers: Article[] = [
     slug: 'internet-plans',
     category: 'plans',
     minutes: 6,
-    title: t('Create an internet plan', 'Criar um plano de internet', 'Créer un forfait internet'),
+    title: t('Create an internet plan', 'Criar um plano de internet', 'Créer un forfait internet', 'Crear un plan de internet'),
     summary: t(
       'Speed, price, and the product the contract will sell.',
       'Velocidade, preço e o produto que o contrato vai vender.',
@@ -166,7 +166,7 @@ export const mapPlansCustomers: Article[] = [
     slug: 'plan-contracts',
     category: 'plans',
     minutes: 5,
-    title: t('Plan contracts and combos', 'Contratos de plano e combos', 'Contrats de forfait et combos'),
+    title: t('Plan contracts and combos', 'Contratos de plano e combos', 'Contrats de forfait et combos', 'Contratos de plan y combos'),
     summary: t(
       'Templates for what a subscriber contract contains — internet, TV, mobile, landline, or a combo.',
       'Modelos do que o contrato do assinante contém — internet, TV, móvel, fixo ou combo.',
@@ -190,7 +190,7 @@ export const mapPlansCustomers: Article[] = [
     slug: 'create-subscriber',
     category: 'subscribers',
     minutes: 7,
-    title: t('Create a subscriber', 'Cadastrar um assinante', 'Créer un abonné'),
+    title: t('Create a subscriber', 'Cadastrar um assinante', 'Créer un abonné', 'Dar de alta un abonado'),
     summary: t(
       'Residential or commercial, tax id, address, and an optional portal password.',
       'Residencial ou comercial, documento, endereço e senha opcional do portal.',
@@ -211,7 +211,7 @@ export const mapPlansCustomers: Article[] = [
         { title: t('Pick person or company', 'Pessoa ou empresa', 'Personne ou société'), body: t(
           'Residential vs commercial changes which tax fields lock. Brazil validates CPF/CNPJ; Canada formats postal codes.',
           'Residencial vs comercial muda quais campos fiscais travam. Brasil valida CPF/CNPJ; Canadá formata postal code.',
-          'Résidentiel vs commercial change les champs fiscaux. Brésil valide CPF/CNPJ ; Canada formate le code postal.',
+          'Résidentiel vs commercial change les champs fiscaux. Le Brésil valide CPF/CNPJ; le Canada formate le code postal.',
         ) },
         { title: t('Save, then add a contract', 'Salve, depois adicione contrato', 'Enregistrez, puis ajoutez un contrat'), body: t(
           'A subscriber without a contract cannot be billed or provisioned. Open the profile and add the service next.',
@@ -226,7 +226,7 @@ export const mapPlansCustomers: Article[] = [
     slug: 'add-contract',
     category: 'subscribers',
     minutes: 7,
-    title: t('Add a service contract', 'Adicionar um contrato de serviço', 'Ajouter un contrat de service'),
+    title: t('Add a service contract', 'Adicionar um contrato de serviço', 'Ajouter un contrat de service', 'Agregar un contrato de servicio'),
     summary: t(
       'The contract is what bills, authenticates, and ties the address to the plant.',
       'O contrato é o que fatura, autentica e liga o endereço à planta.',
@@ -262,7 +262,7 @@ export const mapPlansCustomers: Article[] = [
     slug: 'contract-loyalty',
     category: 'subscribers',
     minutes: 4,
-    title: t('Contract loyalty term', 'Fidelidade do contrato', 'Fidélité du contrat'),
+    title: t('Contract loyalty term', 'Fidelidade do contrato', 'Fidélité du contrat', 'Permanencia del contrato'),
     summary: t(
       '0–24 months on the contract. Zero is month-to-month. The end date starts when the contract goes Active.',
       '0–24 meses no contrato. Zero é mensal. A data final começa quando o contrato fica Ativo.',
@@ -308,7 +308,7 @@ export const mapPlansCustomers: Article[] = [
     slug: 'client-sessions',
     category: 'subscribers',
     minutes: 4,
-    title: t('See who is online', 'Ver quem está online', 'Voir qui est en ligne'),
+    title: t('See who is online', 'Ver quem está online', 'Voir qui est en ligne', 'Ver quién está en línea'),
     summary: t(
       'Live RADIUS sessions — not a ping sweep.',
       'Sessões RADIUS ao vivo — não um ping sweep.',

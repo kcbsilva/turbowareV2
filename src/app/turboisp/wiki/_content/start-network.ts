@@ -8,7 +8,7 @@ export const startAndNetwork: Article[] = [
     slug: 'first-login',
     category: 'start',
     minutes: 3,
-    title: t('Sign in to the worktop', 'Entrar no worktop', 'Se connecter au worktop'),
+    title: t('Sign in to the worktop', 'Entrar no worktop', 'Se connecter au worktop', 'Entrar al worktop'),
     summary: t(
       'How staff reach TurboISP, pick a tenant, and land on the worktop.',
       'Como a equipe acessa o TurboISP, escolhe o tenant e chega no worktop.',
@@ -18,12 +18,12 @@ export const startAndNetwork: Article[] = [
       { type: 'p', text: t(
         'TurboISP is tenant-scoped. You do not get a global inbox of every ISP — you open one operator at a time.',
         'O TurboISP é por tenant. Não existe uma caixa global de todos os ISPs — você abre uma operadora por vez.',
-        'TurboISP est scopé par tenant. Pas de boîte globale de tous les FAI — vous ouvrez un opérateur à la fois.',
+        'TurboISP est limité au tenant. Pas de boîte globale de tous les FAI — vous ouvrez un opérateur à la fois.',
       ) },
       { type: 'callout', kind: 'need', text: t(
         'Your tenant slug (the short name in the URL), staff email, and password. MFA if your tenant requires it.',
         'O slug do tenant (o nome curto na URL), e-mail da equipe e senha. MFA se o tenant exigir.',
-        'Le slug du tenant (le nom court dans l’URL), e-mail staff et mot de passe. MFA si le tenant l’exige.',
+        'Le slug du tenant (le nom court dans l’URL), le courriel de l’équipe et le mot de passe. MFA si le tenant l’exige.',
       ) },
       { type: 'steps', items: [
         { title: t('Open the tenant', 'Abrir o tenant', 'Ouvrir le tenant'), body: t(
@@ -49,7 +49,7 @@ export const startAndNetwork: Article[] = [
     slug: 'setup-checklist',
     category: 'start',
     minutes: 5,
-    title: t('Walk the setup checklist', 'Seguir o checklist de setup', 'Suivre la checklist de setup'),
+    title: t('Walk the setup checklist', 'Seguir o checklist de setup', 'Suivre la checklist de setup', 'Recorrer la lista de puesta en marcha'),
     summary: t(
       'The in-app checklist is the order we expect a new tenant to complete.',
       'O checklist no app é a ordem que esperamos de um tenant novo.',
@@ -85,7 +85,7 @@ export const startAndNetwork: Article[] = [
     slug: 'create-pop',
     category: 'start',
     minutes: 6,
-    title: t('Register a POP', 'Cadastrar um POP', 'Enregistrer un POP'),
+    title: t('Register a POP', 'Cadastrar um POP', 'Enregistrer un POP', 'Registrar un POP'),
     summary: t(
       'A Point of Presence is the site the rest of the operation hangs from — plans, RADIUS, and the map.',
       'O Ponto de Presença é o site do qual o resto da operação pende — planos, RADIUS e o mapa.',
@@ -110,13 +110,13 @@ export const startAndNetwork: Article[] = [
         ) },
         { title: t('Add the POP', 'Adicione o POP', 'Ajoutez le POP'), body: t(
           'Name it the way the NOC says it on the radio — “POP Centro”, not an internal ticket number.',
-          'Nomeie como o NOC fala no rádio — “POP Centro”, não um número de ticket interno.',
+          'Nomeie como o NOC fala no rádio — “POP Centro”, não um número de chamado interno.',
           'Nommez-le comme le NOC le dit à la radio — « POP Centre », pas un numéro de ticket interne.',
         ) },
         { title: t('Switch the active POP', 'Troque o POP ativo', 'Changez le POP actif'), body: t(
           'The worktop is scoped to the active POP. If the map or subscribers look wrong, check the POP switcher first.',
           'O worktop é no POP ativo. Se o mapa ou os assinantes parecerem errados, veja o seletor de POP primeiro.',
-          'Le worktop est scopé au POP actif. Si la carte ou les abonnés semblent faux, vérifiez d’abord le sélecteur de POP.',
+          'Le worktop est propre au POP actif. Si la carte ou les abonnés semblent faux, vérifiez d’abord le sélecteur de POP.',
         ) },
       ] },
       { type: 'related', slugs: ['radius-nas', 'map-api-keys'] },
@@ -126,7 +126,7 @@ export const startAndNetwork: Article[] = [
     slug: 'staff-and-permissions',
     category: 'start',
     minutes: 7,
-    title: t('Users and permission groups', 'Usuários e grupos de permissão', 'Utilisateurs et groupes de permission'),
+    title: t('Users and permission groups', 'Usuários e grupos de permissão', 'Utilisateurs et groupes de permission', 'Usuarios y grupos de permisos'),
     summary: t(
       'Staff see TurboMenu items only if their group allows the page.',
       'A equipe só vê itens do TurboMenu se o grupo permitir a página.',
@@ -167,7 +167,7 @@ export const startAndNetwork: Article[] = [
     slug: 'radius-nas',
     category: 'network',
     minutes: 8,
-    title: t('RADIUS and NAS', 'RADIUS e NAS', 'RADIUS et NAS'),
+    title: t('RADIUS and NAS', 'RADIUS e NAS', 'RADIUS et NAS', 'RADIUS y NAS'),
     summary: t(
       'Point the concentrator at TurboRADIUS and keep sessions visible in the worktop.',
       'Aponte o concentrador para o TurboRADIUS e mantenha as sessões visíveis no worktop.',
@@ -193,7 +193,7 @@ export const startAndNetwork: Article[] = [
         { title: t('Confirm live sessions', 'Confirme sessões ao vivo', 'Confirmez les sessions live'), body: t(
           'TurboMenu → Subscribers → Client sessions. Empty after a known-online customer means RADIUS never accounted the session — secrets and NAS IP first, not the subscriber record.',
           'TurboMenu → Assinantes → Sessões de clientes. Vazio com cliente online conhecido: o RADIUS não contabilizou — segredo e IP do NAS primeiro, não o cadastro.',
-          'TurboMenu → Abonnés → Sessions clients. Vide alors que le client est en ligne : RADIUS n’a pas compté — secret et IP NAS d’abord, pas la fiche abonné.',
+          'TurboMenu → Abonnés → Sessions clients. Vide alors que le client est en ligne: RADIUS n’a pas compté — secret et IP du NAS d’abord, pas la fiche abonné.',
         ) },
       ] },
       { type: 'related', slugs: ['client-sessions', 'disconnect-session', 'ip-blocks'] },
@@ -203,7 +203,7 @@ export const startAndNetwork: Article[] = [
     slug: 'ip-blocks',
     category: 'network',
     minutes: 6,
-    title: t('IP blocks and pools', 'Blocos de IP e pools', 'Blocs IP et pools'),
+    title: t('IP blocks and pools', 'Blocos de IP e pools', 'Blocs IP et pools', 'Bloques de IP y pools'),
     summary: t(
       'Hand out public or CGNAT space from pools, not from a spreadsheet.',
       'Distribua espaço público ou CGNAT a partir de pools, não de planilha.',
@@ -234,7 +234,7 @@ export const startAndNetwork: Article[] = [
     slug: 'cgnat',
     category: 'network',
     minutes: 5,
-    title: t('CGNAT ranges', 'Faixas CGNAT', 'Plages CGNAT'),
+    title: t('CGNAT ranges', 'Faixas CGNAT', 'Plages CGNAT', 'Rangos CGNAT'),
     summary: t(
       'Generate paste-ready CGNAT config from the tenant, then keep the pool in TurboISP as the source of truth.',
       'Gere config CGNAT pronta para colar a partir do tenant, e mantenha o pool no TurboISP como fonte da verdade.',
