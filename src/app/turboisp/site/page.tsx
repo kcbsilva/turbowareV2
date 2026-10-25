@@ -518,6 +518,14 @@ export default function TurboISPSitePage() {
             {s({ en: "Wiki", pt: "Wiki", fr: "Wiki" })}
           </Link>
           <span className="mx-2 text-slate-300">·</span>
+          <Link href="/termos" className="text-sky-600 hover:text-sky-700">
+            {s({ en: "Terms", pt: "Termos", fr: "Conditions" })}
+          </Link>
+          <span className="mx-2 text-slate-300">·</span>
+          <Link href="/privacidade" className="text-sky-600 hover:text-sky-700">
+            {s({ en: "Privacy", pt: "Privacidade", fr: "Confidentialité" })}
+          </Link>
+          <span className="mx-2 text-slate-300">·</span>
           {new Date().getFullYear()} - TurboISP
         </p>
       </footer>

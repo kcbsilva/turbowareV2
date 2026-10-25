@@ -90,6 +90,8 @@ export function SiteFooter({
           <a href="#pricing" className="hover:text-[#fca311]/80 transition">{labels.pricing}</a>
           <a href={turboispSignupUrl()} className="hover:text-[#fca311]/80 transition">{labels.demo}</a>
           <Link href="/admin/login" className="hover:text-white/60 transition">{labels.admin}</Link>
+          <Link href="/termos" className="hover:text-white/60 transition">Termos</Link>
+          <Link href="/privacidade" className="hover:text-white/60 transition">Privacidade</Link>
         </div>
         <p>{new Date().getFullYear()} - TurboISP</p>
       </div>
