@@ -533,6 +533,246 @@ const rows = {
     'Le statut ou le forfait est requis.',
     'El estado o el plan es obligatorio.',
   ],
+  'common.forbidden': [
+    'You do not have access to that.',
+    'Você não tem acesso a isso.',
+    'Vous n’avez pas accès à ça.',
+    'No tienes acceso a eso.',
+  ],
+  'signup.disabled': [
+    'Public signup is turned off.',
+    'O cadastro público está desativado.',
+    'L’inscription publique est désactivée.',
+    'El registro público está desactivado.',
+  ],
+  'signup.body': [
+    'That request is not valid.',
+    'Essa solicitação não é válida.',
+    'Cette requête n’est pas valide.',
+    'Esa solicitud no es válida.',
+  ],
+  'signup.slug': [
+    'That URL is not valid.',
+    'Esse endereço (URL) não é válido.',
+    'Cet identifiant URL n’est pas valide.',
+    'Esa dirección (URL) no es válida.',
+  ],
+  'signup.password': [
+    'Use at least 8 characters in the password.',
+    'Use pelo menos 8 caracteres na senha.',
+    'Utilisez au moins 8 caractères dans le mot de passe.',
+    'Usa al menos 8 caracteres en la contraseña.',
+  ],
+  'signup.emailTaken': [
+    'That email is already in use.',
+    'Esse e-mail já está em uso.',
+    'Ce courriel est déjà utilisé.',
+    'Ese correo ya está en uso.',
+  ],
+  'signup.slugTaken': [
+    'That URL is already in use.',
+    'Esse endereço (URL) já está em uso.',
+    'Cet identifiant URL est déjà utilisé.',
+    'Esa dirección (URL) ya está en uso.',
+  ],
+  'signup.usernameTaken': [
+    'That username is already in use.',
+    'Esse nome de usuário já está em uso.',
+    'Ce nom d’utilisateur est déjà utilisé.',
+    'Ese nombre de usuario ya está en uso.',
+  ],
+  'signup.failed': [
+    'Signup did not go through. Try again.',
+    'O cadastro não foi concluído. Tente de novo.',
+    'L’inscription n’a pas abouti. Réessayez.',
+    'El registro no se completó. Inténtalo de nuevo.',
+  ],
+  'signup.company': [
+    'Company name is required.',
+    'O nome da empresa é obrigatório.',
+    'Le nom de l’entreprise est requis.',
+    'El nombre de la empresa es obligatorio.',
+  ],
+  'signup.unavailable': [
+    'We could not check availability. Try again in a moment.',
+    'Não foi possível verificar a disponibilidade. Tente de novo em instantes.',
+    'Impossible de vérifier la disponibilité. Réessayez dans un instant.',
+    'No se pudo comprobar la disponibilidad. Inténtalo de nuevo en un momento.',
+  ],
+  'register.name': [
+    'First and last name are required.',
+    'Nome e sobrenome são obrigatórios.',
+    'Le prénom et le nom sont requis.',
+    'El nombre y el apellido son obligatorios.',
+  ],
+  'register.financeEmail': [
+    'The billing email is required.',
+    'O e-mail financeiro é obrigatório.',
+    'Le courriel de facturation est requis.',
+    'El correo de facturación es obligatorio.',
+  ],
+  'register.password': [
+    'A password is required.',
+    'A senha é obrigatória.',
+    'Un mot de passe est requis.',
+    'La contraseña es obligatoria.',
+  ],
+  'register.terms': [
+    'You need to accept the Terms of Service.',
+    'Você precisa aceitar os Termos de Serviço.',
+    'Vous devez accepter les conditions d’utilisation.',
+    'Tienes que aceptar los Términos del servicio.',
+  ],
+  'register.captcha': [
+    'The reCAPTCHA check failed. Try again.',
+    'A verificação reCAPTCHA falhou. Tente de novo.',
+    'La vérification reCAPTCHA a échoué. Réessayez.',
+    'La verificación reCAPTCHA falló. Inténtalo de nuevo.',
+  ],
+  'register.emailExists': [
+    'An account with this email already exists.',
+    'Já existe uma conta com este e-mail.',
+    'Un compte existe déjà avec ce courriel.',
+    'Ya existe una cuenta con este correo.',
+  ],
+  'register.cnpjExists': [
+    'An account with this CNPJ already exists.',
+    'Já existe uma conta com este CNPJ.',
+    'Un compte existe déjà avec ce CNPJ.',
+    'Ya existe una cuenta con este CNPJ.',
+  ],
+  'register.subdomain': [
+    'This subdomain is already in use.',
+    'Este subdomínio já está em uso.',
+    'Ce sous-domaine est déjà utilisé.',
+    'Este subdominio ya está en uso.',
+  ],
+  'register.subdomainIsp': [
+    'This subdomain is already in use on TurboISP.',
+    'Este subdomínio já está em uso no TurboISP.',
+    'Ce sous-domaine est déjà utilisé sur TurboISP.',
+    'Este subdominio ya está en uso en TurboISP.',
+  ],
+  'register.slugShort': [
+    'The name needs at least 3 characters.',
+    'O nome precisa de pelo menos 3 caracteres.',
+    'Le nom doit compter au moins 3 caractères.',
+    'El nombre necesita al menos 3 caracteres.',
+  ],
+  'register.reserved': [
+    'This subdomain is reserved.',
+    'Este subdomínio é reservado.',
+    'Ce sous-domaine est réservé.',
+    'Este subdominio está reservado.',
+  ],
+  'slug.charset': [
+    'Use letters or numbers (a–z, 0–9).',
+    'Use letras ou números (a–z, 0–9).',
+    'Utilisez des lettres ou des chiffres (a–z, 0–9).',
+    'Usa letras o números (a–z, 0–9).',
+  ],
+  'slug.reserved': [
+    '{slug} is reserved. Try a name like acme or northnet.',
+    '{slug} é reservado. Tente um nome como acme ou northnet.',
+    '{slug} est réservé. Essayez un nom comme acme ou northnet.',
+    '{slug} está reservado. Prueba un nombre como acme o northnet.',
+  ],
+  'slug.short': [
+    'The subdomain needs at least 3 characters.',
+    'O subdomínio precisa de pelo menos 3 caracteres.',
+    'Le sous-domaine doit compter au moins 3 caractères.',
+    'El subdominio necesita al menos 3 caracteres.',
+  ],
+  'slug.format': [
+    'Use lowercase letters, numbers, and hyphens. It cannot start or end with a hyphen.',
+    'Use letras minúsculas, números e hífens. Não pode começar nem terminar com hífen.',
+    'Utilisez des minuscules, des chiffres et des tirets. Il ne peut pas commencer ni finir par un tiret.',
+    'Usa minúsculas, números y guiones. No puede empezar ni terminar con un guion.',
+  ],
+  'verify.required': [
+    'The verification link is missing its token.',
+    'O link de verificação está sem o token.',
+    'Le lien de vérification n’a pas de jeton.',
+    'Al enlace de verificación le falta el token.',
+  ],
+  'verify.used': [
+    'This verification link is invalid or was already used.',
+    'Este link de verificação é inválido ou já foi usado.',
+    'Ce lien de vérification est invalide ou a déjà été utilisé.',
+    'Este enlace de verificación no es válido o ya se usó.',
+  ],
+  'verify.expired': [
+    'This verification link has expired. Contact support.',
+    'Este link de verificação expirou. Fale com o suporte.',
+    'Ce lien de vérification a expiré. Contactez le soutien.',
+    'Este enlace de verificación venció. Contacta a soporte.',
+  ],
+  'billing.statusList': [
+    'Invalid status. Use one of: {list}.',
+    'Status inválido. Use um destes: {list}.',
+    'Statut invalide. Utilisez l’un de ceux-ci: {list}.',
+    'Estado no válido. Usa uno de estos: {list}.',
+  ],
+  'billing.transition': [
+    'That status change is not allowed: {from} → {to}.',
+    'Essa troca de status não é permitida: {from} → {to}.',
+    'Ce changement de statut n’est pas permis: {from} → {to}.',
+    'Ese cambio de estado no está permitido: {from} → {to}.',
+  ],
+  'billing.invoiceStatus': [
+    'This invoice cannot be paid. Current status: {status}.',
+    'Esta fatura não pode ser paga. Status atual: {status}.',
+    'Cette facture ne peut pas être payée. Statut actuel: {status}.',
+    'Esta factura no se puede pagar. Estado actual: {status}.',
+  ],
+  'billing.gateway': [
+    'The payment gateway did not respond. Try again.',
+    'O gateway de pagamento não respondeu. Tente de novo.',
+    'La passerelle de paiement n’a pas répondu. Réessayez.',
+    'La pasarela de pago no respondió. Inténtalo de nuevo.',
+  ],
+  'agent.identity': [
+    'Provide a tenant slug or a valid 14-digit CNPJ.',
+    'Informe o identificador da instância ou um CNPJ válido de 14 dígitos.',
+    'Indiquez l’identifiant de l’instance ou un CNPJ valide de 14 chiffres.',
+    'Indica el identificador de la instancia o un CNPJ válido de 14 dígitos.',
+  ],
+  'agent.fields': [
+    'activeSubscribers and hardwareId are required.',
+    'activeSubscribers e hardwareId são obrigatórios.',
+    'activeSubscribers et hardwareId sont requis.',
+    'activeSubscribers y hardwareId son obligatorios.',
+  ],
+  'agent.counts': [
+    'Counts must be zero or greater.',
+    'As contagens precisam ser zero ou mais.',
+    'Les quantités doivent être de zéro ou plus.',
+    'Los conteos deben ser cero o más.',
+  ],
+  'agent.client': [
+    'No client matches that identity.',
+    'Nenhum cliente corresponde a essa identidade.',
+    'Aucun client ne correspond à cette identité.',
+    'Ningún cliente corresponde a esa identidad.',
+  ],
+  'agent.noSub': [
+    'No active subscription was found for this client.',
+    'Não há assinatura ativa para este cliente.',
+    'Aucun abonnement actif n’a été trouvé pour ce client.',
+    'No hay una suscripción activa para este cliente.',
+  ],
+  'agent.inactive': [
+    'The subscription is not active (status: {status}).',
+    'A assinatura não está ativa (status: {status}).',
+    'L’abonnement n’est pas actif (statut: {status}).',
+    'La suscripción no está activa (estado: {status}).',
+  ],
+  'agent.manual': [
+    'The new tier needs a manual price. Contact support.',
+    'O novo plano precisa de preço manual. Fale com o suporte.',
+    'Le nouveau forfait exige un prix manuel. Contactez le soutien.',
+    'El nuevo plan necesita un precio manual. Contacta a soporte.',
+  ],
 } as const
 
 type ApiKey = keyof typeof rows
@@ -672,6 +912,43 @@ export const API_ERROR_EXACT: Record<string, ApiErrorKey> = {
   'Only PDF and image files are allowed': 'docs.kind',
   'Note body is required': 'notes.body',
   'noteId required': 'notes.id',
+  Forbidden: 'common.forbidden',
+  'public signup is disabled': 'signup.disabled',
+  'invalid request body': 'signup.body',
+  'invalid slug': 'signup.slug',
+  'password must be at least 8 characters': 'signup.password',
+  'email already in use': 'signup.emailTaken',
+  'slug already in use': 'signup.slugTaken',
+  'username already in use': 'signup.usernameTaken',
+  'signup failed': 'signup.failed',
+  'company name required': 'signup.company',
+  'Could not check availability': 'signup.unavailable',
+  'Billing database unavailable. Ensure TURBOWARE_DB is set and run: npx prisma db push': 'signup.unavailable',
+  'Nome e sobrenome são obrigatórios.': 'register.name',
+  'Email financeiro é obrigatório.': 'register.financeEmail',
+  'A senha é obrigatória.': 'register.password',
+  'Você precisa concordar com os Termos de Serviços.': 'register.terms',
+  'Verificação reCAPTCHA falhou. Tente novamente.': 'register.captcha',
+  'An account with this email already exists.': 'register.emailExists',
+  'An account with this CNPJ already exists.': 'register.cnpjExists',
+  'Este subdomínio já está em uso.': 'register.subdomain',
+  'Este subdomínio já está em uso no TurboISP.': 'register.subdomainIsp',
+  'Nome deve ter pelo menos 3 caracteres.': 'register.slugShort',
+  'Este subdomínio é reservado.': 'register.reserved',
+  'Não foi possível verificar disponibilidade. Tente novamente.': 'signup.unavailable',
+  'Subdomain must use letters or numbers (a–z, 0–9)': 'slug.charset',
+  'Subdomain must be at least 3 characters': 'slug.short',
+  'Use lowercase letters, numbers, and hyphens; it cannot start or end with a hyphen': 'slug.format',
+  'Verification token is required': 'verify.required',
+  'Invalid or already used verification token': 'verify.used',
+  'Verification token has expired. Please contact support.': 'verify.expired',
+  'Gateway error': 'billing.gateway',
+  'Provide tenantSlug or a valid 14-digit cnpj': 'agent.identity',
+  'Missing required fields: activeSubscribers, hardwareId': 'agent.fields',
+  'Counts must be >= 0': 'agent.counts',
+  'Client not found for provided identity': 'agent.client',
+  'No active subscription found for client': 'agent.noSub',
+  'New tier requires manual pricing. Contact support.': 'agent.manual',
 }
 
 function fill(template: string, vars: Record<string, string | number>) {
@@ -713,6 +990,21 @@ export function translateApiError(message: string | null | undefined, lang: stri
 
   const seats = message.match(/^Seat limit reached \((\d+)\/\1\)\.$/)
   if (seats) return text(locale, 'activate.seats', { n: seats[1] ?? '' })
+
+  const statusList = message.match(/^Invalid status\. Must be one of: (.+)$/)
+  if (statusList) return text(locale, 'billing.statusList', { list: statusList[1] ?? '' })
+
+  const transition = message.match(/^Invalid transition: (.+) → (.+)$/)
+  if (transition) return text(locale, 'billing.transition', { from: transition[1] ?? '', to: transition[2] ?? '' })
+
+  const invoiceStatus = message.match(/^Invoice cannot be paid — current status: (.+)$/)
+  if (invoiceStatus) return text(locale, 'billing.invoiceStatus', { status: invoiceStatus[1] ?? '' })
+
+  const reserved = message.match(/^"([^"]+)" is reserved\. Try a company name like acme or northnet\.$/)
+  if (reserved) return text(locale, 'slug.reserved', { slug: reserved[1] ?? '' })
+
+  const inactive = message.match(/^Subscription is not active \(status: (.+)\)$/)
+  if (inactive) return text(locale, 'agent.inactive', { status: inactive[1] ?? '' })
 
   return null
 }

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter, IBM_Plex_Mono } from 'next/font/google'
+import { requestSiteLang } from '@/lib/request-site-lang'
 import { WikiChrome } from './_components/WikiChrome'
+import { wikiCopy } from './_content/strings'
 import './wiki.css'
 
 const inter = Inter({
@@ -16,10 +18,12 @@ const plexMono = IBM_Plex_Mono({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  title: 'Wiki',
-  description:
-    'Operator runbooks for TurboISP — POP, plans, subscribers, billing, provisioning, field, and the network map.',
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await requestSiteLang()
+  return {
+    title: 'Wiki',
+    description: wikiCopy.indexDescription[lang],
+  }
 }
 
 export default function WikiLayout({ children }: { children: React.ReactNode }) {

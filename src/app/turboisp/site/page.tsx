@@ -24,7 +24,8 @@ import {
 import { LANGS, type Lang, pick } from "./_components/constants";
 import { useSiteLang } from "./_components/site-lang";
 import { PricingSection } from "./_components/PricingSection";
-import { turbowareTitle, useDocumentTitle } from "@/lib/document-title";
+import { turbowareTitle, useDocumentTitle, useMetaDescription } from "@/lib/document-title";
+import { ROOT_DESCRIPTION } from "@/lib/locale-copy";
 
 // Drop your screenshots in /public/slides/ with these filenames.
 const SLIDES = [
@@ -197,6 +198,7 @@ const SECTION_NAV = [
 export default function TurboISPSitePage() {
   const { lang, setLang } = useSiteLang();
   useDocumentTitle(turbowareTitle("TurboISP"));
+  useMetaDescription(pick(ROOT_DESCRIPTION, lang));
   const [slideIndex, setSlideIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [broken, setBroken] = useState<Record<string, boolean>>({});

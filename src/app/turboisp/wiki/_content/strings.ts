@@ -9,6 +9,12 @@ export const wikiCopy = {
     'Guides opérateur pour TurboISP — comment faire le travail, pas un inventaire de chaque écran.',
     'Guías de operación de TurboISP: cómo hacer el trabajo, no un inventario de cada pantalla.',
   ),
+  indexDescription: t(
+    'Operator runbooks for TurboISP: POP, plans, subscribers, billing, provisioning, field, and the network map.',
+    'Runbooks do operador no TurboISP: POP, planos, assinantes, faturamento, provisionamento, campo e o mapa da rede.',
+    'Guides opérateur pour TurboISP: POP, forfaits, abonnés, facturation, provisionnement, terrain et la carte du réseau.',
+    'Guías de operación de TurboISP: POP, planes, suscriptores, facturación, aprovisionamiento, campo y el mapa de la red.',
+  ),
   homeTitle: t('What do you want to do?', 'O que você quer fazer?', 'Que voulez-vous faire?', '¿Qué quieres hacer?'),
   homeLead: t(
     'Start from a job. Each guide follows the real TurboMenu path, with the clicks in order.',

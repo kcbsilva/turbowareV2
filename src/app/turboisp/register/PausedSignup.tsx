@@ -7,12 +7,14 @@ import logo from '../assets/TurboISP-logo.png'
 import { LANGS, pick, type Lang } from '../site/_components/constants'
 import { useSiteLang } from '../site/_components/site-lang'
 import { pausedCopy } from './paused-copy'
-import { turbowareTitle, useDocumentTitle } from '@/lib/document-title'
+import { turbowareTitle, useDocumentTitle, useMetaDescription } from '@/lib/document-title'
+import { ROOT_DESCRIPTION } from '@/lib/locale-copy'
 
 export function PausedSignup() {
   const { lang, setLang } = useSiteLang()
   const s = (key: keyof typeof pausedCopy) => pick(pausedCopy[key], lang)
   useDocumentTitle(turbowareTitle(s('title')))
+  useMetaDescription(pick(ROOT_DESCRIPTION, lang))
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-sky-50 to-white text-slate-900 flex flex-col">

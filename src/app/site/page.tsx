@@ -3,74 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
-import {
-  ArrowDown,
-  ArrowUp,
-  Bot,
-  Database,
-  Headphones,
-  Map,
-  Network,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import turbowareLogo from "../assets/turboware-logo.png";
-
-type Project = {
-  name: string;
-  category: string;
-  accent: string;
-  icon: LucideIcon;
-  href: string;
-  description: string;
-};
-
-const PROJECTS: Project[] = [
-  {
-    name: "TurboISP",
-    category: "Network Operations",
-    accent: "#1AABF0",
-    icon: Network,
-    href: "/turboisp/site",
-    description:
-      "End-to-end operational platform for Internet Service Providers combining CRM, billing, network documentation, automation, and multichannel communication in a single system. TurboISP enables multi-PoP management, real-time visibility, workflow automation, and scalable operations from small ISPs to carrier-grade deployments.",
-  },
-  {
-    name: "TurboChat",
-    category: "Customer Conversations",
-    accent: "#ff8a3d",
-    icon: Headphones,
-    href: "/turbochat/site",
-    description:
-      "A unified customer communication platform that delivers automated support and engagement across Meta, Telegram, and 0800 voice channels from a single interface.",
-  },
-  {
-    name: "TurboAgent",
-    category: "Agent Automation",
-    accent: "#7dd56f",
-    icon: Bot,
-    href: "/turboagent/site",
-    description:
-      "An AI-powered automation agent designed to execute tasks, orchestrate workflows, and provide intelligent assistance across systems, tools, and operational processes from a single interface.",
-  },
-  {
-    name: "TurboGIS",
-    category: "Geospatial Intelligence",
-    accent: "#f6c445",
-    icon: Map,
-    href: "/turbogis/site",
-    description:
-      "A geographic information system designed to map, document, and manage networks, towers, and infrastructure with precise spatial visualization and asset tracking.",
-  },
-  {
-    name: "TurboInfraBase",
-    category: "Infrastructure Database",
-    accent: "#ff6b6b",
-    icon: Database,
-    href: "/turboinfrabase/site",
-    description:
-      "A unified infrastructure registry that consolidates hydro, water, gas, telecom, and related assets, maintaining a centralized inventory of all infrastructure mapped and managed within TurboGIS.",
-  },
-];
+import { pick } from "../turboisp/site/_components/constants";
+import { useSiteLang } from "../turboisp/site/_components/site-lang";
+import { SiteLangSelect } from "@/components/SiteLangSelect";
+import { turbowareTitle, useDocumentTitle, useMetaDescription } from "@/lib/document-title";
+import { ROOT_DESCRIPTION } from "@/lib/locale-copy";
+import { PICKER_PROJECTS, pickerChrome } from "@/lib/portfolio-copy";
 
 function getOffset(index: number, activeIndex: number, total: number) {
   let offset = index - activeIndex;
@@ -85,12 +25,16 @@ function getOffset(index: number, activeIndex: number, total: number) {
 export default function SitePage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const wheelLockRef = useRef(false);
-  const activeProject = PROJECTS[activeIndex];
+  const { lang, setLang } = useSiteLang();
+  const copy = (value: Parameters<typeof pick>[0]) => pick(value, lang);
+  const activeProject = PICKER_PROJECTS[activeIndex];
+  useDocumentTitle(turbowareTitle(copy(pickerChrome.pageTitle)));
+  useMetaDescription(copy(ROOT_DESCRIPTION));
 
   const moveProject = (direction: 1 | -1) => {
     setActiveIndex((current) => {
       const next = current + direction;
-      return (next + PROJECTS.length) % PROJECTS.length;
+      return (next + PICKER_PROJECTS.length) % PICKER_PROJECTS.length;
     });
   };
 
@@ -114,6 +58,15 @@ export default function SitePage() {
           }}
         />
 
+        <div className="absolute right-6 top-6 z-20">
+          <SiteLangSelect
+            lang={lang}
+            setLang={setLang}
+            label={copy(pickerChrome.language)}
+            tone="dark"
+          />
+        </div>
+
         <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-6 py-10 lg:px-10">
           <div className="grid w-full items-center gap-10 lg:grid-cols-[0.78fr_1.22fr]">
             <section className="order-2 flex justify-center lg:order-1">
@@ -126,7 +79,7 @@ export default function SitePage() {
                     backgroundColor: "rgba(255,255,255,0.05)",
                     borderColor: "rgba(255,255,255,0.1)",
                   }}
-                  aria-label="Show previous project"
+                  aria-label={copy(pickerChrome.previous)}
                 >
                   <ArrowUp className="h-4 w-4" />
                 </button>
@@ -145,11 +98,11 @@ export default function SitePage() {
                     moveProject(event.deltaY > 0 ? 1 : -1);
                   }}
                 >
-                  {PROJECTS.map((project, index) => {
+                  {PICKER_PROJECTS.map((project, index) => {
                     const offset = getOffset(
                       index,
                       activeIndex,
-                      PROJECTS.length,
+                      PICKER_PROJECTS.length,
                     );
                     const distance = Math.abs(offset);
                     const isActive = offset === 0;
@@ -194,7 +147,7 @@ export default function SitePage() {
                             {project.name}
                           </p>
                           <p className="text-[11px] uppercase tracking-[0.25em] text-white/40">
-                            {project.category}
+                            {copy(project.categoryLabel)}
                           </p>
                         </div>
                       </button>
@@ -210,7 +163,7 @@ export default function SitePage() {
                     backgroundColor: "rgba(255,255,255,0.05)",
                     borderColor: "rgba(255,255,255,0.1)",
                   }}
-                  aria-label="Show next project"
+                  aria-label={copy(pickerChrome.next)}
                 >
                   <ArrowDown className="h-4 w-4" />
                 </button>
@@ -243,7 +196,7 @@ export default function SitePage() {
                         {activeProject.name}
                       </h2>
                       <p className="mt-6 max-w-xl text-base leading-7 text-white/70 sm:text-lg text-justify">
-                        {activeProject.description}
+                        {copy(activeProject.description)}
                       </p>
                       <div className="mt-8 flex justify-end">
                         <Link
@@ -251,7 +204,7 @@ export default function SitePage() {
                           className="inline-flex items-center rounded-full px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110"
                           style={{ backgroundColor: activeProject.accent }}
                         >
-                          Go to {activeProject.name}
+                          {copy(pickerChrome.goTo).replaceAll("{name}", activeProject.name)}
                         </Link>
                       </div>
                     </div>
