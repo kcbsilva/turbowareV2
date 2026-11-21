@@ -425,3 +425,12 @@ enum ClientProductStatus {
 
   @@schema("turboware")
 }
+
+model ServerSnapshot {
+  id         String   @id
+  payload    Json
+  receivedAt DateTime @default(now())
+
+  @@schema("turboware")
+  @@map("server_snapshots")
+}

@@ -10,6 +10,7 @@ const TABS: { href: string; labelKey: MsgKey }[] = [
   { href: '/admin/settings/security', labelKey: 'nav.security' },
   { href: '/admin/settings/company', labelKey: 'settings.company' },
   { href: '/admin/settings/contracts', labelKey: 'settings.templates' },
+  { href: '/admin/settings/servers', labelKey: 'servers.title' },
 ]
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
