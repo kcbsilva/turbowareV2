@@ -4,6 +4,7 @@ export const SERVERS = [
 ] as const
 
 export const GIT_STATES = ['synced', 'different', 'unavailable'] as const
+export const SYNC_STATES = ['queued', 'running', 'succeeded', 'failed', 'expired'] as const
 const METRICS = ['cpuPercent', 'cpuCount', 'ramUsed', 'ramTotal', 'diskUsed', 'diskTotal', 'uptimeSeconds'] as const
 
 type RepositorySnapshot = {
@@ -23,6 +24,12 @@ export type ServerReading = {
   receivedAt: string
   stale: boolean
   snapshot: ServerSnapshot
+}
+
+export type ServerSettingsData = {
+  readings: ServerReading[]
+  syncEnabled: string[]
+  syncRequests: Record<string, (typeof SYNC_STATES)[number]>
 }
 
 function record(value: unknown): value is Record<string, unknown> {

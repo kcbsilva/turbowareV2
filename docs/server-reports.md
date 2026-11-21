@@ -52,3 +52,20 @@ Run the command once before scheduling it, then open the Servers tab and check
 that each displayed commit matches the intended checkout. The report describes
 the deployed source checkout. If you build a binary or image from that checkout,
 the reported commit follows the checkout even when the running artifact predates it.
+
+## Enable manual Git sync
+
+The **Sync** button is available to portal owners and admins for servers with
+a sync token configured. It requests the existing Git deployment for the
+selected repository and verifies the deployed commit against the branch tip
+fetched by that deployment. The tab updates while the request is pending.
+
+Apply the server sync requests migration before enabling the production
+`SERVER_SYNC_TURBOVPN_TOKEN` and `SERVER_SYNC_TURBOISP_API_TOKEN` variables. Use
+a different token for each worker and keep them separate from the monitoring
+tokens. Place the matching `SERVER_SYNC_TOKEN` in a root-only environment file
+on the host. Install `scripts/sync-server.py` as a root-owned file, and run it
+from a systemd timer with the corresponding server ID and HTTPS origin.
+The worker uses the existing `turbo-gitsync@.service` deployment units and
+`turboware-report@.service` monitoring units. Its fixed repository mapping
+matches the deployed checkout layout on the TurboRADIUS-VPN droplet.

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { useAdminLang } from '@/components/admin/AdminLangProvider'
 import { dateLocale } from '@/lib/admin-i18n'
-import { gitState, SERVERS, type ServerReading } from '@/lib/server-snapshots'
+import { gitState, SERVERS, type ServerSettingsData } from '@/lib/server-snapshots'
 
 const GITHUB_REPOSITORIES = {
   TurboVPN: 'kcbsilva/TurboVPN-GO',
@@ -14,21 +14,24 @@ const GITHUB_REPOSITORIES = {
 
 export default function ServersSettingsPage() {
   const { lang, t } = useAdminLang()
-  const [readings, setReadings] = useState<ServerReading[] | null>(null)
+  const [data, setData] = useState<ServerSettingsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [submitting, setSubmitting] = useState<string | null>(null)
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const hasPendingSync = Object.values(data?.syncRequests ?? {}).some((status) => status === 'queued' || status === 'running')
 
-  const refresh = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true)
+  const refresh = useCallback(async (signal?: AbortSignal, background = false) => {
+    if (!background) setLoading(true)
     setError(false)
     try {
-      const response = await fetch('/api/admin/settings/servers', { cache: 'no-store', signal })
+      const response = await fetch('/api/admin/settings/servers?sync=1', { cache: 'no-store', signal })
       if (!response.ok) throw new Error('Server reports request failed')
-      setReadings(await response.json())
+      setData(await response.json())
     } catch {
       if (!signal?.aborted) setError(true)
     } finally {
-      if (!signal?.aborted) setLoading(false)
+      if (!background && !signal?.aborted) setLoading(false)
     }
   }, [])
 
@@ -37,6 +40,38 @@ export default function ServersSettingsPage() {
     void refresh(controller.signal)
     return () => controller.abort()
   }, [refresh])
+
+  useEffect(() => {
+    if (!hasPendingSync) return
+    const controller = new AbortController()
+    const timer = window.setInterval(() => void refresh(controller.signal, true), 5_000)
+    return () => {
+      controller.abort()
+      window.clearInterval(timer)
+    }
+  }, [hasPendingSync, refresh])
+
+  async function syncRepository(serverId: string, repository: string) {
+    setSubmitting(repository)
+    setSyncError(null)
+    try {
+      const response = await fetch('/api/admin/settings/servers/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serverId, repository }),
+      })
+      if (!response.ok) throw new Error('Sync request failed')
+      setData((current) => current && {
+        ...current,
+        syncRequests: { ...current.syncRequests, [repository]: 'queued' },
+      })
+      await refresh(undefined, true)
+    } catch {
+      setSyncError(repository)
+    } finally {
+      setSubmitting(null)
+    }
+  }
 
   const locale = dateLocale(lang)
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
@@ -60,10 +95,11 @@ export default function ServersSettingsPage() {
         </button>
       </div>
       {error && <p role="alert" className="text-xs text-red-600 dark:text-red-400">{t('servers.error')}</p>}
-      {loading && !readings && <p role="status" className="text-xs text-muted-foreground">{t('common.loading')}</p>}
-      {readings && SERVERS.map((server) => {
-        const reading = readings.find((entry) => entry.id === server.id)
+      {loading && !data && <p role="status" className="text-xs text-muted-foreground">{t('common.loading')}</p>}
+      {data && SERVERS.map((server) => {
+        const reading = data.readings.find((entry) => entry.id === server.id)
         const snapshot = reading?.snapshot
+        const canSync = data.syncEnabled.includes(server.id)
         return (
           <section key={server.id} className="rounded-lg border border-border bg-card">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
@@ -102,8 +138,10 @@ export default function ServersSettingsPage() {
                 {server.repositories.map((name) => {
                   const repo = snapshot?.repositories.find((entry) => entry.name === name)
                   const state = repo ? gitState(repo) : 'unavailable'
+                  const syncStatus = data.syncRequests[name]
+                  const pending = syncStatus === 'queued' || syncStatus === 'running'
                   return (
-                    <li key={name} className="grid gap-2 py-2 sm:grid-cols-3">
+                    <li key={name} className="grid gap-2 py-2 sm:grid-cols-[1fr_1fr_1.5fr_auto]">
                       <div>
                         <span className="font-medium">{name}</span>
                         {repo?.ref && <div className="break-all text-muted-foreground">{repo.ref.slice('refs/heads/'.length)}</div>}
@@ -133,6 +171,24 @@ export default function ServersSettingsPage() {
                           )
                         })}
                       </dl>
+                      {canSync && (
+                        <div className="flex flex-col items-start gap-1 sm:items-end">
+                          <button
+                            type="button"
+                            aria-label={t('servers.syncRepository', { name })}
+                            disabled={loading || submitting !== null || pending}
+                            onClick={() => void syncRepository(server.id, name)}
+                            className="rounded-md border border-border px-2.5 py-1 font-medium hover:bg-muted disabled:opacity-50"
+                          >
+                            {t('servers.sync')}
+                          </button>
+                          <span role="status" className="text-muted-foreground">
+                            {syncError === name
+                              ? t('servers.syncError')
+                              : syncStatus && t(`servers.sync.${syncStatus}`)}
+                          </span>
+                        </div>
+                      )}
                     </li>
                   )
                 })}

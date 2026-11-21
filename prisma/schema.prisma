@@ -434,3 +434,16 @@ model ServerSnapshot {
   @@schema("turboware")
   @@map("server_snapshots")
 }
+
+model ServerSyncRequest {
+  repository  String   @id
+  serverId    String
+  requestId   String   @unique
+  status      String
+  requestedAt DateTime
+  expiresAt   DateTime
+
+  @@index([serverId, status, requestedAt])
+  @@schema("turboware")
+  @@map("server_sync_requests")
+}
