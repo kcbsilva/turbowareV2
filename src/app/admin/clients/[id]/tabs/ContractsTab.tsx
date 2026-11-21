@@ -123,6 +123,7 @@ export function ContractsTab({ clientId }: Props) {
     gracePeriodEndsAt: string | null
   } | null>(null)
 
+  const [expandedContracts, setExpandedContracts] = useState<Set<string>>(() => new Set())
   const [contractOpen, setContractOpen] = useState(false)
   const [savingContract, setSavingContract] = useState(false)
   const [contractError, setContractError] = useState('')
@@ -282,6 +283,7 @@ export function ContractsTab({ clientId }: Props) {
       setLicenseError(explainApiError(data.error, lang) || t('licenses.createError'))
       return
     }
+    setExpandedContracts((current) => new Set(current).add(licenseContractId))
     setLicenseOpen(false)
     if (data.turboisp?.temporaryPassword && data.turboisp?.adminUsername) {
       setNotice(
@@ -337,18 +339,34 @@ export function ContractsTab({ clientId }: Props) {
       ) : (
         contracts.map((contract) => (
           <div key={contract.id} className={card}>
-            <div className="px-4 py-2.5 border-b border-border flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-mono text-[11px] font-semibold text-foreground">{contract.number}</p>
-                  <span className={CONTRACT_BADGE[contract.status]}>{t(CONTRACT_STATUS_KEY[contract.status])}</span>
-                </div>
-                <p className="text-xs text-foreground mt-0.5">{contract.title}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {new Date(contract.startsAt).toLocaleDateString(dateLocale(lang))}
-                  {contract.endsAt ? ` – ${new Date(contract.endsAt).toLocaleDateString(dateLocale(lang))}` : ''}
-                </p>
-              </div>
+            <div className="px-4 py-2.5 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                aria-expanded={expandedContracts.has(contract.id)}
+                aria-controls={`contract-details-${contract.id}`}
+                onClick={() => {
+                  setExpandedContracts((current) => {
+                    const next = new Set(current)
+                    if (next.has(contract.id)) next.delete(contract.id)
+                    else next.add(contract.id)
+                    return next
+                  })
+                }}
+                className="group flex min-w-0 flex-1 items-center gap-2 rounded-md text-left hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none" />
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-[11px] font-semibold text-foreground">{contract.number}</span>
+                    <span className={CONTRACT_BADGE[contract.status]}>{t(CONTRACT_STATUS_KEY[contract.status])}</span>
+                  </span>
+                  <span className="block text-xs text-foreground mt-0.5">{contract.title}</span>
+                  <span className="block text-[10px] text-muted-foreground">
+                    {new Date(contract.startsAt).toLocaleDateString(dateLocale(lang))}
+                    {contract.endsAt ? ` – ${new Date(contract.endsAt).toLocaleDateString(dateLocale(lang))}` : ''}
+                  </span>
+                </span>
+              </button>
               <button
                 type="button"
                 onClick={() => openNewLicense(contract.id)}
@@ -358,110 +376,116 @@ export function ContractsTab({ clientId }: Props) {
                 <Plus className="w-3 h-3" /> {t('contracts.addLicense')}
               </button>
             </div>
-            {contract.notes && (
-              <p className="px-4 pt-2 text-[10px] text-muted-foreground">{contract.notes}</p>
-            )}
-            {contract.body && (
-              <div
-                className="contract-body mx-4 my-3 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-foreground"
-                dangerouslySetInnerHTML={{ __html: sanitizeContractHtml(contract.body) }}
-              />
-            )}
-            {contract.licenses.length === 0 ? (
-              <p className="px-4 py-8 text-xs text-muted-foreground text-center">{t('contracts.noLicenses')}</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
-                      <th className="px-4 py-2.5 font-medium">{t('licenses.product')}</th>
-                      <th className="px-4 py-2.5 font-medium">{t('licenses.plan')}</th>
-                      <th className="px-4 py-2.5 font-medium">{t('licenses.dueDate')}</th>
-                      <th className="px-4 py-2.5 font-medium">{t('licenses.tenantSlug')}</th>
-                      <th className="px-4 py-2.5 font-medium">{t('licenses.status')}</th>
-                      <th className="px-4 py-2.5 font-medium text-right">{t('licenses.options')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {contract.licenses.map((row) => {
-                      const st = STATUS_BADGE[row.status]
-                      const rowBusy = busy === row.productId
-                      const canCancel = row.status !== 'CANCELLED'
-                      const productTiers = catalog.find((p) => p.id === row.productId)?.tiers ?? []
-                      return (
-                        <tr key={row.id} className="hover:bg-muted/30">
-                          <td className="px-4 py-3">
-                            <p className="font-medium text-foreground">{row.product.name}</p>
-                          </td>
-                          <td className="px-4 py-3 text-foreground">{planLabel(row.tier?.name, (name) => t('licenses.tierNamed', { name }))}</td>
-                          <td className="px-4 py-3 text-foreground">
-                            {row.expiresAt ? new Date(row.expiresAt).toLocaleDateString(dateLocale(lang)) : '—'}
-                          </td>
-                          <td className="px-4 py-3 font-mono text-foreground">{row.tenantSlug || '—'}</td>
-                          <td className="px-4 py-3">
-                            <span className={st}>{t(STATUS_KEY[row.status])}</span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {rowBusy && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger
-                                  disabled={rowBusy}
-                                  className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted disabled:opacity-50"
+            <div
+              id={`contract-details-${contract.id}`}
+              hidden={!expandedContracts.has(contract.id)}
+              className="border-t border-border"
+            >
+              {contract.licenses.length === 0 ? (
+                <p className="px-4 py-8 text-xs text-muted-foreground text-center">{t('contracts.noLicenses')}</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border text-left text-[10px] text-muted-foreground uppercase tracking-wider">
+                        <th className="px-4 py-2.5 font-medium">{t('licenses.product')}</th>
+                        <th className="px-4 py-2.5 font-medium">{t('licenses.plan')}</th>
+                        <th className="px-4 py-2.5 font-medium">{t('licenses.dueDate')}</th>
+                        <th className="px-4 py-2.5 font-medium">{t('licenses.tenantSlug')}</th>
+                        <th className="px-4 py-2.5 font-medium">{t('licenses.status')}</th>
+                        <th className="px-4 py-2.5 font-medium text-right">{t('licenses.options')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {contract.licenses.map((row) => {
+                        const st = STATUS_BADGE[row.status]
+                        const rowBusy = busy === row.productId
+                        const canCancel = row.status !== 'CANCELLED'
+                        const productTiers = catalog.find((p) => p.id === row.productId)?.tiers ?? []
+                        return (
+                          <tr key={row.id} className="hover:bg-muted/30">
+                            <td className="px-4 py-3">
+                              <p className="font-medium text-foreground">{row.product.name}</p>
+                            </td>
+                            <td className="px-4 py-3 text-foreground">{planLabel(row.tier?.name, (name) => t('licenses.tierNamed', { name }))}</td>
+                            <td className="px-4 py-3 text-foreground">
+                              {row.expiresAt ? new Date(row.expiresAt).toLocaleDateString(dateLocale(lang)) : '—'}
+                            </td>
+                            <td className="px-4 py-3 font-mono text-foreground">{row.tenantSlug || '—'}</td>
+                            <td className="px-4 py-3">
+                              <span className={st}>{t(STATUS_KEY[row.status])}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {rowBusy && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger
+                                    disabled={rowBusy}
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted disabled:opacity-50"
+                                  >
+                                    {t('licenses.statusBtn')} <ChevronDown className="w-3 h-3" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    {(['ACTIVE', 'SUSPENDED', 'PENDING'] as const).map((s) => (
+                                      <DropdownMenuItem
+                                        key={s}
+                                        disabled={row.status === s}
+                                        onClick={() => patch(row.productId, { status: s })}
+                                      >
+                                        {t(STATUS_KEY[s])}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger
+                                    disabled={rowBusy || productTiers.length === 0}
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted disabled:opacity-50"
+                                  >
+                                    {t('licenses.planBtn')} <ChevronDown className="w-3 h-3" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    {productTiers.map((tier) => (
+                                      <DropdownMenuItem
+                                        key={tier.id}
+                                        disabled={row.tier?.id === tier.id}
+                                        onClick={() => patch(row.productId, { tierId: tier.id })}
+                                      >
+                                        {planLabel(tier.name, (name) => t('licenses.tierNamed', { name }))}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                                <button
+                                  type="button"
+                                  disabled={rowBusy || !canCancel}
+                                  onClick={() => {
+                                    if (!window.confirm(t('licenses.cancelConfirm', { name: row.product.name }))) return
+                                    patch(row.productId, { status: 'CANCELLED' })
+                                  }}
+                                  className="px-2 py-1 text-[10px] font-semibold rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-40"
                                 >
-                                  {t('licenses.statusBtn')} <ChevronDown className="w-3 h-3" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {(['ACTIVE', 'SUSPENDED', 'PENDING'] as const).map((s) => (
-                                    <DropdownMenuItem
-                                      key={s}
-                                      disabled={row.status === s}
-                                      onClick={() => patch(row.productId, { status: s })}
-                                    >
-                                      {t(STATUS_KEY[s])}
-                                    </DropdownMenuItem>
-                                  ))}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger
-                                  disabled={rowBusy || productTiers.length === 0}
-                                  className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md border border-border text-foreground hover:bg-muted disabled:opacity-50"
-                                >
-                                  {t('licenses.planBtn')} <ChevronDown className="w-3 h-3" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {productTiers.map((tier) => (
-                                    <DropdownMenuItem
-                                      key={tier.id}
-                                      disabled={row.tier?.id === tier.id}
-                                      onClick={() => patch(row.productId, { tierId: tier.id })}
-                                    >
-                                      {planLabel(tier.name, (name) => t('licenses.tierNamed', { name }))}
-                                    </DropdownMenuItem>
-                                  ))}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                              <button
-                                type="button"
-                                disabled={rowBusy || !canCancel}
-                                onClick={() => {
-                                  if (!window.confirm(t('licenses.cancelConfirm', { name: row.product.name }))) return
-                                  patch(row.productId, { status: 'CANCELLED' })
-                                }}
-                                className="px-2 py-1 text-[10px] font-semibold rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-40"
-                              >
-                                {t('licenses.cancel')}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                                  {t('licenses.cancel')}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {contract.notes && (
+                <p className="px-4 pt-2 text-[10px] text-muted-foreground">{contract.notes}</p>
+              )}
+              {contract.body && (
+                <div
+                  className="contract-body mx-4 my-3 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-foreground"
+                  dangerouslySetInnerHTML={{ __html: sanitizeContractHtml(contract.body) }}
+                />
+              )}
+            </div>
           </div>
         ))
       )}
