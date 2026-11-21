@@ -6,6 +6,12 @@ import { useAdminLang } from '@/components/admin/AdminLangProvider'
 import { dateLocale } from '@/lib/admin-i18n'
 import { gitState, SERVERS, type ServerReading } from '@/lib/server-snapshots'
 
+const GITHUB_REPOSITORIES = {
+  TurboVPN: 'kcbsilva/TurboVPN-GO',
+  TurboRADIUS: 'kcbsilva/TurboRADIUS-GO',
+  'TurboISP-API': 'kcbsilva/turboisp-api',
+} satisfies Record<(typeof SERVERS)[number]['repositories'][number], string>
+
 export default function ServersSettingsPage() {
   const { lang, t } = useAdminLang()
   const [readings, setReadings] = useState<ServerReading[] | null>(null)
@@ -107,12 +113,25 @@ export default function ServersSettingsPage() {
                         {repo?.dirty && <div className="text-amber-700 dark:text-amber-400">{t('servers.dirty')}</div>}
                       </div>
                       <dl>
-                        {(['head', 'upstream'] as const).map((key) => (
-                          <div key={key} className="flex flex-wrap gap-x-2">
-                            <dt className="text-muted-foreground">{t(`servers.${key}`)}</dt>
-                            <dd className="min-w-0 break-all"><code>{repo?.[key] ?? '—'}</code></dd>
-                          </div>
-                        ))}
+                        {(['head', 'upstream'] as const).map((key) => {
+                          const commit = repo?.[key]
+                          return (
+                            <div key={key} className="flex flex-wrap gap-x-2">
+                              <dt className="text-muted-foreground">{t(`servers.${key}`)}</dt>
+                              <dd>
+                                {commit ? (
+                                  <a
+                                    href={`https://github.com/${GITHUB_REPOSITORIES[name]}/commit/${commit}`}
+                                    title={commit}
+                                    className="text-primary underline underline-offset-2"
+                                  >
+                                    <code>{commit.slice(0, 7)}</code>
+                                  </a>
+                                ) : '—'}
+                              </dd>
+                            </div>
+                          )
+                        })}
                       </dl>
                     </li>
                   )
