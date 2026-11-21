@@ -1,4 +1,4 @@
-import { ClientProductStatus, type Prisma } from '@prisma/client'
+import { ClientProductStatus, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { reconcileSubscriptionLicenseSync } from '@/lib/billing'
 import { getPriceByLabel, getTierByLabel, type Region } from '@/lib/pricing'
@@ -223,8 +223,14 @@ export async function createClientLicense(opts: {
   const existing = await prisma.clientProduct.findUnique({
     where: { clientId_productId: { clientId: opts.clientId, productId: opts.productId } },
   })
-  if (existing && existing.status !== 'CANCELLED') {
-    return { error: 'This client already has a license for that product', status: 409 as const }
+  const duplicate = { error: 'This client already has a license for that product', status: 409 as const }
+  if (existing && existing.contractId !== null && existing.status !== 'CANCELLED') {
+    return duplicate
+  }
+
+  const attaching = existing !== null && existing.status !== 'CANCELLED'
+  if (attaching && existing.tenantSlug && existing.tenantSlug !== parsedSlug.slug) {
+    return { error: 'Use the existing license’s tenant slug when attaching it to a contract', status: 409 as const }
   }
 
   let turboisp: {
@@ -238,40 +244,34 @@ export async function createClientLicense(opts: {
     turboisp = provision.provisioned
   }
 
-  const activation = existing
-    ? await prisma.clientProduct.update({
-        where: { id: existing.id },
-        data: {
-          status: 'ACTIVE',
-          contractId: contract.id,
-          tierId: tier.id,
-          tenantSlug: parsedSlug.slug,
-          expiresAt: due,
-          activatedAt: new Date(),
-        },
-        include: {
-          tier: { select: { id: true, name: true } },
-          product: { select: { id: true, name: true, slug: true, logoEmoji: true } },
-        },
-      })
-    : await prisma.clientProduct.create({
-        data: {
-          clientId: opts.clientId,
-          contractId: contract.id,
-          productId: opts.productId,
-          tierId: tier.id,
-          tenantSlug: parsedSlug.slug,
-          status: 'ACTIVE',
-          expiresAt: due,
-          activatedAt: new Date(),
-        },
-        include: {
-          tier: { select: { id: true, name: true } },
-          product: { select: { id: true, name: true, slug: true, logoEmoji: true } },
-        },
-      })
+  const licenseDetails = {
+    contractId: contract.id,
+    tierId: tier.id,
+    tenantSlug: parsedSlug.slug,
+    expiresAt: due,
+    ...(!attaching && { status: 'ACTIVE' as const, activatedAt: new Date() }),
+  }
 
-  if (activation.product.slug === 'turboisp') {
+  let activation: { id: string }
+  try {
+    activation = existing
+      ? await prisma.clientProduct.update({
+          where: { id: existing.id, contractId: existing.contractId, status: existing.status },
+          data: licenseDetails,
+          select: { id: true },
+        })
+      : await prisma.clientProduct.create({
+          data: { ...licenseDetails, clientId: opts.clientId, productId: opts.productId },
+          select: { id: true },
+        })
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && (err.code === 'P2002' || err.code === 'P2025')) {
+      return duplicate
+    }
+    throw err
+  }
+
+  if (product.slug === 'turboisp') {
     await prisma.client.update({
       where: { id: opts.clientId },
       data: { subdomain: parsedSlug.slug },
